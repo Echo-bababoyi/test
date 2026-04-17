@@ -1,0 +1,19 @@
+# Flutter SDK 项目内存放，不入版本库
+tools/flutter/
+
+# Dart/Flutter 构建产物
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+.pub-cache/
+.pub/
+# 注意：pubspec.lock 在应用项目中应当入库（锁定依赖版本），因此不忽略
+
+# IDE
+.idea/
+.vscode/
+*.iml
+# OS
+.DS_Store
