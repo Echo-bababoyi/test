@@ -15,7 +15,6 @@ class SearchResultPage extends ConsumerStatefulWidget {
 class _SearchResultPageState extends ConsumerState<SearchResultPage> {
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
-  late String _query;
   bool _isEditing = false;
   bool _initialized = false;
 
@@ -29,11 +28,10 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // 只在第一次挂载时从 URL 读 query
+    // 只在第一次挂载时从 URL 读 q 初始化输入框
     if (!_initialized) {
       _initialized = true;
       final q = GoRouterState.of(context).uri.queryParameters['q'] ?? '';
-      _query = q;
       _controller.text = q;
       _controller.addListener(_onTextChanged);
     }
@@ -63,15 +61,17 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
     _controller.text = trimmed;
-    setState(() {
-      _query = trimmed;
-      _isEditing = false;
-    });
+    // replace 更新 URL（不增加历史栈条目），URL 成为单一真相源
+    context.replace(
+        '${AppRoutes.searchResult}?q=${Uri.encodeComponent(trimmed)}');
+    setState(() => _isEditing = false);
     _focusNode.unfocus();
   }
 
   @override
   Widget build(BuildContext context) {
+    // URL 是单一真相源；editing 时从 controller 读输入文字
+    final q = GoRouterState.of(context).uri.queryParameters['q'] ?? '';
     final text = _controller.text;
 
     return Scaffold(
@@ -101,7 +101,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
             else ...[
               _ResultTabRow(),
               const Divider(height: 1),
-              Expanded(child: _ResultBody(query: _query)),
+              Expanded(child: _ResultBody(query: q)),
             ],
           ],
         ),

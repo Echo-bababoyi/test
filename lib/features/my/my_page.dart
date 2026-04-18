@@ -86,7 +86,7 @@ class MyPage extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.grey[700],
         foregroundColor: Colors.white,
-        onPressed: () => context.go(AppRoutes.search),
+        onPressed: () => context.push(AppRoutes.search),
         child: const Icon(Icons.mic),
       ),
       floatingActionButtonLocation:

@@ -51,7 +51,11 @@ final appRouter = GoRouter(
       routes: [
         GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashPage()),
         GoRoute(path: AppRoutes.home, builder: (_, _) => const StandardHomePage()),
-        GoRoute(path: AppRoutes.elderHome, builder: (_, _) => const ElderHomePage()),
+        GoRoute(
+          path: AppRoutes.elderHome,
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: ElderHomePage()),
+        ),
         GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginPage()),
         GoRoute(path: AppRoutes.faceAuth, builder: (_, _) => const FaceAuthPage()),
         GoRoute(path: AppRoutes.verify, builder: (_, _) => const VerifyPage()),
@@ -59,7 +63,11 @@ final appRouter = GoRouter(
         GoRoute(path: AppRoutes.searchResult, builder: (_, _) => const SearchResultPage()),
         GoRoute(path: AppRoutes.socialInsurance, builder: (_, _) => const SocialInsurancePage()),
         GoRoute(path: AppRoutes.pensionQuery, builder: (_, _) => const PensionQueryPage()),
-        GoRoute(path: AppRoutes.my, builder: (_, _) => const MyPage()),
+        GoRoute(
+          path: AppRoutes.my,
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: MyPage()),
+        ),
       ],
     ),
   ],

@@ -68,3 +68,42 @@
 - 包装脚本自动设置镜像环境变量 `PUB_HOSTED_URL=https://pub.flutter-io.cn` 和 `FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn`
 - **不要**改 `~/.bashrc` / 不要把 `tools/flutter/bin` 加入系统 PATH——项目级隔离是刻意设计
 - `flutter doctor` 会报 "binary not on PATH" 警告，这是预期的，不用修
+
+## 导航决策约定（go / push / pop / NoTransitionPage）
+
+Phase 1 结束时由 architect 统一定稿，全员照此写新代码。
+
+### go / push / pop 决策矩阵
+
+| 操作 | 场景 | 举例 |
+|---|---|---|
+| `context.go(dest)` | 同级 Tab 切换 / 流程终结 / 应用初始化（替换栈） | `/elder ↔ /my` / auth 成功→ `/elder` / Splash → `/home` |
+| `context.push(dest)` | 钻取导航 / 打开有"取消或返回"的全屏页（入栈） | `/search → /search/result → /service/...` / 首页搜索入口→ `/search` |
+| `context.pop()` | 页面内×/取消/返回（回上一页） | SearchPage 取消、服务页返回 |
+| `context.replace(dest)` | 替换当前 URL 但**不增加历史条目** | SearchResultPage 新 query 提交时 |
+
+**核心原则**：凡目的页有"取消/×/返回"按钮且语义是"回到来源"，**必须用 push 进入 + pop 退出**；凡进入后不应后退（流程终结 / Tab 切换），用 go。
+
+### NoTransitionPage 适用
+
+**用户感知上是横向平移的 Tab 切换**时用 `NoTransitionPage`（瞬时无动画）；钻取 / 流程 / 弹出用默认动画。
+
+当前已配置：`/elder` 和 `/my` 用 `NoTransitionPage`。其他路由保持默认动画。
+
+Phase 2 若新增 Tab 式切换（例如 StandardHomePage 5 Tab 联通），**优先用 IndexedStack 在页面内部切换**，不拆路由——避免引入新的 `NoTransitionPage` 判断。
+
+### PersistentBanner 挂载范围
+
+**原则**：Banner 只挂在用户"落脚停留"的主目的地页，不挂在流程中间页和钻取详情页。
+
+- 挂 banner：StandardHomePage / ElderHomePage / MyPage
+- 不挂 banner：LoginPage / FaceAuthPage / VerifyPage（登录流程中）/ SearchPage / SearchResultPage / 服务详情页
+
+### URL 与状态同步
+
+**进 URL 的条件**：该值满足"书签直达有意义"。
+
+- 进 URL：SearchResult 的 `q`（用户可分享/直达）
+- 不进 URL：SocialInsurancePage 的 `_sub`（依赖会话上下文）、表单中间态、`modeProvider`（由 `/home` vs `/elder` 隐含）
+
+**不要**把 URL 状态缓存进 widget State 字段，应始终从 `GoRouterState.of(context).uri.queryParameters` 读取。若页面内改变 URL 相关状态，走 `context.replace(newUrl)` 同步。

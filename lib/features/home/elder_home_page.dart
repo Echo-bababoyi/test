@@ -64,7 +64,7 @@ class _ElderHomePageState extends ConsumerState<ElderHomePage>
       ),
       // ── 中间大圆麦克风 FAB → /search ─────────────────────────────────────
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go(AppRoutes.search),
+        onPressed: () => context.push(AppRoutes.search),
         backgroundColor: Colors.grey[500],
         elevation: 2,
         child: const Icon(Icons.mic, color: Colors.white),

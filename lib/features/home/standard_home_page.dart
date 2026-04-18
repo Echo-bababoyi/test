@@ -23,7 +23,7 @@ class StandardHomePage extends ConsumerWidget {
                     ref.read(modeProvider.notifier).toElder();
                     context.go(AppRoutes.elderHome);
                   },
-                  onSearchTap: () => context.go(AppRoutes.search),
+                  onSearchTap: () => context.push(AppRoutes.search),
                 ),
                 const _ServiceGridSection(),
                 const _NewsBarSection(),
