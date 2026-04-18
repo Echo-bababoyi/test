@@ -11,6 +11,7 @@ class AppTheme {
     };
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'NotoSansSC',
       colorScheme: ColorScheme.fromSeed(
         seedColor: primary,
         brightness: Brightness.light,
