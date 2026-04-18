@@ -481,4 +481,224 @@ MyPage（依赖 loginProvider，可与搜索线并行）
 
 ---
 
+## 七、Phase 2 实施计划
+
+> Phase 1 完成 11 页灰块线框结构，Phase 2 目标：按 32 张截图逐页像素级贴皮。  
+> 本节按**依赖顺序**拆批次——地基先行，通用组件次之，逐页贴皮在后，验收收尾。
+
+---
+
+### P2-A · Token 补齐 + 全项目魔数替换
+
+**工作量：** `xs`（无视觉改变，纯定义 + 替换）
+
+**目的：** 贴皮阶段所有颜色/字号/间距/圆角必须走 token，否则后续多处重复手写魔数、Phase 3 修一处漏十处。
+
+**涉及文件：**
+- `lib/core/theme/design_tokens.dart`（新增 token）
+- `lib/core/widgets/system_dialog.dart`
+- `lib/core/widgets/in_app_overlay.dart`
+- `lib/core/widgets/persistent_banner.dart`
+- `lib/core/widgets/phone_frame.dart`
+
+**TODO 条目（原文引自 `docs/TODO.md`）：**
+- `AppFontSize` 补 `tiny=11` / `caption=13` 两个 token（`standard_home_page.dart` / `elder_home_page.dart` / `persistent_banner.dart` 共 8+ 处散落硬编码）
+- `Spacing` 补 `xl2=20`（`system_dialog.dart` 里用了，当前无 token）
+- `AppRadius` 补 `phone=24`（`phone_frame.dart` 用，当前裸数字）
+- `AppColors` 补 `phoneBg=0xFF1E1E1E`（`phone_frame.dart` 用）
+- `system_dialog.dart` / `in_app_overlay.dart` / `persistent_banner.dart` 里所有魔数替换为 token 引用
+
+**依赖：** 无（第一批，不依赖任何其他 Phase 2 产出）
+
+**验收标准：**
+- [ ] `flutter analyze` 0 issues
+- [ ] `grep -r "Color(0x" lib/core/widgets/` 结果为空（弹窗组件族无裸颜色）
+- [ ] `design_tokens.dart` 新增 4 个 token，名称与值与 TODO 一致
+
+---
+
+### P2-B · 通用组件抽取 + 代码结构清理
+
+**工作量：** `s`
+
+**目的：** 减少后续贴皮时重复代码；`PermissionFlowHelper` 一次抽取，`SearchPage` 和 `FaceAuthPage` 贴皮时直接复用三段式流程，不重写两遍。
+
+**涉及文件：**
+- `lib/core/widgets/permission_flow_helper.dart`（新建）
+- `lib/features/home/elder_home_page.dart`
+- `lib/features/search/search_page.dart`
+- `lib/features/search/search_result_page.dart`
+- `lib/features/my/my_page.dart`
+- `lib/features/login/login_page.dart`、`face_auth_page.dart`、`search_result_page.dart`、`social_insurance_page.dart`、`pension_query_page.dart`（ConsumerWidget 降级复查）
+
+**TODO 条目（原文引自 `docs/TODO.md`）：**
+- `_EldTabCardSection` IndexedStack 改用 `ListenableBuilder(listenable: tab)` 局部重建（当前 `_tab.addListener(setState)` 每帧全页重建，虽不影响正确性但开销冗余）
+- `_EldToolBarSection` 加 `const` 构造器（build 体是纯 const Widget 树）
+- `_ResultTabRow` 加 `const` 构造器
+- `_MyActivitySection` / `_MyCertSection` / `_MyManagementSection` / `_MyRecommendSection` / `_MySettingsSection` 加 const 构造器
+- 考虑把 `SearchPage` 麦克风 chain 和 `FaceAuthPage` 刷脸 chain 抽共用的 `PermissionFlowHelper`（三段式 Overlay→SystemDialog→Overlay）
+- Phase 1 终验收前复查 6 个 `ConsumerWidget` 页面（`LoginPage` / `FaceAuthPage` / `SearchPage` / `SearchResultPage` / `SocialInsurancePage` / `PensionQueryPage`）是否还需要 `ref`，未用的降级回 `StatelessWidget`
+
+**依赖：** P2-A（token 补齐后代码里无魔数，结构更清晰）
+
+**验收标准：**
+- [ ] `flutter analyze` 0 issues
+- [ ] `PermissionFlowHelper` 存在，并被 SearchPage + FaceAuthPage 引用
+- [ ] `_EldTabCardSection` 使用 `ListenableBuilder` 而非 `addListener(setState)`
+- [ ] 6 个复查页面无多余 `ref` 引用
+
+---
+
+### P2-C · 字体引入 + StandardHomePage / ElderHomePage 贴皮
+
+**工作量：** `l`（截图 9 张，ElderHomePage 结构复杂，字体引入有配置成本）
+
+**对照截图（9 张）：**
+- `主页面.jpg`
+- `长辈版主页面-热门服务.jpg`、`-我的常用.jpg`、`-我的订阅.jpg`
+- `长辈版主页面-往下滑动一段.jpg`、`-往下滑动两段.jpg`、`-往下滑动三段.jpg`
+- `长辈版主页面-立即登录弹窗.jpg`
+
+**TODO 条目（原文引自 `docs/TODO.md`）：**
+- `PersistentBanner.bannerButton` 在长辈模式下读 `modeProvider` 改用 `elderPrimary`（截图里长辈版 banner 按钮是橙色而非蓝色）
+- Banner 文字颜色从 `Colors.white` 改为灰色（对齐截图）
+- 长辈版 AppBar「个人频道」pill 加刷新/同步图标（对齐截图）
+- 长辈版底部 FAB 颜色从 `Colors.grey[500]` 改为 `AppColors.elderPrimary`（对齐截图）
+
+**额外必做（PROJECT_PLAN §五.5 技术瓶颈）：**
+- 引入 Noto Sans SC 字体文件到 `assets/fonts/`，在 `pubspec.yaml` 注册（~2MB，用户已接受）
+- 长辈版大字号常量补入 design token（`AppTextStyle.elder*`，比标准版大 20–30%）
+
+**依赖：** P2-A（token 就绪）、P2-B（ListenableBuilder 优化就绪）
+
+**视觉检查点：**
+- [ ] 标准版顶栏主色 `#2D74DC`
+- [ ] 长辈版主色全面替换为 `#FF6D00`（顶栏、FAB、banner 按钮、Tab 选中指示器）
+- [ ] Banner 按钮：标准版蓝色胶囊 / 长辈版橙色胶囊
+- [ ] Banner 文字颜色为灰色（非白色）
+- [ ] 「个人频道」pill 右侧有刷新/同步图标
+- [ ] 中文字体渲染为 Noto Sans SC（无系统字体 fallback 锯齿）
+- [ ] 3 段拼接截图区块位置与原图无明显错位（对比侧放）
+
+---
+
+### P2-D · LoginPage / FaceAuthPage / VerifyPage 贴皮
+
+**工作量：** `m`（截图 8 张，含弹窗 4 个）
+
+**对照截图（8 张）：**
+- `登录页面.jpg`、`登录页面-同意条款弹窗.jpg`
+- `刷脸身份验证页面（开始认证其他方式认证）.jpg`、`-请求刷脸认证弹窗.jpg`、`-请求使用摄像头弹窗.jpg`、`刷脸验证页面.jpg`
+- `验证码页面.jpg`、`验证码页面-验证码弹窗.jpg`
+
+**TODO 条目（原文引自 `docs/TODO.md`）：**
+- `LoginPage` 登录按钮 guard：手机号空时置灰不可点（batch 3 reviewer 发现）
+- `FaceAuthPage._AuthenticatingView` "模拟认证成功 → 长辈版首页"按钮文案替换为正式占位（batch 3 architect 发现）
+- `VerifyPage` 补"发送验证码"按钮（当前跳过该步直接展示 OTP 输入态；batch 3 reviewer 发现）
+- `LoginPage` 底部"其他证件 / 新用户注册 / 忘记密码 / 登录遇到问题 / 其他登录方式"辅助链接目前纯静态文字，Phase 2 按需决定是否联通
+
+**依赖：** P2-A（token）、P2-B（PermissionFlowHelper，供 FaceAuthPage 刷脸 chain 复用）
+
+**视觉检查点：**
+- [ ] 登录页背景色、输入框圆角与截图一致；手机号空时按钮置灰
+- [ ] 同意条款 InAppOverlay 圆角、遮罩透明度与截图一致
+- [ ] FaceAuthPage 刷脸请求 InAppOverlay 样式对齐
+- [ ] SystemDialog（摄像头 / 验证码）圆角 8dp、按钮分割线、文字样式对齐 Android 原生风格
+- [ ] VerifyPage 有"发送验证码"按钮，输入框布局与截图一致
+
+---
+
+### P2-E · SearchPage / SearchResultPage 贴皮
+
+**工作量：** `m`（截图 8 张，6 种状态 + 麦克风 chain）
+
+**对照截图（8 张）：**
+- `搜索页面.jpg`、`-输入医保缴费.jpg`、`-输入养老金查询.jpg`
+- `搜索页面-获取麦克风权限.jpg`、`-获取麦克风权限弹窗.jpg`、`-麦克风说话按钮弹窗.jpg`
+- `搜索结果页面-输入医保缴费.jpg`、`搜索结果页面-输入养老金查询.jpg`
+
+**TODO 条目（原文引自 `docs/TODO.md`）：**
+- `search_page.dart _VoiceInputContent` 升级 StatefulWidget，`listen()` 期间显示"说话中..."占位（消除 800ms 空窗）
+- `search_page.dart _VoiceInputContent` 麦克风按钮颜色读 `modeProvider`（标准版进入时当前是橙色会冲突）
+- `SearchPage` 联想词精确匹配改为前缀/模糊匹配（输入"医保"应也能出现联想）
+- `search_page.dart / search_result_page.dart` 多处 `Color(0xFF...)` 硬编码改用 `AppColors` 常量；搜索框 `borderRadius(18)` 走 token
+
+**依赖：** P2-A（token）、P2-B（PermissionFlowHelper，供麦克风 chain 复用）
+
+**视觉检查点：**
+- [ ] 搜索框圆角、背景色对齐截图；输入状态下联想词列表样式正确
+- [ ] 麦克风按钮颜色：标准版蓝色 / 长辈版橙色
+- [ ] 三个弹窗（权限引导 / 系统权限 / 录音浮层）样式对齐对应截图
+- [ ] 搜索结果页两种 query 列表内容不同，条目样式一致
+- [ ] 联想词输入"医保"可出现含"医保"词的联想结果
+
+---
+
+### P2-F · SocialInsurancePage / PensionQueryPage / MyPage 贴皮
+
+**工作量：** `m`（截图 8 张，含 3 段长页滚动）
+
+**对照截图（8 张）：**
+- `社保费缴纳服务页面.jpg`、`-我为自己缴页面.jpg`、`-缴费记录页面.jpg`
+- `社保查询服务页面.jpg`
+- `长辈版-我的页面.jpg`、`-往下滑动一段.jpg`、`-往下滑动两段.jpg`、`-往下滑动三段.jpg`
+
+**TODO 条目（原文引自 `docs/TODO.md`）：**
+- `MyPage` FAB 颜色 `Colors.grey[700]` —— 截图里像灰，但 reviewer 批次 5 建议改 `elderPrimary`，Phase 2 上真机再定
+
+**依赖：** P2-A（token）、P2-C（字体、长辈版大字号 token 就绪，MyPage 会用）
+
+**视觉检查点：**
+- [ ] 社保费缴纳主页样式对齐，IndexedStack 三子状态（主页 / 我为自己缴 / 缴费记录）各自对齐对应截图
+- [ ] 社保查询页布局与截图一致
+- [ ] MyPage 3 段拼接与截图无明显错位
+- [ ] MyPage FAB 颜色经浏览器对照截图后定色（灰 or 橙）
+
+---
+
+### P2-终 · 验收专项 + 低优清理 + 打 tag
+
+**工作量：** `s`
+
+**内容：**
+
+**测试补齐**（引自 `docs/TODO.md` 「收尾测试待补」）：
+- P0：`PersistentBanner` 四种状态 widget test（未登录+未关 / 已登录 / dismiss / dismiss 后登出）
+- P0：`loginProvider` + `loginBannerDismissedProvider` 状态流转 unit test
+- P1：`ElderHomePage` Tab 切换 `IndexedStack.index` 正确、非 Tab 区块不重建 widget test
+- P1：`SplashPage` 1500ms 自动跳 + `_navigated` 防重复 widget test + fake timer
+- P2：`AppRouter` 11 条路由全部可导航 + ShellRoute 包 PhoneFrame integration test
+- P2：`AppTheme.of(mode)` 主色切换 unit test
+
+**对照材料生成：**
+- [ ] 32 张「原图 vs 复刻」对比截图生成并存档（`docs/复刻对照/`）
+- [ ] 每张对比截图通过还原度检查清单（PROJECT_PLAN §七 全部勾选）
+
+**低优清理：**
+- [ ] 删除各页面 `_DevNavSection`（Phase 1 开发导航面板，Phase 2 不再需要）
+- [ ] `flutter analyze` 0 issues 最终确认
+
+**收尾动作：**
+- [ ] 打 `v1.0-baseline` tag（后续创新底座）
+
+**依赖：** P2-A ~ P2-F 全部通过
+
+---
+
+### 批次汇总表
+
+| 批次 | 核心内容 | 工作量 | 对照截图数 | 前置依赖 |
+|------|---------|-------|----------|---------|
+| P2-A | Token 补齐 + 魔数替换 | `xs` | 0 | 无 |
+| P2-B | 通用组件 + 代码清理 | `s` | 0 | P2-A |
+| P2-C | 字体引入 + 标准版/长辈版首页贴皮 | `l` | 9 | P2-A, P2-B |
+| P2-D | 登录流程 3 页贴皮 | `m` | 8 | P2-A, P2-B |
+| P2-E | 搜索流程 2 页贴皮 | `m` | 8 | P2-A, P2-B |
+| P2-F | 服务页 + 我的页贴皮 | `m` | 8 | P2-A, P2-C |
+| P2-终 | 测试补齐 + 对照材料 + tag | `s` | 32（全量） | P2-C ~ P2-F |
+
+**注：** P2-D / P2-E / P2-F 三批无相互依赖，可在 P2-B 完成后并行推进（由 team-lead 决定是否并行）。
+
+---
+
 *技术章节（§五）已由 architect 联合确认，2026-04-17。*
