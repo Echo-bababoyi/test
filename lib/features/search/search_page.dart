@@ -6,6 +6,7 @@ import '../../core/theme/design_tokens.dart';
 import '../../core/widgets/in_app_overlay.dart';
 import '../../core/widgets/system_dialog.dart';
 import '../../services/voice_input_service.dart';
+import 'suggestion_list.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -104,7 +105,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             Expanded(
               child: _text.isEmpty
                   ? const _DefaultBody()
-                  : _SuggestionList(query: _text, onSelect: _submitSearch),
+                  : SearchSuggestionList(query: _text, onSelect: _submitSearch),
             ),
           ],
         ),
@@ -404,49 +405,6 @@ class _RecommendPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(label, style: const TextStyle(fontSize: 13)),
-    );
-  }
-}
-
-// ─── 有输入时联想词列表 ────────────────────────────────────────────────────────
-
-class _SuggestionList extends StatelessWidget {
-  final String query;
-  final ValueChanged<String> onSelect;
-
-  const _SuggestionList({required this.query, required this.onSelect});
-
-  List<String> _suggestions() {
-    if (query == '医保缴费') {
-      return [
-        '医保缴费',
-        '少儿医保缴费',
-        '医保缴费记录',
-        '农村医保缴费',
-        '医保缴费查询',
-        '浙里医保缴费',
-        '个人医保缴费',
-        '儿童医保缴费',
-        '子女医保缴费',
-        '农医保缴费',
-        '浙江医保缴费',
-      ];
-    }
-    if (query == '养老金查询') return ['养老金查询'];
-    return [query];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final items = _suggestions();
-    return ListView.separated(
-      itemCount: items.length,
-      separatorBuilder: (context, index) =>
-          const Divider(height: 1, indent: Spacing.lg),
-      itemBuilder: (context, i) => ListTile(
-        title: Text(items[i], style: const TextStyle(fontSize: 16)),
-        onTap: () => onSelect(items[i]),
-      ),
     );
   }
 }

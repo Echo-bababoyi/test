@@ -3,29 +3,106 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/design_tokens.dart';
+import 'suggestion_list.dart';
 
-class SearchResultPage extends ConsumerWidget {
+class SearchResultPage extends ConsumerStatefulWidget {
   const SearchResultPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final q = GoRouterState.of(context).uri.queryParameters['q'] ?? '';
+  ConsumerState<SearchResultPage> createState() => _SearchResultPageState();
+}
+
+class _SearchResultPageState extends ConsumerState<SearchResultPage> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+  late String _query;
+  bool _isEditing = false;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 只在第一次挂载时从 URL 读 query
+    if (!_initialized) {
+      _initialized = true;
+      final q = GoRouterState.of(context).uri.queryParameters['q'] ?? '';
+      _query = q;
+      _controller.text = q;
+      _controller.addListener(_onTextChanged);
+    }
+  }
+
+  void _onTextChanged() => setState(() {});
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onTextChanged);
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onClearTap() {
+    _controller.clear();
+    setState(() => _isEditing = true);
+    _focusNode.requestFocus();
+  }
+
+  void _onFieldTap() {
+    if (!_isEditing) setState(() => _isEditing = true);
+  }
+
+  void _onSubmit(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
+    _controller.text = trimmed;
+    setState(() {
+      _query = trimmed;
+      _isEditing = false;
+    });
+    _focusNode.unfocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = _controller.text;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 顶部搜索栏（与 SearchPage 同款，带查询词）
-            _ResultTopBar(query: q, onCancel: () => context.pop()),
-            const Divider(height: 1),
-            // 综合 / 服务 / 办事 / 政策 tab 行（静态，只有综合高亮）
-            _ResultTabRow(),
-            const Divider(height: 1),
-            Expanded(
-              child: _ResultBody(query: q),
+            // 顶部搜索栏（可编辑）
+            _ResultTopBar(
+              controller: _controller,
+              focusNode: _focusNode,
+              hasText: text.isNotEmpty,
+              onClearTap: _onClearTap,
+              onFieldTap: _onFieldTap,
+              onSubmit: _onSubmit,
+              onCancel: () => context.pop(),
             ),
+            const Divider(height: 1),
+            // body 分支
+            if (_isEditing)
+              Expanded(
+                child: SearchSuggestionList(
+                  query: text,
+                  onSelect: _onSubmit,
+                ),
+              )
+            else ...[
+              _ResultTabRow(),
+              const Divider(height: 1),
+              Expanded(child: _ResultBody(query: _query)),
+            ],
           ],
         ),
       ),
@@ -33,13 +110,26 @@ class SearchResultPage extends ConsumerWidget {
   }
 }
 
-// ─── 顶部搜索栏（只读展示，含 × 返回）────────────────────────────────────────
+// ─── 顶部搜索栏（可编辑 TextField）────────────────────────────────────────────
 
 class _ResultTopBar extends StatelessWidget {
-  final String query;
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool hasText;
+  final VoidCallback onClearTap;
+  final VoidCallback onFieldTap;
+  final ValueChanged<String> onSubmit;
   final VoidCallback onCancel;
 
-  const _ResultTopBar({required this.query, required this.onCancel});
+  const _ResultTopBar({
+    required this.controller,
+    required this.focusNode,
+    required this.hasText,
+    required this.onClearTap,
+    required this.onFieldTap,
+    required this.onSubmit,
+    required this.onCancel,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -57,32 +147,45 @@ class _ResultTopBar extends StatelessWidget {
                 '西湖区',
                 style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
               ),
-              Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textPrimary),
+              Icon(Icons.arrow_drop_down,
+                  size: 18, color: AppColors.textPrimary),
             ],
           ),
           const SizedBox(width: Spacing.sm),
           Expanded(
-            child: Container(
-              height: 36,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(18),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      query,
-                      style: const TextStyle(fontSize: 15),
-                      overflow: TextOverflow.ellipsis,
+            child: GestureDetector(
+              onTap: onFieldTap,
+              child: Container(
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: onSubmit,
+                  onTap: onFieldTap,
+                  style: const TextStyle(fontSize: 15),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 9,
                     ),
+                    suffixIcon: hasText
+                        ? GestureDetector(
+                            onTap: onClearTap,
+                            child: const Icon(
+                              Icons.cancel,
+                              size: 18,
+                              color: Colors.grey,
+                            ),
+                          )
+                        : null,
                   ),
-                  GestureDetector(
-                    onTap: onCancel,
-                    child: const Icon(Icons.cancel, size: 18, color: Colors.grey),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -96,7 +199,8 @@ class _ResultTopBar extends StatelessWidget {
             ),
             child: const Text(
               '取消',
-              style: TextStyle(fontSize: 15, color: AppColors.standardPrimary),
+              style: TextStyle(
+                  fontSize: 15, color: AppColors.standardPrimary),
             ),
           ),
         ],
@@ -153,7 +257,9 @@ class _TabLabel extends StatelessWidget {
           Container(
             height: 2,
             width: 24,
-            color: selected ? AppColors.standardPrimary : Colors.transparent,
+            color: selected
+                ? AppColors.standardPrimary
+                : Colors.transparent,
           ),
         ],
       ),
@@ -183,11 +289,9 @@ class _ResultBody extends StatelessWidget {
                 vertical: Spacing.md,
               ),
               child: Text(
-                '暂无相关服务',
+                query.isEmpty ? '' : '暂无相关服务',
                 style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
+                    fontSize: 14, color: AppColors.textSecondary),
               ),
             ),
           const Center(
@@ -196,9 +300,7 @@ class _ResultBody extends StatelessWidget {
               child: Text(
                 '查看更多搜索结果',
                 style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.standardPrimary,
-                ),
+                    fontSize: 14, color: AppColors.standardPrimary),
               ),
             ),
           ),
@@ -211,7 +313,6 @@ class _ResultBody extends StatelessWidget {
     );
   }
 
-  // 医保缴费 — 服务区
   List<Widget> _medicalPayServices(BuildContext context) => [
         _ServiceItem(
           iconColor: const Color(0xFF2D74DC),
@@ -228,7 +329,7 @@ class _ResultBody extends StatelessWidget {
           title: '社保费缴纳',
           chips: const ['社保医保缴费', '城乡居民基本医'],
           department: '省税务局',
-          onTap: () => context.go(AppRoutes.socialInsurance),
+          onTap: () => context.push(AppRoutes.socialInsurance),
         ),
         const Divider(height: 1, indent: Spacing.lg),
         _ServiceItem(
@@ -242,7 +343,6 @@ class _ResultBody extends StatelessWidget {
         const Divider(height: 1, indent: Spacing.lg),
       ];
 
-  // 养老金查询 — 服务区
   List<Widget> _pensionServices(BuildContext context) => [
         _ServiceItem(
           iconColor: const Color(0xFF2D74DC),
@@ -250,7 +350,7 @@ class _ResultBody extends StatelessWidget {
           title: '社保查询',
           chips: const ['养老险查询', '养老金', '失业险查'],
           department: '省人力社保厅',
-          onTap: () => context.go(AppRoutes.pensionQuery),
+          onTap: () => context.push(AppRoutes.pensionQuery),
         ),
         const Divider(height: 1, indent: Spacing.lg),
         _ServiceItem(
@@ -273,7 +373,6 @@ class _ResultBody extends StatelessWidget {
         const Divider(height: 1, indent: Spacing.lg),
       ];
 
-  // 医保缴费 — 办事区
   List<Widget> _medicalPayAffairs() => [
         const _AffairItem('职工参保登记（医保）'),
         const Divider(height: 1, indent: Spacing.lg),
@@ -281,7 +380,6 @@ class _ResultBody extends StatelessWidget {
         const Divider(height: 1, indent: Spacing.lg),
       ];
 
-  // 养老金查询 — 办事区
   List<Widget> _pensionAffairs() => [
         const _AffairItem('退休高级职称人员增加养老金待遇'),
         const Divider(height: 1, indent: Spacing.lg),
@@ -305,7 +403,8 @@ class _SectionHeader extends StatelessWidget {
       ),
       child: Text(
         title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+        style:
+            const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -357,9 +456,7 @@ class _ServiceItem extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                        fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   if (chips.isNotEmpty) ...[
                     const SizedBox(height: 4),
@@ -369,17 +466,15 @@ class _ServiceItem extends StatelessWidget {
                           .map(
                             (c) => Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey[300]!),
+                                border: Border.all(
+                                    color: Colors.grey[300]!),
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              child: Text(
-                                c,
-                                style: const TextStyle(fontSize: 12),
-                              ),
+                              child: Text(c,
+                                  style:
+                                      const TextStyle(fontSize: 12)),
                             ),
                           )
                           .toList(),
@@ -389,14 +484,14 @@ class _ServiceItem extends StatelessWidget {
                   Text(
                     department,
                     style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
+                        fontSize: 12,
+                        color: AppColors.textSecondary),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+            const Icon(Icons.chevron_right,
+                color: AppColors.textSecondary),
           ],
         ),
       ),
@@ -412,9 +507,7 @@ class _AffairItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: Spacing.lg,
-        vertical: Spacing.md,
-      ),
+          horizontal: Spacing.lg, vertical: Spacing.md),
       child: Text(title, style: const TextStyle(fontSize: 15)),
     );
   }
