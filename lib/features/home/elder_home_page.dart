@@ -98,9 +98,9 @@ class _ElderHomePageState extends ConsumerState<ElderHomePage>
                   },
                 ),
 
-                const _EldGovHotlineSection(),
+                const _EldGovHotlineSection(key: ValueKey('eld_hotline')),
                 _EldTabCardSection(controller: _tab),
-                const _EldOnlineServiceSection(),
+                const _EldOnlineServiceSection(key: ValueKey('eld_online')),
                 const _EldOfflineServiceSection(),
                 const _EldAuthorizedServiceSection(),
                 const _EldFooterSection(),
@@ -178,7 +178,7 @@ class _EldToolBarItem extends StatelessWidget {
 // ─── 政务服务热线条（白卡圆角）────────────────────────────────────────────────
 
 class _EldGovHotlineSection extends StatelessWidget {
-  const _EldGovHotlineSection();
+  const _EldGovHotlineSection({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -525,7 +525,7 @@ class _EldViewAllButton extends StatelessWidget {
 // ─── 线上一站办（2×3 格栅，带品牌色）────────────────────────────────────────
 
 class _EldOnlineServiceSection extends StatelessWidget {
-  const _EldOnlineServiceSection();
+  const _EldOnlineServiceSection({super.key});
 
   static const _items = [
     _EldGridItem(Icons.monitor_heart, Color(0xFFFF6D00), Color(0xFFFFF3E0), '健康医保'),
