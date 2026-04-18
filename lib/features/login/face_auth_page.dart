@@ -15,13 +15,29 @@ class FaceAuthPage extends ConsumerStatefulWidget {
 }
 
 class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
-  // FaceAuthPage 内部子状态：false = 默认双按钮，true = 认证中占位
   bool _isAuthenticating = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('身份验证')),
+      backgroundColor:
+          _isAuthenticating ? Colors.white : const Color(0xFFDEEAF8),
+      appBar: _isAuthenticating
+          ? AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              automaticallyImplyLeading: false,
+              leading: IconButton(
+                icon: const Icon(Icons.close, color: AppColors.textPrimary),
+                onPressed: () => setState(() => _isAuthenticating = false),
+              ),
+            )
+          : AppBar(
+              backgroundColor: const Color(0xFFDEEAF8),
+              elevation: 0,
+              foregroundColor: AppColors.textPrimary,
+              title: const Text('身份验证'),
+            ),
       body: _isAuthenticating
           ? _AuthenticatingView(
               onComplete: () {
@@ -36,7 +52,6 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
     );
   }
 
-  // I2+S1：三段式摄像头权限请求（InAppOverlay → SystemDialog → 认证中子状态）
   void _showFaceAuthOverlay(BuildContext context) {
     PermissionFlowHelper.request(
       context: context,
@@ -52,7 +67,6 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
     );
   }
 
-  // 其他认证方式 InAppOverlay（非阻塞）
   void _showOtherAuthOverlay(BuildContext context) {
     InAppOverlay.show<void>(
       context,
@@ -67,76 +81,74 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
   }
 }
 
-// ─── 默认状态（双按钮）────────────────────────────────────────────────────────
+// ─── 默认状态（双按钮 + 白卡）────────────────────────────────────────────────
 
 class _DefaultView extends StatelessWidget {
   final VoidCallback onStartAuth;
   final VoidCallback onOtherMethod;
 
-  const _DefaultView({
-    required this.onStartAuth,
-    required this.onOtherMethod,
-  });
+  const _DefaultView({required this.onStartAuth, required this.onOtherMethod});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(Spacing.lg),
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: Spacing.xl),
-          // 人脸扫描卡片占位
-          Container(
-            padding: const EdgeInsets.all(Spacing.xl),
-            color: Colors.grey[100],
-            child: Column(
-              children: [
-                // 用户名占位（脱敏）
-                const Text(
-                  '**澄',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: Spacing.xl),
-                // 人脸扫描框占位
-                Container(
-                  width: 180,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    shape: BoxShape.circle,
+          const SizedBox(height: Spacing.sm),
+          // 白色圆角卡片（姓名 + 扫描框 + 说明）
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.large),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Spacing.xl, Spacing.xl, Spacing.xl, Spacing.lg,
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    '**澄',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.person,
-                    size: 80,
-                    color: Colors.grey,
+                  const SizedBox(height: Spacing.lg),
+                  const _FaceScanFrame(),
+                  const SizedBox(height: Spacing.lg),
+                  const Text(
+                    '请进行刷脸认证',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: Spacing.xl),
-                // 说明文字
-                const Text(
-                  '请进行刷脸认证',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                  const SizedBox(height: Spacing.sm),
+                  const Text(
+                    '为保障您的账号隐私与信息安全，\n"浙里办"将获取您的人脸信息进行实人验证',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                const SizedBox(height: Spacing.sm),
-                const Text(
-                  '为保障您的账号隐私与信息安全，"浙里办"将获取您的人脸信息进行实人验证',
-                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: Spacing.xl),
+          const SizedBox(height: Spacing.lg),
           // 开始认证（主按钮）
           FilledButton(
             onPressed: onStartAuth,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.standardPrimary,
-              padding: const EdgeInsets.symmetric(vertical: Spacing.md),
+              minimumSize: const Size.fromHeight(52),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.xlarge),
+              ),
             ),
             child: const Text('开始认证', style: TextStyle(fontSize: 16)),
           ),
@@ -145,17 +157,74 @@ class _DefaultView extends StatelessWidget {
           OutlinedButton(
             onPressed: onOtherMethod,
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: Spacing.md),
+              minimumSize: const Size.fromHeight(52),
               foregroundColor: AppColors.standardPrimary,
+              side: const BorderSide(color: AppColors.standardPrimary),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.xlarge),
+              ),
             ),
             child: const Text('其他方式认证', style: TextStyle(fontSize: 16)),
           ),
           const Spacer(),
           // 页脚
-          const Center(
-            child: Text(
-              '浙里办 | 伴你一生大小事',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.sync, size: 16, color: AppColors.standardPrimary),
+              SizedBox(width: 4),
+              Text(
+                '浙里办  |  伴你一生大小事',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.standardPrimary,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: Spacing.lg),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── 人脸扫描框（蓝色四角 + 圆形头像）────────────────────────────────────────
+
+class _FaceScanFrame extends StatelessWidget {
+  const _FaceScanFrame();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 200,
+      height: 200,
+      child: Stack(
+        children: [
+          // 圆形头像
+          const Positioned.fill(
+            child: Center(child: _FaceAvatar()),
+          ),
+          // 四角蓝色 L 形
+          const Positioned(top: 0, left: 0, child: _CornerBracket()),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Transform.flip(flipX: true, child: const _CornerBracket()),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            child: Transform.flip(flipY: true, child: const _CornerBracket()),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Transform.flip(
+              flipX: true,
+              flipY: true,
+              child: const _CornerBracket(),
             ),
           ),
         ],
@@ -164,7 +233,60 @@ class _DefaultView extends StatelessWidget {
   }
 }
 
-// ─── 认证中子状态（Phase 3 实现动效，Phase 1 静态占位）──────────────────────
+class _FaceAvatar extends StatelessWidget {
+  const _FaceAvatar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 150,
+      height: 150,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: const Color(0xFFD6E8F8),
+        border: Border.all(color: const Color(0xFFCCCCCC)),
+      ),
+      child: const Icon(Icons.person, size: 80, color: Color(0xFF90AECB)),
+    );
+  }
+}
+
+class _CornerBracket extends StatelessWidget {
+  const _CornerBracket();
+
+  static const double _len = 24.0;
+  static const double _thick = 3.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _len,
+      height: _len,
+      child: Stack(
+        children: const [
+          Positioned(
+            top: 0,
+            left: 0,
+            child: ColoredBox(
+              color: AppColors.standardPrimary,
+              child: SizedBox(width: _len, height: _thick),
+            ),
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            child: ColoredBox(
+              color: AppColors.standardPrimary,
+              child: SizedBox(width: _thick, height: _len),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── 认证中子状态（Phase 3 实现动效，Phase 2 样式占位）──────────────────────
 
 class _AuthenticatingView extends StatelessWidget {
   final VoidCallback onComplete;
@@ -176,37 +298,78 @@ class _AuthenticatingView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(Spacing.lg),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 人脸框占位
-          Center(
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.face, size: 80, color: Colors.grey),
-            ),
-          ),
           const SizedBox(height: Spacing.xl),
           const Text(
-            '眨眼 / 摇头动画 — Phase 3 实现',
-            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            '拿起手机，眨眨眼',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: Spacing.xxl),
-          // Phase 1 模拟认证成功
+          Center(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // 浅蓝外环（Phase 3 替换为脉冲动效）
+                Container(
+                  width: 220,
+                  height: 220,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0x4D2D74DC), // standardPrimary @ 30%
+                      width: 6,
+                    ),
+                  ),
+                ),
+                // 人脸圆框
+                Container(
+                  width: 180,
+                  height: 180,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFD6E8F8),
+                  ),
+                  child: const Icon(
+                    Icons.face,
+                    size: 90,
+                    color: Color(0xFF90AECB),
+                  ),
+                ),
+                // 动作提示叠字
+                const Positioned(
+                  top: 30,
+                  child: Text(
+                    '眨眨眼',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Spacer(),
+          // Phase 3 自动跳转；Phase 2 暂留手动触发入口
           FilledButton(
             onPressed: onComplete,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.standardPrimary,
               padding: const EdgeInsets.symmetric(vertical: Spacing.md),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.xlarge),
+              ),
             ),
-            child: const Text('模拟认证成功 → 长辈版首页'),
+            child: const Text('进入下一步'),
           ),
+          const SizedBox(height: Spacing.lg),
         ],
       ),
     );
@@ -236,16 +399,39 @@ class _FaceAuthRequestContent extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: Spacing.md),
-        const Text(
-          '为保障您的账号隐私与信息安全，"浙里办"将获取您的人脸信息进行实人认证：\n\n请阅读并同意《人脸识别功能协议》',
-          style: TextStyle(fontSize: 14),
+        RichText(
+          text: const TextSpan(
+            style: TextStyle(
+              fontSize: AppFontSize.body,
+              color: AppColors.textPrimary,
+              height: 1.6,
+            ),
+            children: [
+              TextSpan(
+                text: '为保障您的账号隐私与信息安全，"浙里办"将获取您的人脸信息进行实人认证：\n\n请阅读并同意',
+              ),
+              TextSpan(
+                text: '《人脸识别功能协议》',
+                style: TextStyle(color: AppColors.standardPrimary),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: Spacing.xl),
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
+              child: ElevatedButton(
                 onPressed: onExit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade200,
+                  foregroundColor: AppColors.standardPrimary,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: Spacing.md),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.xlarge),
+                  ),
+                ),
                 child: const Text('退出'),
               ),
             ),
@@ -255,6 +441,10 @@ class _FaceAuthRequestContent extends StatelessWidget {
                 onPressed: onAgree,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.standardPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: Spacing.md),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.xlarge),
+                  ),
                 ),
                 child: const Text('同意并继续'),
               ),
@@ -285,7 +475,13 @@ class _OtherAuthContent extends StatelessWidget {
       children: [
         Row(
           children: [
-            TextButton(onPressed: onCancel, child: const Text('取消')),
+            TextButton(
+              onPressed: onCancel,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+              ),
+              child: const Text('取消'),
+            ),
             const Expanded(
               child: Text(
                 '其他认证方式',
@@ -293,7 +489,6 @@ class _OtherAuthContent extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            // 右侧占位，保持标题居中
             const SizedBox(width: 56),
           ],
         ),
@@ -309,7 +504,7 @@ class _OtherAuthContent extends StatelessWidget {
           leading: const Icon(Icons.lock_outline),
           title: const Text('密码登录'),
           trailing: const Icon(Icons.chevron_right),
-          onTap: null, // Phase 1 暂不联通
+          onTap: null,
         ),
       ],
     );

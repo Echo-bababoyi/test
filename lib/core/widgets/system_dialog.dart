@@ -46,6 +46,9 @@ class SystemDialog extends StatelessWidget {
                     Navigator.of(context).pop();
                     onDeny?.call();
                   },
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.standardPrimary,
+                  ),
                   child: Text(denyLabel),
                 ),
                 TextButton(
@@ -53,6 +56,9 @@ class SystemDialog extends StatelessWidget {
                     Navigator.of(context).pop();
                     onConfirm?.call();
                   },
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.standardPrimary,
+                  ),
                   child: Text(confirmLabel),
                 ),
               ],

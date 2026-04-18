@@ -15,22 +15,24 @@ class VerifyPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      backgroundColor: const Color(0xFFDEEAF8),
       appBar: AppBar(
-        foregroundColor: AppColors.textPrimary,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        foregroundColor: AppColors.textPrimary,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(Spacing.lg),
+        padding: const EdgeInsets.fromLTRB(
+          Spacing.lg, Spacing.lg, Spacing.lg, 0,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: Spacing.lg),
             // 标题
             const Text(
               '请输入验证码',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 28,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
@@ -42,24 +44,37 @@ class VerifyPage extends ConsumerWidget {
               style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
             const SizedBox(height: Spacing.xl),
-            // 6格 OTP 输入框（灰块占位）
+            // 6格 OTP 输入框
             const _OtpInputRow(),
             const SizedBox(height: Spacing.lg),
-            // 重新发送倒计时占位
-            const Center(
-              child: Text(
-                '重新发送 55秒',
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-              ),
+            // 重新发送倒计时
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.timer_outlined,
+                  size: 14,
+                  color: AppColors.textSecondary,
+                ),
+                SizedBox(width: 4),
+                Text(
+                  '重新发送 55秒',
+                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                ),
+              ],
             ),
             const SizedBox(height: Spacing.xl),
             // 确认按钮
             FilledButton(
               onPressed: () => _confirmSmsCode(context, ref),
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: Spacing.md),
+                backgroundColor: AppColors.standardPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.xlarge),
+                ),
               ),
-              child: const Text('确认', style: TextStyle(fontSize: 16)),
+              child: const Text('确认', style: TextStyle(fontSize: 18)),
             ),
           ],
         ),
@@ -67,7 +82,6 @@ class VerifyPage extends ConsumerWidget {
     );
   }
 
-  // 验证码确认 SystemDialog（阻塞式，自绘 Android 样式）
   void _confirmSmsCode(BuildContext context, WidgetRef ref) {
     SystemDialog.show(
       context,
@@ -83,7 +97,7 @@ class VerifyPage extends ConsumerWidget {
   }
 }
 
-// ─── 6格 OTP 输入行占位 ───────────────────────────────────────────────────────
+// ─── 6格 OTP 输入行 ───────────────────────────────────────────────────────────
 
 class _OtpInputRow extends StatelessWidget {
   const _OtpInputRow();
@@ -96,15 +110,26 @@ class _OtpInputRow extends StatelessWidget {
         for (int i = 0; i < 6; i++)
           Container(
             width: 44,
-            height: 52,
+            height: 54,
             decoration: BoxDecoration(
-              color: i == 0 ? Colors.white : Colors.grey[100],
+              color: i == 0 ? Colors.white : const Color(0xFFF0F5FF),
               border: Border.all(
-                color: i == 0 ? AppColors.standardPrimary : Colors.grey[300]!,
-                width: i == 0 ? 1.5 : 1,
+                color: i == 0
+                    ? AppColors.standardPrimary
+                    : const Color(0xFFDDDDDD),
+                width: i == 0 ? 1.5 : 1.0,
               ),
-              borderRadius: BorderRadius.circular(AppRadius.small),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
             ),
+            child: i == 0
+                ? const Center(
+                    child: SizedBox(
+                      width: 2,
+                      height: 20,
+                      child: ColoredBox(color: AppColors.standardPrimary),
+                    ),
+                  )
+                : null,
           ),
       ],
     );
