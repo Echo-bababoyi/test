@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/router/app_router.dart';
+import '../../core/state/app_state.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/theme/design_tokens.dart';
 import '../../core/widgets/in_app_overlay.dart';
 import '../../core/widgets/permission_flow_helper.dart';
@@ -61,10 +63,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     InAppOverlay.show<void>(
       context,
       child: _VoiceInputContent(
-        onMicTap: () async {
-          Navigator.of(context).pop();
-          final result = await ref.read(voiceInputServiceProvider).listen();
+        onResult: (result) async {
           if (!mounted) return;
+          Navigator.of(context).pop();
           _controller.text = result;
           _submitSearch(result);
         },
@@ -430,21 +431,31 @@ class _MicPermissionContent extends StatelessWidget {
         const SizedBox(height: Spacing.xl),
         Row(
           children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: onNotNow,
-                child: const Text('暂不开启'),
-              ),
-            ),
-            const SizedBox(width: Spacing.md),
-            Expanded(
-              child: FilledButton(
-                onPressed: onEnable,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.standardPrimary,
+            TextButton(
+              onPressed: onNotNow,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.lg,
+                  vertical: Spacing.md,
                 ),
-                child: const Text('去开启'),
               ),
+              child: const Text('暂不开启'),
+            ),
+            const Spacer(),
+            FilledButton(
+              onPressed: onEnable,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.standardPrimary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.xl,
+                  vertical: Spacing.md,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.xlarge),
+                ),
+              ),
+              child: const Text('去开启'),
             ),
           ],
         ),
@@ -455,17 +466,36 @@ class _MicPermissionContent extends StatelessWidget {
 
 // ─── I4：语音输入浮层内容（InAppOverlay，非阻塞）───────────────────────────
 
-class _VoiceInputContent extends StatelessWidget {
-  final VoidCallback onMicTap;
+class _VoiceInputContent extends ConsumerStatefulWidget {
+  final Future<void> Function(String) onResult;
   final VoidCallback onClose;
 
   const _VoiceInputContent({
-    required this.onMicTap,
+    required this.onResult,
     required this.onClose,
   });
 
   @override
+  ConsumerState<_VoiceInputContent> createState() => _VoiceInputContentState();
+}
+
+class _VoiceInputContentState extends ConsumerState<_VoiceInputContent> {
+  bool _listening = false;
+
+  Future<void> _onMicTap() async {
+    setState(() => _listening = true);
+    final result = await ref.read(voiceInputServiceProvider).listen();
+    if (!mounted) return;
+    widget.onResult(result);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final mode = ref.watch(modeProvider);
+    final micColor = mode == AppMode.elder
+        ? AppColors.elderPrimary
+        : AppColors.standardPrimary;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -473,31 +503,38 @@ class _VoiceInputContent extends StatelessWidget {
           alignment: Alignment.topRight,
           child: IconButton(
             icon: const Icon(Icons.close, color: Colors.grey),
-            onPressed: onClose,
+            onPressed: widget.onClose,
           ),
         ),
-        const Text(
-          '您可以这样说：',
-          style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w700),
+        Text(
+          _listening ? '正在听...' : '您可以这样说：',
+          style: const TextStyle(
+            fontSize: AppFontSize.subtitle,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const SizedBox(height: Spacing.md),
-        const Text(
-          '公积金查询、社保查询、预防接种',
-          style: TextStyle(fontSize: AppFontSize.bodyLarge, color: AppColors.textPrimary),
-        ),
+        if (!_listening)
+          const Text(
+            '公积金查询、社保查询、预防接种',
+            style: TextStyle(
+              fontSize: AppFontSize.bodyLarge,
+              color: AppColors.textPrimary,
+            ),
+          ),
         const SizedBox(height: Spacing.xl),
-        const Text(
+        Text(
           '按住话筒说话',
-          style: TextStyle(fontSize: AppFontSize.body, color: AppColors.elderPrimary),
+          style: TextStyle(fontSize: AppFontSize.body, color: micColor),
         ),
         const SizedBox(height: Spacing.md),
         GestureDetector(
-          onTap: onMicTap,
+          onTap: _listening ? null : _onMicTap,
           child: Container(
             width: 64,
             height: 64,
-            decoration: const BoxDecoration(
-              color: AppColors.elderPrimary,
+            decoration: BoxDecoration(
+              color: _listening ? micColor.withValues(alpha: 0.6) : micColor,
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.mic, color: Colors.white, size: 32),

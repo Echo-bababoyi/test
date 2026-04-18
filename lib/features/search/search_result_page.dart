@@ -301,7 +301,7 @@ class _ResultBody extends StatelessWidget {
               child: Text(
                 '查看更多搜索结果',
                 style: TextStyle(
-                    fontSize: 14, color: AppColors.standardPrimary),
+                    fontSize: 14, color: AppColors.textSecondary),
               ),
             ),
           ),
