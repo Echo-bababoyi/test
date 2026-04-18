@@ -13,7 +13,7 @@
 按 `docs/REPRODUCTION_PLAN.md` §五.4 分 5 批：
 
 - ✅ 批次 1：SplashPage + StandardHomePage 灰块线框（2026-04-18 用户验收通过）
-- 🧪 批次 2：ElderHomePage 骨架 + 立即登录弹窗（待用户验收）
+- ✅ 批次 2：ElderHomePage 回炉 + PersistentBanner 第三类 UI 元素（2026-04-18 用户 12 步验收通过，5 个事实错误全修）
 - 🔲 批次 3：LoginPage + FaceAuthPage 静态（含两类弹窗链路） ← **下一步**
 - 🔲 批次 4：SearchPage + SearchResultPage（query 路由参数 + 麦克风流程）
 - 🔲 批次 5：SocialInsurancePage + PensionQueryPage + MyPage
@@ -23,12 +23,13 @@
 
 - 🔲 `StandardHomePage._TopBarRow` 右侧加**通知铃铛**灰块占位（batch 1 reviewer 发现）
 
-### Phase 2 必修项（已登记，贴皮阶段必须做）
+### Phase 2 必修项（已登记，贴皮阶段必做）
 
-- 🔲 **ElderHomePage 结构重排**（architect batch 2 review 发现）：
-  - `_EldGovHotlineSection` 从各 Tab ScrollView 顶部移到 `AppBar.bottom`（只保留一份）
-  - TabBar 从 `AppBar.bottom` 移到 `Scaffold.body` 顶部（白色卡片容器内）
-  - 对齐截图的视觉分层：AppBar 含橙区 + 工具行 + 政务热线条；Body 顶是白色 TabBar 卡片 + TabBarView
+- 🔲 `_EldTabCardSection` IndexedStack 改用 `ListenableBuilder(listenable: tab)` 局部重建（当前 `_tab.addListener(setState)` 每帧全页重建，虽不影响正确性但开销冗余）
+- 🔲 `PersistentBanner.bannerButton` 在长辈模式下读 `modeProvider` 改用 `elderPrimary`（截图里长辈版 banner 按钮是橙色而非蓝色）
+- 🔲 Banner 文字颜色从 `Colors.white` 改为灰色（对齐截图）
+- 🔲 长辈版 AppBar「个人频道」pill 加刷新/同步图标（对齐截图）
+- 🔲 长辈版底部 FAB 颜色从 `Colors.grey[500]` 改为 `AppColors.elderPrimary`（对齐截图）
 
 ---
 
@@ -36,15 +37,7 @@
 
 <!-- 新记录插入最上方 -->
 
-- 🧪 **Phase 1 批次 2：ElderHomePage 骨架 + 立即登录弹窗**（2026-04-18）
-  - 改动：`lib/features/home/elder_home_page.dart`（全量重写 63→450+ 行）
-  - 3 Tab（热门服务 / 我的常用 / 我的订阅）+ 各 Tab 独立 `SingleChildScrollView`
-  - 热门服务 Tab 3 段拼接：`_EldHotServiceCardSection` / `_EldOnlineServiceSection` / `_EldOfflineAndFooterSection`
-  - 共用组件：`_EldGovHotlineSection` / `_EldToolBarItem` / `_EldServiceGridItem` / `_EldOfficeItem`
-  - 立即登录 InAppOverlay：严格按 §5.1 Q3 规范，`addPostFrameCallback` + `mounted` + `ref.read(loginProvider)` 一次性检查，切 Tab / 热重启不重复弹
-  - 底部导航 3 项（首页 / 搜索 / 我的，对照截图 frontend 主动纠正我 task 里说的 2 项）
-  - 质量：`flutter analyze` 0 issues / `flutter build web` 通过 / architect code review 通过
-  - 已知 Phase 2 必修项：TabBar 位置与政务热线条位置对调（见当前待办「Phase 2 必修项」）
+_（暂无——批次 2 已被打回，5 个事实错误详见当前待办「批次 2 回炉」）_
 
 ---
 
@@ -53,6 +46,18 @@
 <!-- 用户确认后从"已提交待验证"迁移到这里 -->
 
 ### Phase 1：主线黑白线框版
+
+#### 批次 2：ElderHomePage 回炉 + PersistentBanner（2026-04-18）
+
+- ✅ 新增第三类 UI 元素 `PersistentBanner`（常驻横条，非阻塞，× 关闭 session 内不重现，跨页共享 dismiss 态）
+- ✅ 立即登录从 InAppOverlay 升级为 PersistentBanner，标准版 + 长辈版都挂
+- ✅ ElderHomePage 结构大改：工具行 / 政务热线 / Tab 卡片 / 各常驻栏目按截图分层（工具行随滚、AppBar 固定只留地区+个人频道）
+- ✅ Tab 降级为 IndexedStack 嵌入式切换器，只影响"浙里医保"那一小块；其他区块全常驻
+- ✅ 长辈版底部导航改为 BottomAppBar + FAB centerDocked（中间大圆麦克风按钮跳 `/search`）
+- ✅ 删 ElderHomePage AppBar 右上搜索 icon
+- ✅ REPRODUCTION_PLAN §四 + §六 同步修订（PM 主笔）
+- ✅ 质量：`flutter analyze` 0 issues / `flutter build web` 通过 / architect code review 通过（1 处路由硬编码已修）/ reviewer 对照验收条通过 / 用户 12 步验收通过
+- 5 个 Phase 2 小修已登记到「当前待办 > Phase 2 必修项」
 
 #### 批次 1：SplashPage + StandardHomePage 灰块线框（2026-04-18）
 
@@ -79,13 +84,16 @@
 
 > 新记录插入最上方。完整 diff 看 `git log`；本区只概括每个 commit 做了什么。
 
-### 2026-04-18 · `<pending>` · feat(phase-1): 批次 2 — ElderHomePage 骨架 + 立即登录 InAppOverlay
-- `lib/features/home/elder_home_page.dart` 全量重写（63→450+ 行）
-- 架构：`AppBar(bottom: PreferredSize(Column[工具行, TabBar]))` + `TabBarView`（3 Tab）+ `BottomNavigationBar`（3 项）
-- 热门服务 Tab 拆 3 段：`_EldHotServiceCardSection` / `_EldOnlineServiceSection` / `_EldOfflineAndFooterSection`；共用 `_EldGovHotlineSection` / `_EldServiceGridItem` / `_EldOfficeItem`
-- 立即登录弹窗按 §5.1 Q3 实现（initState + addPostFrameCallback + 双重守卫，不用 ref.listen）
-- 底部导航 3 项（首页 / 搜索 / 我的），搜索与我的路由联通
-- architect review：✅ 通过；登记 Phase 2 必修项「TabBar 位置 + 政务热线条位置对调」到 TODO
+### 2026-04-18 · `<pending>` · feat(phase-1): 批次 2 回炉 — PersistentBanner + ElderHomePage 重构
+- **文档层（PM 主笔修订）：** `docs/REPRODUCTION_PLAN.md` §四 StandardHomePage 新增登录 Banner 验收条；§四 ElderHomePage 全节重写（AppBar 只留地区+个人频道、工具行移入 body、政务热线到 TabBar 上方独立白卡、Tab 只管紧邻一块、其他区块全常驻、底部导航改 3 项含中间大圆搜索）；§六 新增三类 UI 元素定义表（SystemDialog / InAppOverlay / PersistentBanner）+ 弹窗清单按类型重分组（S3 / I5 / P1）
+- **新建组件：** `lib/core/widgets/persistent_banner.dart`（第三类 UI 元素骨架：声明式 ConsumerWidget，读 `loginProvider` + `loginBannerDismissedProvider` 双条件控制显示；内含深色胶囊 + × 关闭 + "立即登录"按钮 → `AppRoutes.login`）
+- **新增状态：** `lib/core/state/app_state.dart` 加 `LoginBannerDismissedNotifier` + `loginBannerDismissedProvider`（Riverpod v3 无 StateProvider，用 NotifierProvider<bool>）
+- **设计 token：** `lib/core/theme/design_tokens.dart` 加 `AppColors.bannerBg` / `bannerButton`
+- **StandardHomePage：** 删 `_LoginPromptSection`，body 改 `Stack + Align(bottomCenter) PersistentBanner`
+- **ElderHomePage 整页重构：** 全量重写；AppBar 去搜索 icon；工具行 / 政务热线 / Tab 卡片 / 线上一站办 / 线下就近办 / 授权办 / 页脚 全部移入 body `SingleChildScrollView > Column`；Tab 内容走 `IndexedStack` 只包含"浙里医保"那一块；底部 `BottomAppBar + FAB.centerDocked`（麦克风大圆 → `/search`）；body `Stack + PersistentBanner`；彻底删除 `addPostFrameCallback + InAppOverlay.show + _LoginPromptContent`
+- 回炉背景：用户 12 步验收发现 5 个事实错误，这轮全部修复
+- architect review：⚠️→ ✅（1 处路由硬编码 `/login` 已改为 `AppRoutes.login`）
+- 顺带修：批次 1 提交记录的 `<pending>` 回填为 `4504f06`
 
 ### 2026-04-18 · `4504f06` · feat(phase-1): 批次 1 — SplashPage + StandardHomePage 灰块线框
 - `lib/features/splash/splash_page.dart`：`ConsumerWidget` → `StatefulWidget`，`initState` delay 1.5s 自动跳 `/home`，双重防护（`mounted` + `_navigated`）

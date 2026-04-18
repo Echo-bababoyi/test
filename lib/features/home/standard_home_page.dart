@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_router.dart';
 import '../../core/state/app_state.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/widgets/persistent_banner.dart';
 
 class StandardHomePage extends ConsumerWidget {
   const StandardHomePage({super.key});
@@ -11,24 +12,31 @@ class StandardHomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _HeroSection(
-              onElderEntryTap: () {
-                ref.read(modeProvider.notifier).toElder();
-                context.go(AppRoutes.elderHome);
-              },
-              onSearchTap: () => context.go(AppRoutes.search),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _HeroSection(
+                  onElderEntryTap: () {
+                    ref.read(modeProvider.notifier).toElder();
+                    context.go(AppRoutes.elderHome);
+                  },
+                  onSearchTap: () => context.go(AppRoutes.search),
+                ),
+                const _ServiceGridSection(),
+                const _NewsBarSection(),
+                const _HotServiceSection(),
+                const _DevNavSection(),
+              ],
             ),
-            const _ServiceGridSection(),
-            const _NewsBarSection(),
-            const _HotServiceSection(),
-            const _LoginPromptSection(),
-            const _DevNavSection(),
-          ],
-        ),
+          ),
+          const Align(
+            alignment: Alignment.bottomCenter,
+            child: PersistentBanner(),
+          ),
+        ],
       ),
       bottomNavigationBar: const _BottomNavBar(),
     );
@@ -295,41 +303,6 @@ class _HotServiceSection extends StatelessWidget {
             alignment: Alignment.center,
             child: const Text('热门服务卡片占位',
                 style: TextStyle(color: Colors.grey)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── 底部登录引导条（未登录时可见）────────────────────────────────────────────
-
-class _LoginPromptSection extends StatelessWidget {
-  const _LoginPromptSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(top: Spacing.xs),
-      padding: const EdgeInsets.symmetric(
-        horizontal: Spacing.lg, vertical: Spacing.md,
-      ),
-      color: Colors.grey[800],
-      child: Row(
-        children: [
-          const Expanded(
-            child: Text(
-              '登录浙里办，享受更多服务',
-              style: TextStyle(color: Colors.white, fontSize: 13),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Spacing.md, vertical: Spacing.sm,
-            ),
-            color: Colors.grey[600],
-            child: const Text('立即登录',
-                style: TextStyle(color: Colors.white, fontSize: 13)),
           ),
         ],
       ),

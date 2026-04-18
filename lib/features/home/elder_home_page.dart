@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/router/app_router.dart';
-import '../../core/state/app_state.dart';
 import '../../core/theme/design_tokens.dart';
-import '../../core/widgets/in_app_overlay.dart';
+import '../../core/widgets/persistent_banner.dart';
 
 class ElderHomePage extends ConsumerStatefulWidget {
   const ElderHomePage({super.key});
@@ -20,21 +19,8 @@ class _ElderHomePageState extends ConsumerState<ElderHomePage>
   @override
   void initState() {
     super.initState();
-    // §5.1 Q3：首帧完成后一次性检查登录态，不用 ref.listen 避免重复触发
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (!ref.read(loginProvider).isLoggedIn) {
-        InAppOverlay.show(
-          context,
-          child: _LoginPromptContent(
-            onLogin: () {
-              Navigator.of(context).pop();
-              context.go(AppRoutes.login);
-            },
-          ),
-        );
-      }
-    });
+    // 重建 IndexedStack 时跟随 tab 变化
+    _tab.addListener(() => setState(() {}));
   }
 
   @override
@@ -47,6 +33,7 @@ class _ElderHomePageState extends ConsumerState<ElderHomePage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      // ── AppBar：地区行 + 个人频道（这两项固定，不随滚动消失）──────────────
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: AppColors.elderPrimary,
@@ -58,9 +45,9 @@ class _ElderHomePageState extends ConsumerState<ElderHomePage>
           ],
         ),
         actions: [
-          // 个人频道占位
+          // 个人频道 pill
           Container(
-            margin: const EdgeInsets.only(right: Spacing.sm),
+            margin: const EdgeInsets.only(right: Spacing.lg),
             padding: const EdgeInsets.symmetric(
               horizontal: Spacing.sm, vertical: 4,
             ),
@@ -73,58 +60,90 @@ class _ElderHomePageState extends ConsumerState<ElderHomePage>
               style: TextStyle(color: Colors.white, fontSize: 12),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () => context.go(AppRoutes.search),
-          ),
         ],
-        // AppBar bottom：工具行 + TabBar 合并为 PreferredSize
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48.0 + kTextTabBarHeight),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 扫一扫 | 消息 | 常规版 工具行
-              SizedBox(
-                height: 48,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: const [
-                    _EldToolBarItem(label: '扫一扫'),
-                    _EldToolBarItem(label: '消息'),
-                    _EldToolBarItem(label: '常规版'),
-                  ],
-                ),
-              ),
-              TabBar(
-                controller: _tab,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white60,
-                indicatorColor: Colors.white,
-                tabs: const [
-                  Tab(text: '热门服务'),
-                  Tab(text: '我的常用'),
-                  Tab(text: '我的订阅'),
-                ],
-              ),
-            ],
-          ),
+      ),
+      // ── 中间大圆麦克风 FAB → /search ─────────────────────────────────────
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.go(AppRoutes.search),
+        backgroundColor: Colors.grey[500],
+        elevation: 2,
+        child: const Icon(Icons.mic, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      // ── BottomAppBar（配合 FAB 凹槽）─────────────────────────────────────
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 6,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _EldBottomNavItem(
+              icon: Icons.star,
+              label: '首页',
+              selected: true,
+              onTap: null, // 已在首页，保持不动
+            ),
+            const SizedBox(width: 64), // FAB 凹槽占位
+            _EldBottomNavItem(
+              icon: Icons.person,
+              label: '我的',
+              selected: false,
+              onTap: () => context.go(AppRoutes.my),
+            ),
+          ],
         ),
       ),
-      body: TabBarView(
-        controller: _tab,
-        children: const [
-          _HotServiceTab(),
-          _FavoritesTab(),
-          _SubscriptionTab(),
+      // ── body：滚动主体 + PersistentBanner 浮在底部 ───────────────────────
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 工具行随页面滚动（橙底延续 AppBar）
+                _EldToolBarSection(),
+                // 政务服务热线（白卡，常驻可见）
+                const _EldGovHotlineSection(),
+                // Tab 卡片（TabBar + IndexedStack，切 Tab 只变这块内容）
+                _EldTabCardSection(tab: _tab),
+                // 以下三块常驻，与 Tab 选择无关
+                const _EldOnlineServiceSection(),
+                const _EldOfflineServiceSection(),
+                const _EldAuthorizedServiceSection(),
+                const _EldFooterSection(),
+              ],
+            ),
+          ),
+          // 登录引导 Banner（未登录且未关闭时显示）
+          const Align(
+            alignment: Alignment.bottomCenter,
+            child: PersistentBanner(),
+          ),
         ],
       ),
-      bottomNavigationBar: const _ElderBottomNavBar(),
     );
   }
 }
 
-// ─── AppBar 工具栏小项（扫一扫 / 消息 / 常规版）────────────────────────────
+// ─── AppBar 工具行（扫一扫 / 消息 / 常规版，橙色背景延续）────────────────────
+
+class _EldToolBarSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.elderPrimary,
+      padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: const [
+          _EldToolBarItem(label: '扫一扫'),
+          _EldToolBarItem(label: '消息'),
+          _EldToolBarItem(label: '常规版'),
+        ],
+      ),
+    );
+  }
+}
 
 class _EldToolBarItem extends StatelessWidget {
   final String label;
@@ -132,18 +151,21 @@ class _EldToolBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(width: 24, height: 20, color: Colors.white24),
-        const SizedBox(height: 2),
-        Text(label, style: const TextStyle(color: Colors.white, fontSize: 11)),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 24, height: 20, color: Colors.white24),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+        ],
+      ),
     );
   }
 }
 
-// ─── 政务服务热线条（3 个 Tab 共用）─────────────────────────────────────────
+// ─── 政务服务热线条（常驻，白卡圆角）────────────────────────────────────────
 
 class _EldGovHotlineSection extends StatelessWidget {
   const _EldGovHotlineSection();
@@ -161,7 +183,7 @@ class _EldGovHotlineSection extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(width: 32, height: 32, color: Colors.grey[300]),
+          Container(width: 36, height: 36, color: Colors.grey[300]),
           const SizedBox(width: Spacing.md),
           const Expanded(
             child: Text('政务服务热线', style: TextStyle(fontSize: 16)),
@@ -182,72 +204,42 @@ class _EldGovHotlineSection extends StatelessWidget {
   }
 }
 
-// ─── 热门服务 Tab ─────────────────────────────────────────────────────────────
+// ─── Tab 卡片（TabBar + IndexedStack）────────────────────────────────────────
+// 只有这块随 Tab 切换而变化，其余区域常驻不动。
 
-class _HotServiceTab extends StatelessWidget {
-  const _HotServiceTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _EldGovHotlineSection(),
-          _EldHotServiceCardSection(),    // 段一：热门服务快捷卡片
-          _EldOnlineServiceSection(),     // 段二：线上一站办
-          _EldOfflineAndFooterSection(),  // 段三：线下就近办 + 授权办 + 页脚
-        ],
-      ),
-    );
-  }
-}
-
-// ─── 段一：热门服务快捷卡片（住址变动落户 + 权益记录查询）─────────────────────
-
-class _EldHotServiceCardSection extends StatelessWidget {
-  const _EldHotServiceCardSection();
-
-  static const _items = ['住址变动落户', '权益记录查询'];
+class _EldTabCardSection extends StatelessWidget {
+  final TabController tab;
+  const _EldTabCardSection({required this.tab});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: Spacing.md),
-      padding: const EdgeInsets.all(Spacing.md),
-      color: AppColors.surface,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.large),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              for (final label in _items) ...[
-                Expanded(
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 56, height: 56, color: Colors.grey[300],
-                      ),
-                      const SizedBox(height: Spacing.sm),
-                      Text(label, style: const TextStyle(fontSize: 14)),
-                    ],
-                  ),
-                ),
-              ],
+          TabBar(
+            controller: tab,
+            labelColor: AppColors.elderPrimary,
+            unselectedLabelColor: AppColors.textSecondary,
+            indicatorColor: AppColors.elderPrimary,
+            tabs: const [
+              Tab(text: '热门服务'),
+              Tab(text: '我的常用'),
+              Tab(text: '我的订阅'),
             ],
           ),
-          const SizedBox(height: Spacing.md),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.xl, vertical: Spacing.sm,
-              ),
-              color: Colors.grey[100],
-              child: const Text(
-                '查看全部 ›',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-            ),
+          IndexedStack(
+            index: tab.index,
+            children: const [
+              _EldHotContent(),
+              _EldFavoritesContent(),
+              _EldSubscriptionContent(),
+            ],
           ),
         ],
       ),
@@ -255,7 +247,110 @@ class _EldHotServiceCardSection extends StatelessWidget {
   }
 }
 
-// ─── 段二：线上一站办（2 × 3 格栅）──────────────────────────────────────────
+// Tab 内容：热门服务（住址变动落户 / 权益记录查询）
+class _EldHotContent extends StatelessWidget {
+  const _EldHotContent();
+
+  static const _items = ['住址变动落户', '权益记录查询'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(Spacing.md),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              for (final label in _items)
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(width: 56, height: 56, color: Colors.grey[200]),
+                      const SizedBox(height: Spacing.sm),
+                      Text(label, style: const TextStyle(fontSize: 14)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: Spacing.md),
+          const Text(
+            '查看全部 ›',
+            style: TextStyle(fontSize: 14, color: AppColors.elderPrimary),
+          ),
+          const SizedBox(height: Spacing.sm),
+        ],
+      ),
+    );
+  }
+}
+
+// Tab 内容：我的常用（浙里医保 / 社保查询）
+class _EldFavoritesContent extends StatelessWidget {
+  const _EldFavoritesContent();
+
+  static const _items = ['浙里医保', '社保查询'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(Spacing.md),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              for (final label in _items)
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(width: 56, height: 56, color: Colors.grey[200]),
+                      const SizedBox(height: Spacing.sm),
+                      Text(label, style: const TextStyle(fontSize: 14)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: Spacing.md),
+          const Text(
+            '查看全部 ›',
+            style: TextStyle(fontSize: 14, color: AppColors.elderPrimary),
+          ),
+          const SizedBox(height: Spacing.sm),
+        ],
+      ),
+    );
+  }
+}
+
+// Tab 内容：我的订阅（空状态）
+class _EldSubscriptionContent extends StatelessWidget {
+  const _EldSubscriptionContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: Spacing.xl, horizontal: Spacing.lg),
+      child: Column(
+        children: [
+          SizedBox(height: Spacing.lg),
+          Text(
+            '您还没有订阅任何服务',
+            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+          ),
+          SizedBox(height: Spacing.xl),
+          Text(
+            '查看全部 ›',
+            style: TextStyle(fontSize: 14, color: AppColors.elderPrimary),
+          ),
+          SizedBox(height: Spacing.sm),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── 线上一站办（常驻，2×3 格栅）────────────────────────────────────────────
 
 class _EldOnlineServiceSection extends StatelessWidget {
   const _EldOnlineServiceSection();
@@ -286,10 +381,9 @@ class _EldOnlineServiceSection extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: Spacing.md,
             crossAxisSpacing: Spacing.md,
-            childAspectRatio: 1.6,
+            childAspectRatio: 1.8,
             children: [
-              for (final label in _items)
-                _EldServiceGridItem(label: label),
+              for (final label in _items) _EldServiceGridItem(label: label),
             ],
           ),
         ],
@@ -297,6 +391,161 @@ class _EldOnlineServiceSection extends StatelessWidget {
     );
   }
 }
+
+// ─── 线下就近办（常驻）───────────────────────────────────────────────────────
+
+class _EldOfflineServiceSection extends StatelessWidget {
+  const _EldOfflineServiceSection();
+
+  static const _officeItems = [
+    '杭州市西湖区三墩镇…',
+    '杭州联合农村商业银…',
+    '杭州市西湖区三墩镇…',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: Spacing.md),
+      padding: const EdgeInsets.all(Spacing.lg),
+      color: AppColors.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '线下就近办',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: Spacing.md),
+          // 地图占位
+          Container(
+            height: 80,
+            color: Colors.grey[200],
+            alignment: Alignment.center,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.xl, vertical: Spacing.sm,
+              ),
+              color: Colors.grey[400],
+              child: const Text(
+                '从地图上查找更多大厅 ›',
+                style: TextStyle(fontSize: 13),
+              ),
+            ),
+          ),
+          const SizedBox(height: Spacing.sm),
+          const Text(
+            '附近有 37 家大厅',
+            style: TextStyle(fontSize: 13, color: Colors.grey),
+          ),
+          const SizedBox(height: Spacing.sm),
+          for (final name in _officeItems) ...[
+            _EldOfficeItem(name: name),
+            const Divider(height: 1),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─── 授权办（常驻，2×2 格栅）─────────────────────────────────────────────────
+
+class _EldAuthorizedServiceSection extends StatelessWidget {
+  const _EldAuthorizedServiceSection();
+
+  static const _items = [
+    '老年人优待证', '养老保险年限',
+    '高龄津贴', '法律援助申请',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: Spacing.md),
+      padding: const EdgeInsets.all(Spacing.lg),
+      color: AppColors.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '授权办',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: Spacing.md),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: Spacing.md,
+            crossAxisSpacing: Spacing.md,
+            childAspectRatio: 1.8,
+            children: [
+              for (final label in _items) _EldServiceGridItem(label: label),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── 页脚（常驻）─────────────────────────────────────────────────────────────
+
+class _EldFooterSection extends StatelessWidget {
+  const _EldFooterSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: Spacing.xl),
+      color: AppColors.surface,
+      alignment: Alignment.center,
+      child: const Text(
+        '浙里办伴你一生大小事',
+        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+      ),
+    );
+  }
+}
+
+// ─── 底部导航项（BottomAppBar 内使用）───────────────────────────────────────
+
+class _EldBottomNavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  const _EldBottomNavItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? AppColors.elderPrimary : Colors.grey;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.xl, vertical: Spacing.sm,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color),
+            Text(label, style: TextStyle(color: color, fontSize: 11)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── 共用服务格栅单元格 ────────────────────────────────────────────────────────
 
 class _EldServiceGridItem extends StatelessWidget {
   final String label;
@@ -319,107 +568,7 @@ class _EldServiceGridItem extends StatelessWidget {
   }
 }
 
-// ─── 段三：线下就近办 + 授权办 + 页脚 ────────────────────────────────────────
-
-class _EldOfflineAndFooterSection extends StatelessWidget {
-  const _EldOfflineAndFooterSection();
-
-  static const _officeItems = [
-    '杭州市西湖区三墩镇…',
-    '杭州联合农村商业银…',
-    '杭州市西湖区三墩镇…',
-  ];
-
-  static const _authItems = [
-    '老年人优待证', '养老保险年限',
-    '高龄津贴', '法律援助申请',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // 线下就近办
-        Container(
-          margin: const EdgeInsets.only(top: Spacing.md),
-          padding: const EdgeInsets.all(Spacing.lg),
-          color: AppColors.surface,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '线下就近办',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: Spacing.md),
-              // 地图占位
-              Container(
-                height: 80,
-                color: Colors.grey[200],
-                alignment: Alignment.center,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: Spacing.xl, vertical: Spacing.sm,
-                  ),
-                  color: Colors.grey[400],
-                  child: const Text('从地图上查找更多大厅 ›',
-                      style: TextStyle(fontSize: 13)),
-                ),
-              ),
-              const SizedBox(height: Spacing.sm),
-              const Text('附近有 37 家大厅',
-                  style: TextStyle(fontSize: 13, color: Colors.grey)),
-              const SizedBox(height: Spacing.sm),
-              for (final name in _officeItems) ...[
-                _EldOfficeItem(name: name),
-                const Divider(height: 1),
-              ],
-            ],
-          ),
-        ),
-        // 授权办
-        Container(
-          margin: const EdgeInsets.only(top: Spacing.md),
-          padding: const EdgeInsets.all(Spacing.lg),
-          color: AppColors.surface,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '授权办',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: Spacing.md),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: Spacing.md,
-                crossAxisSpacing: Spacing.md,
-                childAspectRatio: 1.6,
-                children: [
-                  for (final label in _authItems)
-                    _EldServiceGridItem(label: label),
-                ],
-              ),
-            ],
-          ),
-        ),
-        // 页脚
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: Spacing.xl),
-          color: AppColors.surface,
-          alignment: Alignment.center,
-          child: const Text(
-            '浙里办伴你一生大小事',
-            style: TextStyle(fontSize: 13, color: Colors.grey),
-          ),
-        ),
-      ],
-    );
-  }
-}
+// ─── 大厅列表条目 ──────────────────────────────────────────────────────────────
 
 class _EldOfficeItem extends StatelessWidget {
   final String name;
@@ -444,12 +593,16 @@ class _EldOfficeItem extends StatelessWidget {
                         horizontal: Spacing.sm, vertical: 2,
                       ),
                       color: Colors.grey[200],
-                      child: const Text('空闲',
-                          style: TextStyle(fontSize: 11, color: Colors.green)),
+                      child: const Text(
+                        '空闲',
+                        style: TextStyle(fontSize: 11, color: Colors.green),
+                      ),
                     ),
                     const SizedBox(width: Spacing.sm),
-                    const Text('距您1.5km',
-                        style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    const Text(
+                      '距您1.5km',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
                   ],
                 ),
               ],
@@ -464,164 +617,6 @@ class _EldOfficeItem extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ─── 我的常用 Tab ─────────────────────────────────────────────────────────────
-
-class _FavoritesTab extends StatelessWidget {
-  const _FavoritesTab();
-
-  static const _items = ['浙里医保', '社保查询'];
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const _EldGovHotlineSection(),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: Spacing.md),
-            padding: const EdgeInsets.all(Spacing.md),
-            color: AppColors.surface,
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    for (final label in _items) ...[
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 56, height: 56, color: Colors.grey[300],
-                            ),
-                            const SizedBox(height: Spacing.sm),
-                            Text(label, style: const TextStyle(fontSize: 14)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: Spacing.md),
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: Spacing.xl, vertical: Spacing.sm,
-                    ),
-                    color: Colors.grey[100],
-                    child: const Text(
-                      '查看全部 ›',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const _EldOnlineServiceSection(),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── 我的订阅 Tab ─────────────────────────────────────────────────────────────
-
-class _SubscriptionTab extends StatelessWidget {
-  const _SubscriptionTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const _EldGovHotlineSection(),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: Spacing.md),
-            padding: const EdgeInsets.all(Spacing.xl),
-            color: AppColors.surface,
-            child: Column(
-              children: [
-                const SizedBox(height: Spacing.xl),
-                const Text(
-                  '您还没有订阅任何服务',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-                const SizedBox(height: Spacing.xl),
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: Spacing.xl, vertical: Spacing.sm,
-                    ),
-                    color: Colors.grey[100],
-                    child: const Text(
-                      '查看全部 ›',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const _EldOnlineServiceSection(),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── 底部导航（首页 / 我的）────────────────────────────────────────────────────
-
-class _ElderBottomNavBar extends StatelessWidget {
-  const _ElderBottomNavBar();
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: 0,
-      selectedItemColor: AppColors.elderPrimary,
-      unselectedItemColor: Colors.grey,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.star), label: '首页'),
-        BottomNavigationBarItem(icon: Icon(Icons.mic), label: '搜索'),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: '我的'),
-      ],
-      onTap: (i) {
-        if (i == 1) context.go(AppRoutes.search);
-        if (i == 2) context.go(AppRoutes.my);
-      },
-    );
-  }
-}
-
-// ─── 立即登录 InAppOverlay 内容 ───────────────────────────────────────────────
-
-class _LoginPromptContent extends StatelessWidget {
-  final VoidCallback onLogin;
-  const _LoginPromptContent({required this.onLogin});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(
-          child: Text(
-            '登录享受更多服务',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-          ),
-        ),
-        FilledButton(
-          onPressed: onLogin,
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.elderPrimary,
-          ),
-          child: const Text('立即登录'),
-        ),
-      ],
     );
   }
 }

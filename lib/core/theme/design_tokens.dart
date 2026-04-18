@@ -18,6 +18,9 @@ class AppColors {
   static const Color textPrimary = Color(0xFF333333);
   static const Color textSecondary = Color(0xFF999999);
   static const Color divider = Color(0xFFE5E5E5);
+  // 登录引导 Banner
+  static const Color bannerBg = Color(0xFF333333);
+  static const Color bannerButton = Color(0xFF2D74DC); // 复用标准版蓝
 }
 
 class Spacing {

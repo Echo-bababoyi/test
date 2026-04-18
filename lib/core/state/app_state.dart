@@ -31,3 +31,14 @@ class ModeNotifier extends Notifier<AppMode> {
 }
 
 final modeProvider = NotifierProvider<ModeNotifier, AppMode>(ModeNotifier.new);
+
+/// ---- 登录引导 Banner 关闭状态（session 级，不随登出重置）----
+class LoginBannerDismissedNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+  void dismiss() => state = true;
+}
+
+final loginBannerDismissedProvider =
+    NotifierProvider<LoginBannerDismissedNotifier, bool>(
+        LoginBannerDismissedNotifier.new);
