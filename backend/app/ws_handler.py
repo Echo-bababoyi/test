@@ -4,11 +4,11 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from app.agent.agno_agent import hardcoded_dispatch
+from app.agent.agno_agent import dispatch
 from app.schemas import (
     AgentUtterance,
-    IntentProposal,
     IntentData,
+    IntentProposal,
     SessionControlIn,
     SessionControlOut,
     UserUtterance,
@@ -25,25 +25,30 @@ def _now() -> datetime:
 
 async def _handle_user_utterance(ws: WebSocket, msg: UserUtterance) -> None:
     sid = msg.session_id
-    result = hardcoded_dispatch(msg.text)
+    result = await dispatch(msg.text, sid)
 
-    if result is None:
+    tool_result: dict | None = result["tool_result"]
+    agent_text: str = result["agent_text"]
+
+    if tool_result is None:
+        # LLM 纯文本回复 or fallback 都没命中 → 发文本
+        fallback_text = agent_text or "我暂时听不懂，换种说法试试？"
         await ws.send_json(
             AgentUtterance(
                 session_id=sid,
                 ts=_now(),
-                text="我暂时听不懂，换种说法试试？",
+                text=fallback_text,
                 is_partial=False,
             ).model_dump(mode="json")
         )
         return
 
-    intent_type = result["intent_type"]
-    params = result["params"]
-    reason = result.get("reason", "")
+    intent_type = tool_result["intent_type"]
+    params = tool_result["params"]
+    reason = tool_result.get("reason", "")
 
     if intent_type == "ExplainTerm":
-        explanation = params.get("explanation", "")
+        explanation = params.get("explanation", agent_text or reason)
         await ws.send_json(
             AgentUtterance(
                 session_id=sid,
@@ -54,17 +59,17 @@ async def _handle_user_utterance(ws: WebSocket, msg: UserUtterance) -> None:
         )
         return
 
-    # NavigateTo / SwitchMode → 先说明，再发 intent_proposal
+    # NavigateTo / SwitchMode → agent_utterance 预告 + intent_proposal
+    announce = agent_text if agent_text else f"好的，{reason}，请点确认。"
     await ws.send_json(
         AgentUtterance(
             session_id=sid,
             ts=_now(),
-            text=f"好的，{reason}，请点确认。",
+            text=announce,
             is_partial=False,
         ).model_dump(mode="json")
     )
 
-    # path 提取出来，其余参数放 extra
     intent_data = IntentData(
         action=intent_type,
         path=params.get("path"),

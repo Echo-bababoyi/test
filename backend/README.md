@@ -55,14 +55,22 @@ backend/
 └── pyproject.toml
 ```
 
+## 环境变量
+
+| 变量 | 必填 | 说明 |
+|---|---|---|
+| `DEEPSEEK_API_KEY` | Step 4+ | DeepSeek-V3 API Key |
+| `USE_LLM` | 否 | `true`（默认）或 `false`（强制走硬编码规则） |
+| `CORS_ORIGINS` | 否 | 逗号分隔的前端 origin，默认含 localhost:5000/3000 |
+
 ## 阶段进度
 
 | Step | 状态 | 说明 |
 |---|---|---|
 | Step 1 | ✅ | FastAPI 骨架 + `/health` |
 | Step 2 | ✅ | WebSocket + schemas + echo |
-| Step 3 | 🔲 | Agno 硬编码规则 Agent |
-| Step 4 | 🔲 | 接 DeepSeek-V3 LLM |
+| Step 3 | ✅ | Agno 硬编码规则 Agent + 14 单元测试 |
+| Step 4 | ✅ | DeepSeek-V3 LLM + fallback + token 日志 |
 | Step 5 | 🔲 | 接百度 ASR |
 | Step 6 | 🔲 | 接讯飞 TTS |
 | Step 7 | 🔲 | CORS 精调 + 文档完善 |
