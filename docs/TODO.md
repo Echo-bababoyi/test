@@ -8,14 +8,16 @@
 
 ## 当前待办
 
-### Phase 1：主线黑白线框版（未开始）
+### Phase 1：主线黑白线框版（进行中）
 
-- 🔲 每个页面按截图拆出"语义区块"（Header / 服务网格 / 轮播 / 卡片 / 底部导航）用灰块占位
-- 🔲 端到端主线跑通：启动 → 标准首页 → 长辈首页 → 登录全链路 → 搜索医保缴费 → 社保服务页
-- 🔲 搜索结果页按关键词分流（医保缴费 vs 养老金查询）
-- 🔲 底部导航联通：首页/我的在长辈版下正常切换
-- 🔲 长辈首页 3 个 Tab 下的"占位卡片"按截图区块规划（具体图标/配色 Phase 2 做）
-- 🔲 Phase 1 验收：主线能点通、弹窗分类正确、黑白线框视觉统一
+按 `docs/REPRODUCTION_PLAN.md` §五.4 分 5 批：
+
+- 🧪 **批次 1：SplashPage + StandardHomePage** 灰块线框（待用户验收）
+- 🔲 批次 2：ElderHomePage 骨架 + 立即登录弹窗（3 Tab + 滚动 + InAppOverlay）
+- 🔲 批次 3：LoginPage + FaceAuthPage 静态（含两类弹窗链路）
+- 🔲 批次 4：SearchPage + SearchResultPage（query 路由参数 + 麦克风流程）
+- 🔲 批次 5：SocialInsurancePage + PensionQueryPage + MyPage
+- 🔲 Phase 1 终验收：主线能点通、弹窗分类正确、黑白线框视觉统一
 
 ---
 
@@ -23,7 +25,19 @@
 
 <!-- 新记录插入最上方 -->
 
-_（暂无）_
+- 🧪 **Phase 1 批次 1：SplashPage + StandardHomePage**（2026-04-18）
+  - 改动：`lib/features/splash/splash_page.dart` / `lib/features/home/standard_home_page.dart`
+  - SplashPage：StatefulWidget + `initState` delay 1500ms + `mounted && !_navigated` 双重防护跳转 `/home`
+  - StandardHomePage：6 个语义 Section（`_HeroSection` / `_ServiceGridSection` / `_NewsBarSection` / `_HotServiceSection` / `_LoginPromptSection` / `_DevNavSection`）+ `_BottomNavBar`
+  - frontend 自验 + architect review 双通过（`flutter analyze` 0 issues / `flutter build web` 通过）
+  - **测试方法**（浏览器）：
+    1. 终端跑 `./bin/flutter build web && python3 -m http.server 8080 --directory build/web --bind 0.0.0.0`
+    2. 浏览器开 `http://localhost:8080/`
+    3. 启动页自动过 ~1.5 秒跳到标准首页（不用点按钮）
+    4. 标准首页：蓝色 Hero 区（logo + 快捷操作 + Banner + 搜索框）、2×4 服务网格、最新消息条、热门服务区、登录引导、开发导航面板、底部 5 Tab
+    5. 点「长辈版」快捷按钮 → 主题变橙 + 跳 ElderHomePage
+    6. 点搜索框 → 跳 SearchPage
+    7. 点开发导航面板任一条 → 能跳到对应页
 
 ---
 
@@ -48,6 +62,12 @@ _（暂无）_
 ## 提交记录
 
 > 新记录插入最上方。完整 diff 看 `git log`；本区只概括每个 commit 做了什么。
+
+### 2026-04-18 · `<pending>` · feat(phase-1): 批次 1 — SplashPage + StandardHomePage 灰块线框
+- `lib/features/splash/splash_page.dart`：`ConsumerWidget` → `StatefulWidget`，`initState` delay 1.5s 自动跳 `/home`，双重防护（`mounted` + `_navigated`）
+- `lib/features/home/standard_home_page.dart`：拆 6 个语义 Section（Hero / ServiceGrid / NewsBar / HotService / LoginPrompt / DevNav）+ `_BottomNavBar`；Hero 区蓝底含顶栏 logo 占位、3 快捷操作（含「长辈版」入口）、Banner 占位、搜索框；服务网格 2×4；保留 `_DevNavSection` 开发导航面板（Phase 2 删）
+- frontend 自验 + architect review 双通过
+- Phase 1 分 5 批实施计划同步落入 `docs/TODO.md`
 
 ### 2026-04-18 · `3dc1d9e` · docs: Phase 1-4 完美复刻计划（PM 主笔 + architect 技术章节）
 - 新增 `docs/REPRODUCTION_PLAN.md`（443 行）——团队产出的完美复刻计划
