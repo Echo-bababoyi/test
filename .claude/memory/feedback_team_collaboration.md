@@ -11,6 +11,13 @@ type: feedback
 **Why:** 读 persona 文件只是信息加载，不等于启动团队协作模式。角色扮演一人分饰多角会混淆上下文、无法并行、也拿不到 Team 工具链的分发能力。
 **How to apply:** 听到任何"团队"相关指令，使用 TeamCreate + Agent(team_name=...) 流程，每个成员加载对应 persona 文件。
 
+## 团队成员模型默认用 Sonnet
+
+启动团队时，5 个成员（PM / architect / frontend / backend / reviewer）默认使用 `sonnet` 模型，而不是 opus。team-lead（主对话）保持当前模型（通常是 opus）做协调。
+
+**Why:** 成员执行的是具体编码/审查/文档任务，sonnet 速度更快、足够胜任；opus 留给 team-lead 做复杂的任务拆分与方案权衡。全员用 opus 成本与延迟都翻倍。
+**How to apply:** 调 Agent 工具 spawn 成员时显式传 `model: "sonnet"`。遇到成员搞不定的高难度问题再单独升级。
+
 ## 团队结构
 
 固定 5 人：**PM / architect / frontend / backend / reviewer**，各有明确职责边界。
