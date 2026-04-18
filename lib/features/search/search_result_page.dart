@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/design_tokens.dart';
 import 'suggestion_list.dart';
 
-class SearchResultPage extends ConsumerStatefulWidget {
+class SearchResultPage extends StatefulWidget {
   const SearchResultPage({super.key});
 
   @override
-  ConsumerState<SearchResultPage> createState() => _SearchResultPageState();
+  State<SearchResultPage> createState() => _SearchResultPageState();
 }
 
-class _SearchResultPageState extends ConsumerState<SearchResultPage> {
+class _SearchResultPageState extends State<SearchResultPage> {
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
   bool _isEditing = false;
@@ -99,7 +98,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                 ),
               )
             else ...[
-              _ResultTabRow(),
+              const _ResultTabRow(),
               const Divider(height: 1),
               Expanded(child: _ResultBody(query: q)),
             ],
@@ -212,6 +211,8 @@ class _ResultTopBar extends StatelessWidget {
 // ─── 综合 / 服务 / 办事 / 政策 tab 行（静态）────────────────────────────────
 
 class _ResultTabRow extends StatelessWidget {
+  const _ResultTabRow();
+
   @override
   Widget build(BuildContext context) {
     return Padding(

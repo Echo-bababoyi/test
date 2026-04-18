@@ -17,13 +17,6 @@ class _ElderHomePageState extends ConsumerState<ElderHomePage>
   late final TabController _tab = TabController(length: 3, vsync: this);
 
   @override
-  void initState() {
-    super.initState();
-    // 重建 IndexedStack 时跟随 tab 变化
-    _tab.addListener(() => setState(() {}));
-  }
-
-  @override
   void dispose() {
     _tab.dispose();
     super.dispose();
@@ -101,7 +94,7 @@ class _ElderHomePageState extends ConsumerState<ElderHomePage>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // 工具行随页面滚动（橙底延续 AppBar）
-                _EldToolBarSection(),
+                const _EldToolBarSection(),
                 // 政务服务热线（白卡，常驻可见）
                 const _EldGovHotlineSection(),
                 // Tab 卡片（TabBar + IndexedStack，切 Tab 只变这块内容）
@@ -128,6 +121,8 @@ class _ElderHomePageState extends ConsumerState<ElderHomePage>
 // ─── AppBar 工具行（扫一扫 / 消息 / 常规版，橙色背景延续）────────────────────
 
 class _EldToolBarSection extends StatelessWidget {
+  const _EldToolBarSection();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -233,13 +228,16 @@ class _EldTabCardSection extends StatelessWidget {
               Tab(text: '我的订阅'),
             ],
           ),
-          IndexedStack(
-            index: tab.index,
-            children: const [
-              _EldHotContent(),
-              _EldFavoritesContent(),
-              _EldSubscriptionContent(),
-            ],
+          ListenableBuilder(
+            listenable: tab,
+            builder: (context, _) => IndexedStack(
+              index: tab.index,
+              children: const [
+                _EldHotContent(),
+                _EldFavoritesContent(),
+                _EldSubscriptionContent(),
+              ],
+            ),
           ),
         ],
       ),

@@ -5,7 +5,7 @@ import '../../core/router/app_router.dart';
 import '../../core/state/app_state.dart';
 import '../../core/theme/design_tokens.dart';
 import '../../core/widgets/in_app_overlay.dart';
-import '../../core/widgets/system_dialog.dart';
+import '../../core/widgets/permission_flow_helper.dart';
 
 class FaceAuthPage extends ConsumerStatefulWidget {
   const FaceAuthPage({super.key});
@@ -36,33 +36,19 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
     );
   }
 
-  // 请求刷脸认证 InAppOverlay（非阻塞）
+  // I2+S1：三段式摄像头权限请求（InAppOverlay → SystemDialog → 认证中子状态）
   void _showFaceAuthOverlay(BuildContext context) {
-    InAppOverlay.show<void>(
-      context,
-      child: _FaceAuthRequestContent(
-        onAgree: () {
-          Navigator.of(context).pop();
-          _showCameraSystemDialog(context);
-        },
+    PermissionFlowHelper.request(
+      context: context,
+      guideContentBuilder: (onProceed) => _FaceAuthRequestContent(
+        onAgree: onProceed,
         onExit: () => Navigator.of(context).pop(),
       ),
-    );
-  }
-
-  // 摄像头权限 SystemDialog（阻塞式，自绘 Android 样式）
-  void _showCameraSystemDialog(BuildContext context) {
-    SystemDialog.show(
-      context,
-      title: '"浙里办"请求使用摄像头',
-      message: '用于进行刷脸身份验证',
-      confirmLabel: '使用应用时允许',
-      denyLabel: '禁止',
-      onConfirm: () {
-        // 允许 → 切换到认证中子状态，不跳路由
-        setState(() => _isAuthenticating = true);
-      },
-      // 拒绝 → 弹窗关闭，留在默认状态（onDeny = null 即可）
+      systemTitle: '"浙里办"请求使用摄像头',
+      systemMessage: '用于进行刷脸身份验证',
+      systemConfirmLabel: '使用应用时允许',
+      systemDenyLabel: '禁止',
+      onGranted: () => setState(() => _isAuthenticating = true),
     );
   }
 

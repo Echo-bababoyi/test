@@ -65,15 +65,15 @@ class MyPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _MyHeaderSection(login: login),
-                _MyActivitySection(),
+                const _MyActivitySection(),
                 const SizedBox(height: Spacing.sm),
-                _MyCertSection(),
+                const _MyCertSection(),
                 _MyInfoSection(),
                 const SizedBox(height: Spacing.sm),
-                _MyManagementSection(),
+                const _MyManagementSection(),
                 const SizedBox(height: Spacing.sm),
-                _MyRecommendSection(),
-                _MySettingsSection(),
+                const _MyRecommendSection(),
+                const _MySettingsSection(),
               ],
             ),
           ),
@@ -230,6 +230,8 @@ class _MyHeaderSection extends StatelessWidget {
 // ─── 活动记录 2-col 图标区 ─────────────────────────────────────────────────────
 
 class _MyActivitySection extends StatelessWidget {
+  const _MyActivitySection();
+
   static const _items = [
     (Icons.work_outline, '办事记录'),
     (Icons.edit_note_outlined, '我的草稿'),
@@ -307,6 +309,8 @@ class _ActivityIcon extends StatelessWidget {
 // ─── 我的证照（横向滑动卡片）────────────────────────────────────────────────────
 
 class _MyCertSection extends StatelessWidget {
+  const _MyCertSection();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -507,6 +511,8 @@ class _InfoIcon extends StatelessWidget {
 // ─── 我的管理（2+1 图标区）────────────────────────────────────────────────────
 
 class _MyManagementSection extends StatelessWidget {
+  const _MyManagementSection();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -577,6 +583,8 @@ class _ManageIcon extends StatelessWidget {
 // ─── 服务推荐（2×2 图标网格）─────────────────────────────────────────────────
 
 class _MyRecommendSection extends StatelessWidget {
+  const _MyRecommendSection();
+
   static const _items = [
     (Icons.shield_outlined, '社保医保税...'),
     (Icons.manage_search, '社保查询'),
@@ -668,6 +676,8 @@ class _RecommendIcon extends StatelessWidget {
 // ─── 设置区（ListTile 两项）───────────────────────────────────────────────────
 
 class _MySettingsSection extends StatelessWidget {
+  const _MySettingsSection();
+
   @override
   Widget build(BuildContext context) {
     return Container(

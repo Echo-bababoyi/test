@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/design_tokens.dart';
 import '../../core/widgets/in_app_overlay.dart';
-import '../../core/widgets/system_dialog.dart';
+import '../../core/widgets/permission_flow_helper.dart';
 import '../../services/voice_input_service.dart';
 import 'suggestion_list.dart';
 
@@ -40,29 +40,19 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     context.push('${AppRoutes.searchResult}?q=${Uri.encodeComponent(trimmed)}');
   }
 
-  // I3：应用内浮层 — 麦克风权限引导（非阻塞）
+  // I3+S3：三段式麦克风权限请求（InAppOverlay → SystemDialog → I4）
   void _showMicPermissionOverlay() {
-    InAppOverlay.show<void>(
-      context,
-      child: _MicPermissionContent(
+    PermissionFlowHelper.request(
+      context: context,
+      guideContentBuilder: (onProceed) => _MicPermissionContent(
         onNotNow: () => Navigator.of(context).pop(),
-        onEnable: () {
-          Navigator.of(context).pop();
-          _showMicSystemDialog();
-        },
+        onEnable: onProceed,
       ),
-    );
-  }
-
-  // S3：系统弹窗 — 麦克风权限（阻塞式）
-  void _showMicSystemDialog() {
-    SystemDialog.show(
-      context,
-      title: '"浙里办"请求使用麦克风',
-      message: '用于通过麦克风实现语音搜索等功能',
-      confirmLabel: '使用应用时允许',
-      denyLabel: '禁止',
-      onConfirm: _showVoiceInputOverlay,
+      systemTitle: '"浙里办"请求使用麦克风',
+      systemMessage: '用于通过麦克风实现语音搜索等功能',
+      systemConfirmLabel: '使用应用时允许',
+      systemDenyLabel: '禁止',
+      onGranted: _showVoiceInputOverlay,
     );
   }
 
