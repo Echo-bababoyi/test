@@ -21,6 +21,8 @@ class AppColors {
   // 登录引导 Banner
   static const Color bannerBg = Color(0xFF333333);
   static const Color bannerButton = Color(0xFF2D74DC); // 复用标准版蓝
+  // PhoneFrame 外框背景
+  static const Color phoneBg = Color(0xFF1E1E1E);
 }
 
 class Spacing {
@@ -29,11 +31,14 @@ class Spacing {
   static const double md = 12;
   static const double lg = 16;
   static const double xl = 24;
+  static const double lgPlus = 20; // lg 和 xl 之间的过渡尺寸
   static const double xxl = 32;
 }
 
 class AppFontSize {
+  static const double tiny = 11;
   static const double small = 12;
+  static const double caption = 13;
   static const double body = 14;
   static const double bodyLarge = 16;
   static const double subtitle = 18;
@@ -50,4 +55,5 @@ class AppRadius {
   static const double medium = 8;
   static const double large = 12;
   static const double xlarge = 16;
+  static const double phone = 24;
 }

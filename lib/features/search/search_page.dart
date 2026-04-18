@@ -148,7 +148,7 @@ class _SearchBar extends StatelessWidget {
             children: const [
               Text(
                 '西湖区',
-                style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                style: TextStyle(fontSize: AppFontSize.body, color: AppColors.textPrimary),
               ),
               Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textPrimary),
             ],
@@ -235,7 +235,7 @@ class _DefaultBody extends StatelessWidget {
         children: [
           const Text(
             '我的常用',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: Spacing.md),
           Row(
@@ -243,7 +243,7 @@ class _DefaultBody extends StatelessWidget {
               Expanded(
                 child: _QuickItem(
                   icon: Icons.health_and_safety_outlined,
-                  iconColor: Color(0xFF2D74DC),
+                  iconColor: AppColors.standardPrimary,
                   label: '浙里医保',
                 ),
               ),
@@ -251,7 +251,7 @@ class _DefaultBody extends StatelessWidget {
               Expanded(
                 child: _QuickItem(
                   icon: Icons.manage_search,
-                  iconColor: Color(0xFF2D74DC),
+                  iconColor: AppColors.standardPrimary,
                   label: '社保查询',
                 ),
               ),
@@ -263,7 +263,7 @@ class _DefaultBody extends StatelessWidget {
               Expanded(
                 child: _QuickItem(
                   icon: Icons.home_work_outlined,
-                  iconColor: Color(0xFF2D74DC),
+                  iconColor: AppColors.standardPrimary,
                   label: '住房公积金',
                 ),
               ),
@@ -271,7 +271,7 @@ class _DefaultBody extends StatelessWidget {
               Expanded(
                 child: _QuickItem(
                   icon: Icons.print_outlined,
-                  iconColor: Color(0xFFFF6D00),
+                  iconColor: AppColors.elderPrimary,
                   label: '社保证明...',
                 ),
               ),
@@ -283,7 +283,7 @@ class _DefaultBody extends StatelessWidget {
             children: [
               const Text(
                 '最近搜索',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w700),
               ),
               OutlinedButton(
                 onPressed: null,
@@ -298,7 +298,7 @@ class _DefaultBody extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-                child: const Text('清空', style: TextStyle(fontSize: 13)),
+                child: const Text('清空', style: TextStyle(fontSize: AppFontSize.caption)),
               ),
             ],
           ),
@@ -313,7 +313,7 @@ class _DefaultBody extends StatelessWidget {
           const SizedBox(height: Spacing.xl),
           const Text(
             '为你推荐',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: Spacing.md),
           Wrap(
@@ -368,7 +368,7 @@ class _QuickItem extends StatelessWidget {
         const SizedBox(width: Spacing.sm),
         Text(
           label,
-          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+          style: const TextStyle(fontSize: AppFontSize.body, color: AppColors.textPrimary),
         ),
       ],
     );
@@ -387,7 +387,7 @@ class _RecentPill extends StatelessWidget {
         color: Colors.grey[100],
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(label, style: const TextStyle(fontSize: 14)),
+      child: Text(label, style: const TextStyle(fontSize: AppFontSize.body)),
     );
   }
 }
@@ -404,7 +404,7 @@ class _RecommendPill extends StatelessWidget {
         color: Colors.grey[100],
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(label, style: const TextStyle(fontSize: 13)),
+      child: Text(label, style: const TextStyle(fontSize: AppFontSize.caption)),
     );
   }
 }
@@ -428,13 +428,13 @@ class _MicPermissionContent extends StatelessWidget {
       children: [
         const Text(
           '浙里办需要获取麦克风权限',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          style: TextStyle(fontSize: AppFontSize.title, fontWeight: FontWeight.w700),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: Spacing.md),
         const Text(
           '开启麦克风权限，浙里办可以为您提供通过麦克风实现语音搜索等功能',
-          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: AppFontSize.body, color: AppColors.textSecondary),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: Spacing.xl),
@@ -488,17 +488,17 @@ class _VoiceInputContent extends StatelessWidget {
         ),
         const Text(
           '您可以这样说：',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: Spacing.md),
         const Text(
           '公积金查询、社保查询、预防接种',
-          style: TextStyle(fontSize: 16, color: AppColors.textPrimary),
+          style: TextStyle(fontSize: AppFontSize.bodyLarge, color: AppColors.textPrimary),
         ),
         const SizedBox(height: Spacing.xl),
         const Text(
           '按住话筒说话',
-          style: TextStyle(fontSize: 14, color: AppColors.elderPrimary),
+          style: TextStyle(fontSize: AppFontSize.body, color: AppColors.elderPrimary),
         ),
         const SizedBox(height: Spacing.md),
         GestureDetector(

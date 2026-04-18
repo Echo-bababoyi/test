@@ -12,7 +12,7 @@ class PhoneFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: const Color(0xFF1E1E1E),
+      color: AppColors.phoneBg,
       child: Center(
         child: FittedBox(
           fit: BoxFit.contain,
@@ -20,7 +20,7 @@ class PhoneFrame extends StatelessWidget {
             width: DesignSize.width,
             height: DesignSize.height,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(AppRadius.phone),
               child: child,
             ),
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/design_tokens.dart';
 
 /// 应用内浮层（非阻塞）：底部出现，可点击蒙层或手势下滑关闭。
 /// 在代码里与 SystemDialog **物理分开**，不共用基类。
@@ -12,9 +13,9 @@ class InAppOverlay extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xlarge)),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(Spacing.lg),
       child: SafeArea(top: false, child: child),
     );
   }

@@ -135,7 +135,7 @@ class _QuickActionItem extends StatelessWidget {
           const SizedBox(height: Spacing.xs),
           Text(
             label,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+            style: const TextStyle(color: Colors.white, fontSize: AppFontSize.small),
           ),
         ],
       ),
@@ -186,7 +186,7 @@ class _SearchBarRow extends StatelessWidget {
               ),
               color: AppColors.standardPrimary,
               child: const Text('搜索',
-                  style: TextStyle(color: Colors.white, fontSize: 12)),
+                  style: TextStyle(color: Colors.white, fontSize: AppFontSize.small)),
             ),
           ],
         ),
@@ -238,7 +238,7 @@ class _ServiceGridItem extends StatelessWidget {
         Container(width: 48, height: 48, color: Colors.grey[300]),
         const SizedBox(height: Spacing.xs),
         Text(label,
-            style: const TextStyle(fontSize: 11),
+            style: const TextStyle(fontSize: AppFontSize.tiny),
             textAlign: TextAlign.center),
       ],
     );
@@ -265,12 +265,12 @@ class _NewsBarSection extends StatelessWidget {
               horizontal: Spacing.sm, vertical: 2,
             ),
             color: Colors.grey[300],
-            child: const Text('最新消息', style: TextStyle(fontSize: 11)),
+            child: const Text('最新消息', style: TextStyle(fontSize: AppFontSize.tiny)),
           ),
           const SizedBox(width: Spacing.sm),
           const Expanded(
             child: Text('请您登录后查看最新消息',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                style: TextStyle(fontSize: AppFontSize.small, color: Colors.grey),
                 overflow: TextOverflow.ellipsis),
           ),
           const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
@@ -295,7 +295,7 @@ class _HotServiceSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('热门服务',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              style: TextStyle(fontSize: AppFontSize.bodyLarge, fontWeight: FontWeight.w600)),
           const SizedBox(height: Spacing.md),
           Container(
             height: 80,
@@ -353,7 +353,7 @@ class _DevNavSection extends StatelessWidget {
             ),
             child: Text(
               '🔧 Phase 0 开发导航面板（Phase 2 删除）',
-              style: TextStyle(fontSize: 11, color: Colors.grey),
+              style: TextStyle(fontSize: AppFontSize.tiny, color: Colors.grey),
             ),
           ),
           ListView(
@@ -365,7 +365,7 @@ class _DevNavSection extends StatelessWidget {
                   dense: true,
                   title: Text(label),
                   subtitle: Text(path,
-                      style: const TextStyle(fontSize: 11)),
+                      style: const TextStyle(fontSize: AppFontSize.tiny)),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.go(path),
                 ),

@@ -57,7 +57,7 @@ class _ElderHomePageState extends ConsumerState<ElderHomePage>
             ),
             child: const Text(
               '个人频道',
-              style: TextStyle(color: Colors.white, fontSize: 12),
+              style: TextStyle(color: Colors.white, fontSize: AppFontSize.small),
             ),
           ),
         ],
@@ -158,7 +158,7 @@ class _EldToolBarItem extends StatelessWidget {
         children: [
           Container(width: 24, height: 20, color: Colors.white24),
           const SizedBox(height: 2),
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+          Text(label, style: const TextStyle(color: Colors.white, fontSize: AppFontSize.small)),
         ],
       ),
     );
@@ -186,7 +186,7 @@ class _EldGovHotlineSection extends StatelessWidget {
           Container(width: 36, height: 36, color: Colors.grey[300]),
           const SizedBox(width: Spacing.md),
           const Expanded(
-            child: Text('政务服务热线', style: TextStyle(fontSize: 16)),
+            child: Text('政务服务热线', style: TextStyle(fontSize: AppFontSize.bodyLarge)),
           ),
           Container(
             padding: const EdgeInsets.symmetric(
@@ -196,7 +196,7 @@ class _EldGovHotlineSection extends StatelessWidget {
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(AppRadius.xlarge),
             ),
-            child: const Text('去拨打', style: TextStyle(fontSize: 13)),
+            child: const Text('去拨打', style: TextStyle(fontSize: AppFontSize.caption)),
           ),
         ],
       ),
@@ -267,7 +267,7 @@ class _EldHotContent extends StatelessWidget {
                     children: [
                       Container(width: 56, height: 56, color: Colors.grey[200]),
                       const SizedBox(height: Spacing.sm),
-                      Text(label, style: const TextStyle(fontSize: 14)),
+                      Text(label, style: const TextStyle(fontSize: AppFontSize.body)),
                     ],
                   ),
                 ),
@@ -276,7 +276,7 @@ class _EldHotContent extends StatelessWidget {
           const SizedBox(height: Spacing.md),
           const Text(
             '查看全部 ›',
-            style: TextStyle(fontSize: 14, color: AppColors.elderPrimary),
+            style: TextStyle(fontSize: AppFontSize.body, color: AppColors.elderPrimary),
           ),
           const SizedBox(height: Spacing.sm),
         ],
@@ -305,7 +305,7 @@ class _EldFavoritesContent extends StatelessWidget {
                     children: [
                       Container(width: 56, height: 56, color: Colors.grey[200]),
                       const SizedBox(height: Spacing.sm),
-                      Text(label, style: const TextStyle(fontSize: 14)),
+                      Text(label, style: const TextStyle(fontSize: AppFontSize.body)),
                     ],
                   ),
                 ),
@@ -314,7 +314,7 @@ class _EldFavoritesContent extends StatelessWidget {
           const SizedBox(height: Spacing.md),
           const Text(
             '查看全部 ›',
-            style: TextStyle(fontSize: 14, color: AppColors.elderPrimary),
+            style: TextStyle(fontSize: AppFontSize.body, color: AppColors.elderPrimary),
           ),
           const SizedBox(height: Spacing.sm),
         ],
@@ -336,12 +336,12 @@ class _EldSubscriptionContent extends StatelessWidget {
           SizedBox(height: Spacing.lg),
           Text(
             '您还没有订阅任何服务',
-            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: AppFontSize.bodyLarge, color: AppColors.textSecondary),
           ),
           SizedBox(height: Spacing.xl),
           Text(
             '查看全部 ›',
-            style: TextStyle(fontSize: 14, color: AppColors.elderPrimary),
+            style: TextStyle(fontSize: AppFontSize.body, color: AppColors.elderPrimary),
           ),
           SizedBox(height: Spacing.sm),
         ],
@@ -372,7 +372,7 @@ class _EldOnlineServiceSection extends StatelessWidget {
         children: [
           const Text(
             '线上一站办',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: Spacing.md),
           GridView.count(
@@ -414,7 +414,7 @@ class _EldOfflineServiceSection extends StatelessWidget {
         children: [
           const Text(
             '线下就近办',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: Spacing.md),
           // 地图占位
@@ -429,14 +429,14 @@ class _EldOfflineServiceSection extends StatelessWidget {
               color: Colors.grey[400],
               child: const Text(
                 '从地图上查找更多大厅 ›',
-                style: TextStyle(fontSize: 13),
+                style: TextStyle(fontSize: AppFontSize.caption),
               ),
             ),
           ),
           const SizedBox(height: Spacing.sm),
           const Text(
             '附近有 37 家大厅',
-            style: TextStyle(fontSize: 13, color: Colors.grey),
+            style: TextStyle(fontSize: AppFontSize.caption, color: Colors.grey),
           ),
           const SizedBox(height: Spacing.sm),
           for (final name in _officeItems) ...[
@@ -470,7 +470,7 @@ class _EldAuthorizedServiceSection extends StatelessWidget {
         children: [
           const Text(
             '授权办',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: Spacing.md),
           GridView.count(
@@ -503,7 +503,7 @@ class _EldFooterSection extends StatelessWidget {
       alignment: Alignment.center,
       child: const Text(
         '浙里办伴你一生大小事',
-        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+        style: TextStyle(fontSize: AppFontSize.caption, color: AppColors.textSecondary),
       ),
     );
   }
@@ -537,7 +537,7 @@ class _EldBottomNavItem extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: color),
-            Text(label, style: TextStyle(color: color, fontSize: 11)),
+            Text(label, style: TextStyle(color: color, fontSize: AppFontSize.tiny)),
           ],
         ),
       ),
@@ -561,7 +561,7 @@ class _EldServiceGridItem extends StatelessWidget {
         children: [
           Container(width: 40, height: 40, color: Colors.grey[300]),
           const SizedBox(height: Spacing.xs),
-          Text(label, style: const TextStyle(fontSize: 14)),
+          Text(label, style: const TextStyle(fontSize: AppFontSize.body)),
         ],
       ),
     );
@@ -584,7 +584,7 @@ class _EldOfficeItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: 14)),
+                Text(name, style: const TextStyle(fontSize: AppFontSize.body)),
                 const SizedBox(height: 2),
                 Row(
                   children: [
@@ -595,13 +595,13 @@ class _EldOfficeItem extends StatelessWidget {
                       color: Colors.grey[200],
                       child: const Text(
                         '空闲',
-                        style: TextStyle(fontSize: 11, color: Colors.green),
+                        style: TextStyle(fontSize: AppFontSize.tiny, color: Colors.green),
                       ),
                     ),
                     const SizedBox(width: Spacing.sm),
                     const Text(
                       '距您1.5km',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                      style: TextStyle(fontSize: AppFontSize.small, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -613,7 +613,7 @@ class _EldOfficeItem extends StatelessWidget {
               horizontal: Spacing.md, vertical: Spacing.sm,
             ),
             color: Colors.grey[300],
-            child: const Text('去办事', style: TextStyle(fontSize: 13)),
+            child: const Text('去办事', style: TextStyle(fontSize: AppFontSize.caption)),
           ),
         ],
       ),
