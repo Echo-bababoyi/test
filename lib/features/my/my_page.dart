@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_router.dart';
 import '../../core/state/app_state.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/widgets/elder_bottom_nav.dart';
 import '../../core/widgets/persistent_banner.dart';
 
 class MyPage extends ConsumerWidget {
@@ -91,43 +92,10 @@ class MyPage extends ConsumerWidget {
       ),
       floatingActionButtonLocation:
           FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 6,
-        child: Row(
-          children: [
-            Expanded(
-              child: InkWell(
-                onTap: () => context.go(AppRoutes.elderHome),
-                child: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.star_border,
-                        color: AppColors.textSecondary),
-                    Text('首页',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: AppColors.textSecondary)),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 64),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.person,
-                      color: AppColors.elderPrimary),
-                  Text('我的',
-                      style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.elderPrimary)),
-                ],
-              ),
-            ),
-          ],
-        ),
+      bottomNavigationBar: ElderBottomNav(
+        selectedIndex: 1,
+        onHomeTap: () => context.go(AppRoutes.elderHome),
+        onSearchTap: () => context.push(AppRoutes.search),
       ),
     );
   }

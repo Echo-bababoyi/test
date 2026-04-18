@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_router.dart';
 import '../../core/state/app_state.dart';
 import '../../core/theme/design_tokens.dart';
+import '../../core/widgets/elder_bottom_nav.dart';
 import '../../core/widgets/persistent_banner.dart';
 
 class ElderHomePage extends ConsumerStatefulWidget {
@@ -79,27 +80,10 @@ class _ElderHomePageState extends ConsumerState<ElderHomePage>
         child: const Icon(Icons.mic, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 6,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _EldBottomNavItem(
-              icon: Icons.star,
-              label: '首页',
-              selected: true,
-              onTap: null,
-            ),
-            const SizedBox(width: 64),
-            _EldBottomNavItem(
-              icon: Icons.person,
-              label: '我的',
-              selected: false,
-              onTap: () => context.go(AppRoutes.my),
-            ),
-          ],
-        ),
+      bottomNavigationBar: ElderBottomNav(
+        selectedIndex: 0,
+        onMyTap: () => context.go(AppRoutes.my),
+        onSearchTap: () => context.push(AppRoutes.search),
       ),
       body: Stack(
         children: [
@@ -863,43 +847,3 @@ class _EldFooterSection extends StatelessWidget {
 
 // ─── 底部导航项 ───────────────────────────────────────────────────────────────
 
-class _EldBottomNavItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback? onTap;
-
-  const _EldBottomNavItem({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = selected ? AppColors.elderPrimary : Colors.grey;
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: Spacing.xl,
-          vertical: Spacing.sm,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: AppFontSize.tiny,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
