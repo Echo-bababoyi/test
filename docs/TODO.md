@@ -8,6 +8,16 @@
 
 ## 当前待办
 
+### ⚠️ 批次 3 前置（开工前必须回答的歧义）
+
+- 🔲 **VerifyPage 路由指向歧义（reviewer 发现，批次 3 必须拆清楚再动手）**
+  - 按 `REPRODUCTION_PLAN.md`：`/login/verify` = SMS 验证码页（备选登录分支）
+  - 当前实现：`VerifyPage` AppBar title 是"刷脸验证中"，内容是眨眼/摇头动画，属于刷脸流程子状态——**与规格冲突**
+  - 更严重：`FaceAuthPage._requestCameraPermission` 摄像头允许后 `context.go(AppRoutes.verify)` 跳了 VerifyPage，这是**错误的**——刷脸动效应是 FaceAuthPage 自身内部子状态（Phase 3 实现），不跳 verify 路由
+  - 批次 3 实施前必须确认：`VerifyPage` 只做 SMS 分支；FaceAuthPage 摄像头授权后保持在本页（内部子状态 idle 占位即可）
+
+---
+
 ### Phase 1：主线黑白线框版（进行中）
 
 按 `docs/REPRODUCTION_PLAN.md` §五.4 分 5 批：
@@ -23,6 +33,15 @@
 
 - 🔲 `StandardHomePage._TopBarRow` 右侧加**通知铃铛**灰块占位（batch 1 reviewer 发现）
 
+### 收尾测试待补（不在批次 3–5 做，Phase 1 终验收前一次性补）
+
+- 🔲 **P0** `PersistentBanner` 四种状态 widget test：未登录+未关 / 已登录 / dismiss / dismiss 后登出
+- 🔲 **P0** `loginProvider` + `loginBannerDismissedProvider` 状态流转 unit test（两者独立，dismiss 不随 logout 重置）
+- 🔲 **P1** `ElderHomePage` Tab 切换触发 `IndexedStack.index` 正确，非 Tab 区块不重建 widget test
+- 🔲 **P1** `SplashPage` 1500ms 后自动跳 `/home`、`_navigated` 防重复 widget test + fake timer
+- 🔲 **P2** `AppRouter` 11 条路由全部可导航 + ShellRoute 包 PhoneFrame integration test
+- 🔲 **P2** `AppTheme.of(mode)` 主色切换 unit test（`#2D74DC` / `#FF6D00`）
+
 ### Phase 2 必修项（已登记，贴皮阶段必做）
 
 - 🔲 `_EldTabCardSection` IndexedStack 改用 `ListenableBuilder(listenable: tab)` 局部重建（当前 `_tab.addListener(setState)` 每帧全页重建，虽不影响正确性但开销冗余）
@@ -30,6 +49,27 @@
 - 🔲 Banner 文字颜色从 `Colors.white` 改为灰色（对齐截图）
 - 🔲 长辈版 AppBar「个人频道」pill 加刷新/同步图标（对齐截图）
 - 🔲 长辈版底部 FAB 颜色从 `Colors.grey[500]` 改为 `AppColors.elderPrimary`（对齐截图）
+- 🔲 `AppFontSize` 补 `tiny=11` / `caption=13` 两个 token（`standard_home_page.dart` / `elder_home_page.dart` / `persistent_banner.dart` 共 8+ 处散落硬编码）
+- 🔲 `Spacing` 补 `xl2=20`（`system_dialog.dart` 里用了，当前无 token）
+- 🔲 `AppRadius` 补 `phone=24`（`phone_frame.dart` 用，当前裸数字）
+- 🔲 `AppColors` 补 `phoneBg=0xFF1E1E1E`（`phone_frame.dart` 用）
+- 🔲 `system_dialog.dart` / `in_app_overlay.dart` / `persistent_banner.dart` 里所有魔数替换为 token 引用
+- 🔲 `_EldToolBarSection` 加 `const` 构造器（build 体是纯 const Widget 树）
+- 🔲 Phase 1 终验收前复查 6 个 `ConsumerWidget` 页面（`LoginPage` / `FaceAuthPage` / `SearchPage` / `SearchResultPage` / `SocialInsurancePage` / `PensionQueryPage`）是否还需要 `ref`，未用的降级回 `StatelessWidget`
+
+---
+
+## 代码状态登记
+
+> 以下文件**当前未被任何页面调用**，但属**刻意保留的扩展接口骨架**，Phase 2 代码清理时**禁止误删**。
+
+| 文件 | 接入时机 | 用途 |
+|------|---------|------|
+| `lib/services/voice_input_service.dart` | 批次 4 SearchPage 升级时 | 语音输入扩展点（VoiceInputService mock） |
+| `lib/services/face_auth_service.dart` | 批次 3 FaceAuthPage 升级时 | 刷脸认证扩展点（FaceAuthService mock） |
+| `lib/services/service_repository.dart` | 批次 4–5 服务页升级时 | 业务数据扩展点（ServiceRepository mock） |
+| `lib/core/intent/app_intent.dart` | Phase 4 后 | 智能代理操作 UI 扩展点（AppIntent + Dispatcher） |
+| `lib/core/logging/interaction_logger.dart` | Phase 4 后 | 行为日志扩展点（InteractionLogger） |
 
 ---
 
