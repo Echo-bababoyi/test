@@ -59,20 +59,20 @@
 
 - 截图文件名与文档中的页面名均为中文。在引用和提交信息中保持中文原样，**不要**转写为拼音或英文。
 - 当前阶段（代理定义期）**不对 `archive/scene-canvas-v1/` 下的任何代码做功能性改动**。若新设计需要改动，待 `docs/AGENT_SPEC.md` 产出后再决定是"原地解冻修改"还是"按需从归档取组件到新目录"。
-- 需要运行场景画布时，先 `cd archive/scene-canvas-v1/`，再用 `../../bin/flutter <cmd>` 调用项目级 Flutter SDK（SDK 仍在根 `tools/flutter/`，包装脚本仍在根 `bin/`）。
+- 需要运行场景画布时，先 `cd archive/scene-canvas-v1/`，再用 `../bin/flutter <cmd>` 调用项目级 Flutter SDK（SDK 封存在 `archive/flutter/`，包装脚本在 `archive/bin/`）。
 
 ## 本地工具链约定
 
-**使用项目级 Flutter SDK，不用系统级。** 所有 Flutter/Dart 命令走项目内包装脚本：
+**使用项目级 Flutter SDK，不用系统级。** 所有 Flutter/Dart 命令走项目内包装脚本（SDK 和脚本都封存在 archive/ 下）：
 
 ```bash
-./bin/flutter <cmd>    # 不是 flutter <cmd>
-./bin/dart <cmd>       # 不是 dart <cmd>
+./archive/bin/flutter <cmd>    # 从项目根调用
+./archive/bin/dart <cmd>
 ```
 
-- SDK 位于 `tools/flutter/`（~1.5 GB，已 `.gitignore` 排除）
+- SDK 位于 `archive/flutter/`（2.3 GB，已被根 `.gitignore` 排除）
 - 包装脚本自动设置镜像环境变量 `PUB_HOSTED_URL=https://pub.flutter-io.cn` 和 `FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn`
-- **不要**改 `~/.bashrc` / 不要把 `tools/flutter/bin` 加入系统 PATH——项目级隔离是刻意设计
+- **不要**改 `~/.bashrc` / 不要把 `archive/flutter/bin` 加入系统 PATH——项目级隔离是刻意设计
 - `flutter doctor` 会报 "binary not on PATH" 警告，这是预期的，不用修
 
 ## 导航决策约定（go / push / pop / NoTransitionPage）

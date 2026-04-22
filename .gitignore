@@ -1,7 +1,7 @@
-# Flutter SDK 项目内存放，不入版本库
-tools/flutter/
+# Flutter SDK 项目内存放，不入版本库（2.3 GB）
+archive/flutter/
 
-# Dart/Flutter 构建产物
+# Dart/Flutter 构建产物（匹配任何层级，含 archive/scene-canvas-v1/ 下）
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
@@ -25,7 +25,7 @@ build/
 .trae/
 .agents/
 
-# 环境变量和密钥（backend/.gitignore 已覆盖 backend/.env；此处防根目录或其他子目录出现 .env）
+# 环境变量和密钥（archive/scene-canvas-v1/backend/.gitignore 已覆盖其内 .env；此处防任意位置出现 .env）
 .env
 .env.*
 !.env.example
@@ -42,5 +42,5 @@ build/
 .#*
 \#*\#
 
-# 防御性：根目录若意外出现 node_modules
+# 防御性：意外出现的 node_modules
 node_modules/

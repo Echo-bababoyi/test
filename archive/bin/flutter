@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # 项目级 Flutter 包装脚本
-# - 指向本项目 tools/flutter/ 的 SDK
+# - 指向本项目 archive/flutter/ 的 SDK（封存期保留，将来激活场景画布时可用）
 # - 自动走国内镜像（pub.dev 与 Flutter engine storage）
 set -e
-PROJECT_ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+ARCHIVE_ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
 export PUB_HOSTED_URL="${PUB_HOSTED_URL:-https://pub.flutter-io.cn}"
 export FLUTTER_STORAGE_BASE_URL="${FLUTTER_STORAGE_BASE_URL:-https://storage.flutter-io.cn}"
-exec "$PROJECT_ROOT/tools/flutter/bin/flutter" "$@"
+exec "$ARCHIVE_ROOT/flutter/bin/flutter" "$@"
