@@ -33,14 +33,26 @@
 - AGENT_WEBSOCKET_SCHEMA.md（WebSocket 协议草案）
 - TODO.md（Phase 1/2 时代的待办）
 
-### 封存为"场景画布 v1"（代码不动，未来二次利用）
+### 封存为"场景画布 v1"（2026-04-22 整体归档到 `archive/scene-canvas-v1/`，未来二次利用）
 
-- `lib/`（Flutter Web 浙里办长辈版 UI 原型，11 页 + 组件 + 服务骨架）
-- `backend/`（FastAPI + Agno + DeepSeek-V3，Step 1-4 已完成）
-- `test/`（33 个测试）
-- `tools/flutter/`（SDK）
+归档目录结构：
+```
+archive/scene-canvas-v1/
+├── lib/                  Flutter Web 浙里办长辈版 UI（11 页 + 组件 + 服务骨架）
+├── backend/              FastAPI + Agno + DeepSeek-V3（Step 1-4 已完成，未接前端）
+├── test/                 33 个测试
+├── assets/               字体资源（Noto Sans SC）
+├── web/                  Flutter Web 入口
+├── pubspec.yaml / .lock  Flutter 依赖清单
+├── analysis_options.yaml
+└── .metadata
+```
 
-**原则**：新定义确定前，不对上述代码做功能性改动。若新设计要求引入组件/路径，届时再从画布里按需调取。
+留在根目录不动的基础设施（都可复用，不随代码归档）：
+- `tools/flutter/`（Flutter SDK，gitignored）
+- `bin/flutter` `bin/dart`（包装脚本，运行画布时需 `cd archive/scene-canvas-v1/` 后用 `../../bin/flutter <cmd>`）
+
+**原则**：新定义确定前，不对归档目录下的代码做功能性改动。若新设计要求引入组件/路径，届时再决定是"原地解冻修改"还是"按需从归档取组件到新目录"。
 
 ---
 

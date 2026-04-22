@@ -24,7 +24,7 @@
 
 **当前阶段**：代理的设计定义尚未完成。工作文档为 `docs/AGENT_DEFINITION_QUESTIONS.md`（用户逐条答题中）。答完后产出 `docs/AGENT_SPEC.md` 作为权威设计规范，再进入实施。
 
-**"浙里办长辈版复刻"的定位**：Phase 1/2 已完成的 11 页 Flutter Web 原型（`lib/`）**封存为"场景画布 v1"**，作为代理演示的背景载体保留，**不再追求像素级还原**。浙里办只是场景画布，不是最终交付物。
+**"浙里办长辈版复刻"的定位**：Phase 1/2 已完成的 11 页 Flutter Web 原型 + FastAPI 代理后端已**整体归档至 `archive/scene-canvas-v1/`**，作为未来代理演示的背景载体保留，**不再追求像素级还原**。浙里办只是场景画布，不是最终交付物。重新激活时再按需从归档目录取出。
 
 **旧设计文档**（PRD v2.0 / PROJECT_PLAN / AGENT_ARCHITECTURE / AGENT_UI_SPEC / AGENT_WEBSOCKET_SCHEMA / TECH_STACK_REVIEW）已全部归档至 `docs/archive/pre-redefinition/`，**不作为当前设计依据**。
 
@@ -41,7 +41,7 @@
 
 ## 场景画布 v1 内部约定（封存不动，未来复用时沿用）
 
-以下约定是 Phase 1/2 已固化的场景画布内部规则，**仅在重新启用 `lib/` 代码时适用**，不是当前代理设计的依据。
+以下约定是 Phase 1/2 已固化的场景画布内部规则，**仅在重新启用 `archive/scene-canvas-v1/` 下的代码时适用**，不是当前代理设计的依据。
 
 **两种视觉模式：** 标准版主色 `#2D74DC`（蓝色），长辈版主色 `#FF6D00`（橙色）。长辈版通过标准版首页专用入口进入，不是主题开关。
 
@@ -51,12 +51,15 @@
 
 **两条登录分支：** 刷脸路径（同意条款 → 刷脸 InAppOverlay → 摄像头 SystemDialog → 眨眼/摇头）；验证码备选路径（其他方式认证 → 验证码页 → SystemDialog）。
 
-**11 个页面（已实现于 `lib/features/`）：** SplashPage、StandardHomePage、ElderHomePage（含 Tab）、LoginPage、FaceAuthPage、VerifyPage、SearchPage、SearchResultPage、SocialInsurancePage、PensionQueryPage、MyPage。
+**11 个页面（已实现于 `archive/scene-canvas-v1/lib/features/`）：** SplashPage、StandardHomePage、ElderHomePage（含 Tab）、LoginPage、FaceAuthPage、VerifyPage、SearchPage、SearchResultPage、SocialInsurancePage、PensionQueryPage、MyPage。
+
+**代理后端（已实现于 `archive/scene-canvas-v1/backend/`）：** FastAPI 骨架 + WebSocket + Agno Agent + DeepSeek-V3 LLM（Step 1-4 已完成，未接前端）。
 
 ## 工作准则
 
 - 截图文件名与文档中的页面名均为中文。在引用和提交信息中保持中文原样，**不要**转写为拼音或英文。
-- 当前阶段（代理定义期）**不对 `lib/` 与 `backend/` 做功能性改动**。若新设计需要改动，待 `docs/AGENT_SPEC.md` 产出后再开工。
+- 当前阶段（代理定义期）**不对 `archive/scene-canvas-v1/` 下的任何代码做功能性改动**。若新设计需要改动，待 `docs/AGENT_SPEC.md` 产出后再决定是"原地解冻修改"还是"按需从归档取组件到新目录"。
+- 需要运行场景画布时，先 `cd archive/scene-canvas-v1/`，再用 `../../bin/flutter <cmd>` 调用项目级 Flutter SDK（SDK 仍在根 `tools/flutter/`，包装脚本仍在根 `bin/`）。
 
 ## 本地工具链约定
 
