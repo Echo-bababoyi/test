@@ -1,15 +1,15 @@
 {
   "version": 1,
   "skills": {
-    "extract-design-system": {
-      "source": "arvindrk/extract-design-system",
-      "sourceType": "github",
-      "computedHash": "5f231fda377e304b202848f09ecc0fd42839355e76f60e06c3ceb7a643c15500"
-    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
       "computedHash": "9e1c8b3103f92fa8092568a44fe64858de7c5c9dc65ce4bea8f168080e889cfd"
+    },
+    "flutter-animating-apps": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "85c3483e4b5da7abefc7de8ad8fb4211b6680a2ba03e727aa000ad139e0b9565"
     },
     "flutter-building-layouts": {
       "source": "flutter/skills",

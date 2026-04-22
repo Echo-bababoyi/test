@@ -28,7 +28,7 @@
 - `docs/TODO.md` — **本项目唯一的** todolist 活文档。新增问题/任务一律写入此文件；**不要**创建并行的第二个待办文件。状态：🔲 待做 / 🧪 待验证 / ✅ 已完成。
 - `docs/复刻浙里办/浙里办页面逻辑.txt` — 每一个页面跳转与弹窗的叙述性流程说明，含验证码登录的备选分支。页面跳转顺序存在歧义时以此为准。
 - `docs/复刻浙里办/截图/` — 32 张权威截图。文件名与流程文档中的页面名称一一对应；还原 UI 时，截图优先于任何文字描述。
-- `docs/team-personas/` — 5 份 CC Team persona 通用骨架（PM / architect / frontend / backend / reviewer）。当前未启用，启动团队协作时加载。
+- `docs/archive/team-personas/` — 5 份 CC Team persona 通用骨架（PM / architect / frontend / backend / reviewer）。当前未启用，启动团队协作时加载。
 - `docs/信息服务APP的适老化设计与多模态交互_开题报告初稿.txt` — 毕业设计开题报告（文献综述、研究方法、进度安排）。用于论文定位，不用于实现细节。
 
 ## 实现时必须保留的核心概念
