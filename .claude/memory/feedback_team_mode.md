@@ -64,9 +64,60 @@ type: feedback
 5. **代码 Review**（architect）：review diff
 6. **提交 + 测试**：team-lead commit，TODO 标 🧪，用户验证后 ✅
 
+## 派活纪律
+
+### 派活只用 SendMessage
+- 不调 `TaskUpdate(owner=X)`（会触发系统自动通知，制造噪音）
+- Task 清单仅作 team-lead 看板，owner 保持空
+
+**Why**：TaskUpdate 改 owner 会触发成员收到系统通知，干扰正常派活流程。
+
+### 派活消息必须自包含
+- 不引用"上一条消息"、"主对话里"等成员看不到的内容
+- 所有素材（文件路径、需求描述、约束条件）内联到同一条 SendMessage 里
+
+**Why**：成员的上下文窗口独立于主对话，看不到 team-lead 和用户之间的对话内容。
+
+### Task 一事一建
+- 当前只能有 1 个 in_progress + 最多 1 个 pending
+- 禁止预建整条 pipeline 的 N 个 Task
+- 上一个 completed 后再 TaskCreate 下一个
+
+**Why**：避免 Task 列表爆炸，保持看板清晰。
+
+## 成员行为约束（每次派活 prompt 尾部附加）
+
+### idle 后静默等待
+
+每次派活的 prompt 尾部必须附加以下约束：
+```
+完成本任务的汇报后进入 idle，静默等待下一次派活。不得主动：
+- 重发或补充已完成任务的方案
+- 自查 TaskList 状态或文件系统
+- 修改 Task 的 status / owner
+- 发 idle 之后的第二轮文字回复
+有新想法 → 等 team-lead 主动问你 / 派新任务时再说。
+```
+
+**Why**：成员 idle 后自作主张重发方案或检查文件系统，会制造噪音、消耗 token、干扰 team-lead 调度节奏。
+
+### 通读正文再动手
+
+每次派活的 prompt 尾部必须附加以下约束：
+```
+收到派活后，先从头到尾通读 SendMessage 正文再开始动手或提问。
+TaskList 的 description 字段只是短索引，不是需求规格；完整规格全在 SendMessage 正文里。
+如果有歧义，必须指出是正文哪一段哪一点不懂。
+```
+
+**Why**：成员只读 Task description 就开始干活，容易漏掉 SendMessage 正文里的关键约束和细节。
+
 ## 其他协作规则
 
 - **idle 通知**：不对成员的 idle_notification 发文本回复，静默等待
 - **服务管理**：服务只由 team-lead 管理（启动/停止/重启），成员不越权
 - **不并行过多任务**：一步步来，避免多线程混乱
 - **测试策略**：不每次改动都跑全量测试，只针对当前改动做针对性测试
+- **文档改动只派 PM**，不派给开发
+- **.env 修改**和**破坏性操作**（DB migration、批量删除）只由 team-lead 执行
+- **Persona 文件**：`docs/team-personas/` 下 5 个文件（pm.md / architect.md / backend-dev.md / frontend-dev.md / reviewer.md），创建成员时加载

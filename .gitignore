@@ -1,7 +1,7 @@
 # Flutter SDK 项目内存放，不入版本库（2.3 GB）
-archive/flutter/
+flutter/
 
-# Dart/Flutter 构建产物（匹配任何层级，含 archive/scene-canvas-v1/ 下）
+# Dart/Flutter 构建产物
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
@@ -9,7 +9,6 @@ archive/flutter/
 build/
 .pub-cache/
 .pub/
-# 注意：pubspec.lock 在应用项目中应当入库（锁定依赖版本），因此不忽略
 
 # IDE
 .idea/
@@ -19,13 +18,11 @@ build/
 .DS_Store
 
 # Claude Code 本地工具配置
-# 注意：skills-lock.json（项目 skill 清单）和 .claude/memory + .claude/skills 需入库，
-# 仅本地权限白名单 settings.local.json 不入库
 .claude/settings.local.json
 .trae/
 .agents/
 
-# 环境变量和密钥（archive/scene-canvas-v1/backend/.gitignore 已覆盖其内 .env；此处防任意位置出现 .env）
+# 环境变量和密钥
 .env
 .env.*
 !.env.example
@@ -35,12 +32,14 @@ build/
 *.tmp
 *.bak
 
-# 编辑器交换/备份文件（vim / emacs 等）
+# 编辑器交换/备份文件
 *.swp
 *.swo
 *~
 .#*
 \#*\#
 
-# 防御性：意外出现的 node_modules
+# 防御性
 node_modules/
+__pycache__/
+*.pyc
