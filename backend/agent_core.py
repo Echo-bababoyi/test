@@ -161,6 +161,7 @@ class AgentCore:
             stopped_tool = self._get_stopped_tool(response)
             if stopped_tool in _SENSITIVE_TOOLS:
                 permission_id = str(uuid.uuid4())
+                self._permission_event.clear()  # clear before send so resolve_permission cannot race
                 await self._send_fn(
                     "permission_request",
                     self._build_permission_payload(stopped_tool, permission_id),
@@ -204,9 +205,15 @@ class AgentCore:
         return (response.content or result_text).strip()
 
     def _get_stopped_tool(self, response) -> str | None:
-        """Return the tool_name of the message that caused stop_after_tool_call, or None."""
+        """Return the tool_name of the message that caused stop_after_tool_call, or None.
+
+        Only checks current-round messages (from_history=False) to avoid re-triggering
+        on historical tool calls that also have stop_after_tool_call=True.
+        """
         messages = response.messages or []
         for msg in messages:
+            if getattr(msg, "from_history", False):
+                continue
             if getattr(msg, "stop_after_tool_call", False):
                 tool_name = getattr(msg, "tool_name", None)
                 if tool_name:
@@ -235,7 +242,6 @@ class AgentCore:
 
     async def wait_for_permission(self, timeout: float = 20.0) -> bool:
         """Suspend until frontend responds to a permission_request, with timeout."""
-        self._permission_event.clear()
         try:
             await asyncio.wait_for(self._permission_event.wait(), timeout=timeout)
         except asyncio.TimeoutError:
