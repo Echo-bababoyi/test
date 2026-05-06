@@ -4,3 +4,7 @@ websockets
 pydantic
 httpx
 python-dotenv
+agno==1.4.4
+openai
+edge-tts
+websocket-client

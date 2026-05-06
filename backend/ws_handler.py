@@ -1,3 +1,5 @@
+import asyncio
+import base64
 import logging
 from enum import Enum
 from datetime import datetime, timezone
@@ -9,6 +11,10 @@ from backend.models import (
     InboundMessageType,
     INBOUND_PAYLOAD_MAP,
     OutboundMessage,
+    AgentReadyPayload,
+    AgentReplyPayload,
+    AgentOutOfScopePayload,
+    AgentErrorPayload,
 )
 
 logger = logging.getLogger(__name__)
@@ -27,6 +33,9 @@ class WSHandler:
         self.ws = websocket
         self.session_id = session_id
         self.state = SessionState.idle
+        self._agent_core = None
+        self._pending_intent: dict | None = None
+        self._audio_buf: list[bytes] = []
 
     async def run(self):
         await self.ws.accept()
@@ -61,24 +70,139 @@ class WSHandler:
 
     async def _on_agent_wake(self, payload):
         logger.info("session=%s agent_wake trigger=%s page=%s", self.session_id, payload.trigger, payload.current_page)
+
+        from backend.agent_core import AgentCore
+        self._agent_core = AgentCore(session_id=self.session_id, ws_handler=self)
+        self._audio_buf = []
         self.state = SessionState.listening
+
+        await self.send("agent_ready", AgentReadyPayload(
+            greeting="您好，我是小浙，有什么可以帮您？",
+            draft_hint=None,
+            has_draft=False,
+            draft_id=None,
+        ).model_dump())
 
     async def _on_audio_chunk(self, payload):
         logger.info("session=%s audio_chunk index=%d is_last=%s", self.session_id, payload.chunk_index, payload.is_last)
+        raw_bytes = base64.b64decode(payload.audio_base64)
+        self._audio_buf.append(raw_bytes)
 
     async def _on_audio_end(self, payload):
-        logger.info("session=%s audio_end", self.session_id)
+        logger.info("session=%s audio_end chunks=%d", self.session_id, len(self._audio_buf))
         self.state = SessionState.confirming
+
+        chunks = list(self._audio_buf)
+        self._audio_buf = []
+
+        from backend.asr_adapter import get_asr_adapter
+        asr = get_asr_adapter()
+        if asr and chunks:
+            try:
+                text = await asr.recognize(chunks)
+                logger.info("session=%s asr_result text=%r", self.session_id, text)
+            except Exception as exc:
+                logger.error("session=%s asr error: %s", self.session_id, exc)
+                text = ""
+        else:
+            text = ""
+
+        if text:
+            await self.process_asr_text(text)
+        else:
+            logger.warning("session=%s asr returned empty text", self.session_id)
+            self.state = SessionState.listening
+            await self.send("agent_error", AgentErrorPayload(
+                error_code="asr_unclear",
+                retry_count=0,
+                max_retries=3,
+                voice_hint="不好意思没听清，您再说一遍",
+                tts_audio_base64=None,
+            ).model_dump())
 
     async def _on_user_confirm(self, payload):
         logger.info("session=%s user_confirm answer=%s mode=%s", self.session_id, payload.answer, payload.input_mode)
-        self.state = SessionState.executing if payload.answer == "yes" else SessionState.idle
+        if payload.answer == "yes":
+            self.state = SessionState.executing
+            if self._agent_core and self._pending_intent:
+                asyncio.create_task(self._run_execute(self._pending_intent["intent_summary"]))
+        else:
+            self.state = SessionState.idle
+            self._pending_intent = None
 
     async def _on_permission_response(self, payload):
         logger.info("session=%s permission_response id=%s granted=%s", self.session_id, payload.permission_id, payload.granted)
+        if self._agent_core:
+            self._agent_core.resolve_permission(payload.granted)
 
     async def _on_query_result_ready(self, payload):
         logger.info("session=%s query_result_ready page=%s", self.session_id, payload.page_id)
+
+    async def process_asr_text(self, text: str) -> None:
+        """Called when final ASR transcript is ready."""
+        if not self._agent_core:
+            return
+        try:
+            intent = await self._agent_core.process_text(text)
+            self._pending_intent = intent
+            scene_id = intent["scene_id"]
+
+            if scene_id == "out_of_scope":
+                self.state = SessionState.idle
+                tts_b64 = await self._tts_to_b64("抱歉，这个功能暂时帮不到您")
+                await self.send("agent_out_of_scope", AgentOutOfScopePayload(
+                    user_intent=intent["intent_summary"],
+                    scope_type="not_supported",
+                    voice_hint="抱歉，这个功能暂时帮不到您",
+                    tts_audio_base64=tts_b64,
+                ).model_dump())
+                return
+
+            self.state = SessionState.confirming
+            confirm_text = intent["confirm_text"]
+            tts_b64 = await self._tts_to_b64(confirm_text)
+            await self.send("agent_reply", AgentReplyPayload(
+                text=confirm_text,
+                tts_audio_base64=tts_b64,
+                tts_format="mp3",
+                requires_confirmation=True,
+                confirmation_timeout_ms=15000,
+            ).model_dump())
+        except Exception as exc:
+            logger.error("session=%s process_asr_text error: %s", self.session_id, exc)
+            await self.send("agent_error", AgentErrorPayload(
+                error_code="AGENT_PROCESS_FAILED",
+                retry_count=0,
+                max_retries=2,
+                voice_hint="处理失败，请再试一次",
+                tts_audio_base64=None,
+            ).model_dump())
+
+    async def _run_execute(self, intent_summary: str) -> None:
+        try:
+            await self._agent_core.execute_task(intent_summary)
+            self.state = SessionState.done
+        except Exception as exc:
+            logger.error("session=%s execute_task error: %s", self.session_id, exc)
+            self.state = SessionState.idle
+            await self.send("agent_error", AgentErrorPayload(
+                error_code="AGENT_EXECUTE_FAILED",
+                retry_count=0,
+                max_retries=2,
+                voice_hint="执行失败，请再试一次",
+                tts_audio_base64=None,
+            ).model_dump())
+
+    async def _tts_to_b64(self, text: str) -> str | None:
+        """Synthesize text and return base64-encoded mp3, or None on failure."""
+        from backend.tts_adapter import get_tts_adapter
+        try:
+            tts = get_tts_adapter()
+            audio_bytes = await tts.synthesize(text)
+            return base64.b64encode(audio_bytes).decode() if audio_bytes else None
+        except Exception as exc:
+            logger.error("session=%s tts error: %s", self.session_id, exc)
+            return None
 
     async def send(self, msg_type: str, payload):
         out = OutboundMessage(
