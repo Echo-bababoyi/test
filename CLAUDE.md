@@ -22,7 +22,7 @@
 
 **核心创新点**：**受控响应型智能代理"小浙"**（权限受控 + 行为受控 + 不主动挑事，只在用户有需求时介入）。围绕该代理设计展开适老化交互与多模态交互研究。
 
-**当前阶段**：设计阶段全部完成（2026-04-28），进入编码实施阶段。设计文档体系：`docs/PRD.md`（产品需求）→ `docs/AGENT_SPEC.md`（代理规范）→ `docs/ARCHITECTURE.md`（系统架构 v1.2，Agno + DeepSeek-V3 + 讯飞 ASR/TTS）→ `docs/UI_UX_DESIGN.md`（交互设计 + 适老化规范）。
+**当前阶段**：编码实施完成（2026-05-06），进入部署与真机测试阶段。技术栈：FastAPI + Agno Agent + DeepSeek-V3 + Web Speech API（ASR）+ Edge TTS。
 
 ## 项目结构
 
@@ -36,30 +36,50 @@
 │   ├── flutter
 │   └── dart
 ├── flutter/                  # 项目级 Flutter SDK（.gitignore 排除）
+├── backend/                  # FastAPI 后端
+│   ├── main.py               # 入口 + WebSocket 端点
+│   ├── ws_handler.py          # WebSocket 状态机
+│   ├── agent_core.py          # Agno Agent 核心
+│   ├── models.py              # Pydantic 消息模型
+│   ├── deepseek_client.py     # DeepSeek API 客户端
+│   ├── asr_adapter.py         # 讯飞 ASR 适配器（备用）
+│   ├── tts_adapter.py         # 讯飞 TTS + Edge TTS
+│   ├── xunfei_auth.py         # 讯飞签名公共模块
+│   ├── tools/                 # 5 个 Agno 工具函数
+│   ├── prompts/               # 场景 prompt（6 个）
+│   └── tests/                 # E2E + HITL 测试
+├── app/                       # Flutter Web 前端
+│   ├── lib/
+│   │   ├── main.dart
+│   │   ├── router.dart        # GoRouter 12 条路由
+│   │   ├── theme.dart         # 适老化主题
+│   │   ├── pages/             # 12 个页面
+│   │   ├── widgets/           # 代理面板、气泡、麦克风等
+│   │   └── services/          # WS 客户端、会话状态、草稿箱等
+│   └── pubspec.yaml
 ├── docs/
-│   ├── PRD.md                                 # 【权威】产品需求文档（v1.0）
-│   ├── AGENT_SPEC.md                          # 【权威】代理设计规范（v1.0）
-│   ├── ARCHITECTURE.md                        # 【权威】系统架构设计（v1.2）
-│   ├── UI_UX_DESIGN.md                        # 【权威】UI/UX 交互设计（v1.0）
-│   ├── IMPLEMENTATION_PLAN.md                 # 编码实施计划（初稿，待修订）
-│   ├── AGENT_DEFINITION_QUESTIONS.md          # 设计问答记录（决策追溯）
+│   ├── PRD.md                 # 【权威】产品需求文档（v1.0）
+│   ├── AGENT_SPEC.md          # 【权威】代理设计规范（v1.0）
+│   ├── ARCHITECTURE.md        # 【权威】系统架构设计（v1.2）
+│   ├── UI_UX_DESIGN.md        # 【权威】UI/UX 交互设计（v1.0）
+│   ├── NEXT_PLAN.md           # 【当前】下一阶段计划（v2.0）
 │   ├── 信息服务APP的适老化设计与多模态交互_开题报告初稿.txt  # 【北极星】开题报告
-│   ├── 复刻浙里办/
-│   │   ├── 浙里办页面逻辑.txt                  # 页面跳转与弹窗流程说明
-│   │   └── 截图/                              # 32 张浙里办截图（场景参考）
-│   └── team-personas/                         # CC Team persona 骨架（未启用）
-└── archive/                                   # 已清空
+│   ├── 复刻浙里办/             # 浙里办截图参考
+│   └── team-personas/         # CC Team persona 文件
+└── archive/
+    └── scene-canvas-v1/       # 旧版场景画布（UI 参考）
 ```
 
 ## 参考资料说明
 
-- `docs/PRD.md` — **产品需求文档**。产品定位、目标用户、功能清单（含优先级与毕设范围标注）、4 个核心场景用户故事与验收标准、非功能需求、产品边界。
-- `docs/AGENT_SPEC.md` — **代理设计规范**。代理的原则、能力矩阵、业务场景、UI 形态、三项机制、错误恢复等全部定义。
-- `docs/IMPLEMENTATION_PLAN.md` — **编码实施计划**（初稿）。10 个子任务、4 个 Phase、技术风险。PM 已审阅，有 3 条调整建议待采纳修订。
-- `docs/AGENT_DEFINITION_QUESTIONS.md` — 设计定义阶段的问答工作文档（7 组全部定稿）。保留用于决策追溯，不作为设计依据——以 AGENT_SPEC.md 为准。
-- `docs/信息服务APP的适老化设计与多模态交互_开题报告初稿.txt` — 毕业设计开题报告（文献综述、研究方法）。**论文北极星**，所有设计决策需与此对齐。
-- `docs/复刻浙里办/` — 浙里办页面逻辑说明 + 32 张截图。**场景参考**，非设计依据。
-- `ISSUES.md` — **本项目唯一的**问题清单。新增问题/任务一律写入此文件。状态：✅ 已完成 / 🧪 已实现待测 / 🔧 未实现 / 🐛 Bug / ❓ 待确认。
+- `docs/PRD.md` — **产品需求文档**。产品定位、目标用户、功能清单、4 个核心场景用户故事与验收标准。
+- `docs/AGENT_SPEC.md` — **代理设计规范**。代理的原则、能力矩阵、业务场景、UI 形态、三项机制。
+- `docs/ARCHITECTURE.md` — **系统架构设计**。技术选型、数据模型、WebSocket 协议、核心场景时序。
+- `docs/UI_UX_DESIGN.md` — **UI/UX 交互设计**。4 场景剧本、适老化规范、代理面板设计。
+- `docs/NEXT_PLAN.md` — **下一阶段计划**（v2.0）。6 个任务，Web Speech API + PWA 简化方案。
+- `docs/信息服务APP的适老化设计与多模态交互_开题报告初稿.txt` — **论文北极星**。
+- `docs/复刻浙里办/` — 浙里办页面逻辑 + 截图。**场景参考**。
+- `ISSUES.md` — **本项目唯一的**问题清单。状态：✅ 已完成 / 🧪 已实现待测 / 🔧 未实现 / 🐛 Bug / ❓ 待确认。
 
 ## 工作准则
 
