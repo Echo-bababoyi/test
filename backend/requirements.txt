@@ -2,9 +2,10 @@ fastapi
 uvicorn[standard]
 websockets
 pydantic
-httpx
+httpx[socks]
 python-dotenv
 agno==1.4.4
 openai
+mcp
 edge-tts
 websocket-client
