@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/agent_command_executor.dart';
 import '../services/audio_player.dart';
+import '../services/draft_service.dart';
+import '../services/draft_store.dart';
 import '../services/log_service.dart';
 import '../services/ws_client.dart';
 import '../services/session_state.dart';
@@ -27,7 +29,8 @@ String _generateSessionId() {
 }
 
 class AgentPanel extends StatefulWidget {
-  const AgentPanel({super.key});
+  final String? currentPath;
+  const AgentPanel({super.key, this.currentPath});
 
   @override
   State<AgentPanel> createState() => _AgentPanelState();
@@ -78,9 +81,35 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
       });
       _ws.send('agent_wake', {});
       _ws.messages.listen(_handleMessage);
+      await _checkPageDraft();
     } catch (_) {
       setState(() => _session.websocketConnected = false);
     }
+  }
+
+  static const _pageIdMap = {
+    '/elder/yibao-jiaofei': ('yibao_jiaofei', '医保缴费'),
+    '/elder/yibao-query':   ('yibao_query',   '医保查询'),
+    '/elder/pension-query': ('pension_query',  '养老金查询'),
+  };
+
+  Future<void> _checkPageDraft() async {
+    if (!mounted) return;
+    final location = widget.currentPath ?? '';
+    final entry = _pageIdMap[location];
+    if (entry == null) return;
+    final (pageId, pageTitle) = entry;
+    final draft = await DraftService.checkDraft(pageId);
+    if (!mounted || draft == null) return;
+    setState(() {
+      _items.add({
+        'type': 'draft_prompt',
+        'draft': draft,
+        'pageId': pageId,
+        'pageTitle': pageTitle,
+      });
+    });
+    _scrollToBottom();
   }
 
   void _handleMessage(Map<String, dynamic> msg) {
@@ -308,6 +337,33 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
                   ),
                 );
               }
+              if (item['type'] == 'draft_prompt') {
+                final pageTitle = item['pageTitle'] as String;
+                final draft = item['draft'] as Map<String, dynamic>;
+                return _DraftPromptCard(
+                  pageTitle: pageTitle,
+                  onContinue: () {
+                    setState(() => _items.removeAt(i));
+                    // 跳转到对应页面，草稿仍在 IndexedDB 可供恢复
+                    final pageId = item['pageId'] as String;
+                    final routeMap = {
+                      'yibao_jiaofei': '/elder/yibao-jiaofei',
+                      'yibao_query':   '/elder/yibao-query',
+                      'pension_query': '/elder/pension-query',
+                    };
+                    final route = routeMap[pageId];
+                    if (route != null) {
+                      _close().then((_) {
+                        if (mounted) GoRouter.of(context).go(route);
+                      });
+                    }
+                  },
+                  onDismiss: () {
+                    setState(() => _items.removeAt(i));
+                    DraftStore.deleteDraft(draft['draft_id'] as String);
+                  },
+                );
+              }
               return AgentBubble(
                 text: item['text'] as String,
                 isAgent: item['role'] == 'agent',
@@ -391,6 +447,81 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
           ),
         ),
       ],
+    );
+  }
+}
+
+class _DraftPromptCard extends StatelessWidget {
+  final String pageTitle;
+  final VoidCallback onContinue;
+  final VoidCallback onDismiss;
+
+  const _DraftPromptCard({
+    required this.pageTitle,
+    required this.onContinue,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF3E0),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFFFCC80)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: const [
+                Icon(Icons.edit_note, color: Color(0xFFFF6D00), size: 20),
+                SizedBox(width: 6),
+                Text('草稿提醒', style: TextStyle(fontSize: 14, color: Color(0xFFFF6D00), fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '上次有个未完成的$pageTitle，要继续吗？',
+              style: const TextStyle(fontSize: 16, color: Color(0xFF333333)),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onDismiss,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF999999),
+                      side: const BorderSide(color: Color(0xFFE5E5E5)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    child: const Text('不用了', style: TextStyle(fontSize: 15)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: onContinue,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF6D00),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      elevation: 0,
+                    ),
+                    child: const Text('继续', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -76,11 +76,12 @@ class _AssistantButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        final path = GoRouter.of(context).state.uri.path;
         showDialog(
           context: context,
           barrierColor: Colors.transparent,
           barrierDismissible: false,
-          builder: (_) => const AgentPanel(),
+          builder: (_) => AgentPanel(currentPath: path),
         );
       },
       child: Transform.translate(

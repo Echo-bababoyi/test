@@ -17,6 +17,7 @@ from backend.models import (
     AgentOutOfScopePayload,
     AgentErrorPayload,
     AgentThinkingPayload,
+    CmdHighlightPayload,
     TaskDonePayload,
     AsrResultPayload,
 )
@@ -168,6 +169,13 @@ class WSHandler:
                 tts_format="mp3",
                 requires_confirmation=False,
                 confirmation_timeout_ms=None,
+            ).model_dump())
+            await self.send("cmd_highlight", CmdHighlightPayload(
+                element_key="result_area",
+                highlight_color="#FF6D00",
+                pulse=True,
+                voice_hint="",
+                duration_ms=5000,
             ).model_dump())
             await self._push_task_done(
                 scene=self._pending_intent.get("scene_id", "") if self._pending_intent else "",
