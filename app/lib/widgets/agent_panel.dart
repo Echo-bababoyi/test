@@ -38,6 +38,7 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
   final _session = SessionState();
   final _ws = WsClient.instance;
   final _scrollController = ScrollController();
+  final _textController = TextEditingController();
   AgentCommandExecutor? _executor;
 
   final List<Map<String, dynamic>> _items = [];
@@ -134,17 +135,33 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
     if (mounted) Navigator.of(context).pop();
   }
 
+  void _sendText() {
+    final text = _textController.text.trim();
+    if (text.isEmpty) return;
+    _session.addDialog('user', text);
+    setState(() {
+      _items.add({'role': 'user', 'text': text});
+    });
+    _ws.send('text_input', {
+      'session_id': _session.sessionId,
+      'text': text,
+    });
+    _textController.clear();
+    _scrollToBottom();
+  }
+
   @override
   void dispose() {
     _slideController.dispose();
     _scrollController.dispose();
+    _textController.dispose();
     _ws.disconnect();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final panelHeight = MediaQuery.of(context).size.height * 0.45;
+    final panelHeight = MediaQuery.of(context).size.height * 0.55;
 
     return GestureDetector(
       onTap: _close,
@@ -200,7 +217,68 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
                     ),
                     const Divider(height: 1),
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 48,
+                              child: TextField(
+                                controller: _textController,
+                                style: const TextStyle(fontSize: 18),
+                                textInputAction: TextInputAction.send,
+                                onSubmitted: (_) => _sendText(),
+                                decoration: InputDecoration(
+                                  hintText: '输入文字指令…',
+                                  hintStyle: const TextStyle(fontSize: 18, color: Color(0xFFBBBBBB)),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(24),
+                                    borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(24),
+                                    borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(24),
+                                    borderSide: const BorderSide(color: Color(0xFFFF6D00), width: 1.5),
+                                  ),
+                                  filled: true,
+                                  fillColor: const Color(0xFFFAFAFA),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: Material(
+                              color: const Color(0xFFFF6D00),
+                              shape: const CircleBorder(),
+                              child: InkWell(
+                                customBorder: const CircleBorder(),
+                                onTap: _sendText,
+                                child: const Icon(Icons.send, color: Colors.white, size: 22),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: const [
+                          Expanded(child: Divider(indent: 24, endIndent: 8)),
+                          Text('或', style: TextStyle(fontSize: 13, color: Color(0xFFBBBBBB))),
+                          Expanded(child: Divider(indent: 8, endIndent: 24)),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Column(
                         children: [
                           MicButton(onAudioEnd: _onAudioEnd),
