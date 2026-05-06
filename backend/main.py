@@ -17,13 +17,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+_active_sessions: set[str] = set()
+
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
 
 
+@app.get("/api/status")
+async def status():
+    return {
+        "status": "ok",
+        "active_sessions": len(_active_sessions),
+        "session_ids": list(_active_sessions),
+    }
+
+
 @app.websocket("/ws/session/{session_id}")
 async def ws_session(websocket: WebSocket, session_id: str):
-    handler = WSHandler(websocket, session_id)
-    await handler.run()
+    _active_sessions.add(session_id)
+    try:
+        handler = WSHandler(websocket, session_id)
+        await handler.run()
+    finally:
+        _active_sessions.discard(session_id)

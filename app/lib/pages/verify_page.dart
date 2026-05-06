@@ -23,6 +23,7 @@ class VerifyPage extends StatefulWidget {
 class _VerifyPageState extends State<VerifyPage> {
   final _phoneController = TextEditingController();
   final _codeController = TextEditingController();
+  final _codeFocusNode = FocusNode();
 
   final _phoneKey = AgentElementRegistry.register('input_phone');
   final _sendBtnKey = AgentElementRegistry.register('btn_send_code');
@@ -32,6 +33,13 @@ class _VerifyPageState extends State<VerifyPage> {
   int _countdown = 0;
   Timer? _timer;
 
+  bool get _phoneValid {
+    final p = _phoneController.text;
+    return p.length == 11 && p.startsWith('1');
+  }
+
+  bool get _phoneInvalid => _phoneController.text.isNotEmpty && !_phoneValid;
+
   bool get _canLogin => _codeController.text == '123456';
 
   @override
@@ -39,6 +47,7 @@ class _VerifyPageState extends State<VerifyPage> {
     super.initState();
     AgentElementRegistry.registerController('input_phone', _phoneController);
     AgentElementRegistry.registerController('input_verify_code', _codeController);
+    _phoneController.addListener(() => setState(() {}));
     _codeController.addListener(() => setState(() {}));
   }
 
@@ -49,10 +58,12 @@ class _VerifyPageState extends State<VerifyPage> {
     AgentElementRegistry.unregister('input_verify_code');
     _phoneController.dispose();
     _codeController.dispose();
+    _codeFocusNode.dispose();
     super.dispose();
   }
 
   void _sendCode() {
+    if (!_phoneValid) return;
     setState(() => _countdown = 60);
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -63,6 +74,8 @@ class _VerifyPageState extends State<VerifyPage> {
         setState(() => _countdown--);
       }
     });
+    // autofocus 验证码框
+    _codeFocusNode.requestFocus();
   }
 
   InputDecoration _inputDecoration({String? label, IconData? prefix}) {
@@ -96,7 +109,7 @@ class _VerifyPageState extends State<VerifyPage> {
         backgroundColor: _kOrange,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('验证码登录', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+        title: const Text('验证码登录', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -125,6 +138,11 @@ class _VerifyPageState extends State<VerifyPage> {
                       style: const TextStyle(fontSize: 18),
                     ),
                   ),
+                  if (_phoneInvalid)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 6),
+                      child: Text('请输入11位手机号（首位为1）', style: TextStyle(fontSize: 15, color: Color(0xFFFF3B30))),
+                    ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -134,7 +152,9 @@ class _VerifyPageState extends State<VerifyPage> {
                           child: TextField(
                             key: _codeKey,
                             controller: _codeController,
+                            focusNode: _codeFocusNode,
                             keyboardType: TextInputType.number,
+                            autofocus: false,
                             decoration: _inputDecoration(label: '验证码', prefix: Icons.sms),
                             style: const TextStyle(fontSize: 18),
                           ),
@@ -145,7 +165,7 @@ class _VerifyPageState extends State<VerifyPage> {
                         height: 56,
                         child: OutlinedButton(
                           key: _sendBtnKey,
-                          onPressed: _countdown == 0 ? _sendCode : null,
+                          onPressed: (_countdown == 0 && _phoneValid) ? _sendCode : null,
                           style: OutlinedButton.styleFrom(
                             foregroundColor: _kOrange,
                             side: const BorderSide(color: _kOrange),
@@ -153,7 +173,7 @@ class _VerifyPageState extends State<VerifyPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                           ),
                           child: Text(
-                            _countdown > 0 ? '${_countdown}s' : '发送',
+                            _countdown > 0 ? '${_countdown}s 后重发' : '发送',
                             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -168,7 +188,7 @@ class _VerifyPageState extends State<VerifyPage> {
               height: 56,
               child: ElevatedButton(
                 key: _loginBtnKey,
-                onPressed: _canLogin ? () { AuthState.instance.login(); context.go('/elder'); } : null,
+                onPressed: _canLogin ? () { AuthState.instance.login(name: '张大爷'); context.go('/elder'); } : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _kOrange,
                   disabledBackgroundColor: const Color(0xFFFFB07A),

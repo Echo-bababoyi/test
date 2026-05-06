@@ -76,11 +76,10 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       backgroundColor: _kBg,
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         backgroundColor: _kOrange,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('搜索服务', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+        title: const Text('搜索服务', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
       body: Column(

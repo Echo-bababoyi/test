@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/agent_element_registry.dart';
 import '../services/ws_client.dart';
+import '../widgets/connection_indicator.dart';
 import '../widgets/elder_bottom_nav.dart';
 
 const _kOrange = Color(0xFFFF6D00);
@@ -46,8 +47,9 @@ class _YibaoQueryPageState extends State<YibaoQueryPage> {
         backgroundColor: _kOrange,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('医保查询', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+        title: const Text('医保查询', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
         centerTitle: true,
+        actions: const [ConnectionIndicator()],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

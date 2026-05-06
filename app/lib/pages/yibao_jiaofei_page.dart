@@ -38,7 +38,9 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
       _targetPerson != null &&
       _year != null &&
       _amountController.text.isNotEmpty &&
-      _idController.text.isNotEmpty;
+      _idController.text.length == 18;
+
+  bool get _idInvalid => _idController.text.isNotEmpty && _idController.text.length != 18;
 
   @override
   void initState() {
@@ -83,7 +85,7 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
         backgroundColor: _kOrange,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('医保缴费', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+        title: const Text('医保缴费', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
       body: ListView(
@@ -147,6 +149,11 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
                     style: const TextStyle(fontSize: 18),
                   ),
                 ),
+                if (_idInvalid)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 6),
+                    child: Text('请输入18位身份证号', style: TextStyle(fontSize: 15, color: Color(0xFFFF3B30))),
+                  ),
               ],
             ),
           ),
@@ -158,12 +165,16 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
               onPressed: _canSubmit ? () {} : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kOrange,
-                disabledBackgroundColor: const Color(0xFFFFB07A),
+                disabledBackgroundColor: const Color(0xFFE0E0E0),
                 foregroundColor: Colors.white,
+                disabledForegroundColor: const Color(0xFF999999),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
-              child: const Text('去支付', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+              child: Text(
+                _canSubmit ? '去支付' : '请先填写完整信息',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
             ),
           ),
         ],

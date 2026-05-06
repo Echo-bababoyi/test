@@ -38,7 +38,7 @@ class _FaceAuthPageState extends State<FaceAuthPage> {
         backgroundColor: _kOrange,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('刷脸登录', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+        title: const Text('刷脸登录', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
       body: Padding(

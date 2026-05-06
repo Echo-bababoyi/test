@@ -26,7 +26,7 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false,
+        foregroundColor: const Color(0xFF333333),
       ),
       body: Column(
         children: [

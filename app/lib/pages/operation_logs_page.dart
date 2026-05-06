@@ -60,7 +60,7 @@ class _OperationLogsPageState extends State<OperationLogsPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('操作记录', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+        title: const Text('操作记录', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
         backgroundColor: const Color(0xFFFF6D00),
         foregroundColor: Colors.white,
         elevation: 0,

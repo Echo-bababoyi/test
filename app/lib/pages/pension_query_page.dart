@@ -46,7 +46,7 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
         backgroundColor: _kOrange,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('养老金查询', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+        title: const Text('养老金查询', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
       body: Padding(

@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import logging
+import time
 import uuid
 from enum import Enum
 from datetime import datetime, timezone
@@ -41,22 +42,46 @@ class WSHandler:
         self._agent_core = None
         self._pending_intent: dict | None = None
         self._audio_buf: list[bytes] = []
+        self._last_activity: float = time.time()
+
+    async def _heartbeat(self):
+        """每 30 秒发 ping，并检查空闲超时（5 分钟无操作则关闭连接）。"""
+        try:
+            while True:
+                await asyncio.sleep(30)
+                if time.time() - self._last_activity > 300:
+                    logger.info("session=%s idle timeout", self.session_id)
+                    await self.ws.close(1000, "idle timeout")
+                    return
+                await self.ws.send_json({
+                    "type": "ping",
+                    "payload": {},
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                })
+        except Exception:
+            pass  # 连接已断开，静默退出
 
     async def run(self):
         await self.ws.accept()
         logger.info("session=%s connected", self.session_id)
+        hb_task = asyncio.create_task(self._heartbeat())
         try:
             while True:
                 raw = await self.ws.receive_json()
+                if raw.get("type") == "pong":
+                    self._last_activity = time.time()
+                    continue
                 await self._dispatch(raw)
         except Exception as exc:
             logger.info("session=%s disconnected: %s", self.session_id, exc)
         finally:
+            hb_task.cancel()
             if self._agent_core:
-                self._agent_core.resolve_permission(False)  # 释放可能挂起的 HITL
+                self._agent_core.resolve_permission(False)
                 self._agent_core = None
 
     async def _dispatch(self, raw: dict):
+        self._last_activity = time.time()
         msg = InboundMessage(**raw)
         msg_type = msg.type
 
