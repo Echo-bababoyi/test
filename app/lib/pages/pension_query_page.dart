@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/agent_element_registry.dart';
+import '../services/ws_client.dart';
 import '../widgets/elder_bottom_nav.dart';
 
 class PensionQueryPage extends StatefulWidget {
@@ -11,10 +12,22 @@ class PensionQueryPage extends StatefulWidget {
 
 class _PensionQueryPageState extends State<PensionQueryPage> {
   bool _hasResult = false;
-  String _amount = '';
+  static const _mockAmount = '3280';
 
-  final _queryKey = AgentElementRegistry.register('pension_query_btn_query');
-  final _resultKey = AgentElementRegistry.register('pension_query_result_amount');
+  final _queryKey = AgentElementRegistry.register('btn_query');
+  final _resultKey = AgentElementRegistry.register('result_pension_amount');
+
+  void _doQuery() {
+    setState(() => _hasResult = true);
+    WsClient.instance.send('query_result_ready', {
+      'page_id': 'pension_query',
+      'result_fields': {
+        'month': '2026年5月',
+        'amount': _mockAmount,
+        'unit': '元',
+      },
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +40,7 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
           children: [
             ElevatedButton(
               key: _queryKey,
-              onPressed: () => setState(() {
-                _hasResult = true;
-                _amount = '3,200.00';
-              }),
+              onPressed: _doQuery,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF6D00),
                 foregroundColor: Colors.white,
@@ -47,9 +57,9 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('本月养老金', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                      const Text('本月养老金（2026年5月）', style: TextStyle(fontSize: 16, color: Colors.grey)),
                       const SizedBox(height: 8),
-                      Text('¥$_amount', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFFF6D00))),
+                      Text('¥$_mockAmount 元', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFFF6D00))),
                     ],
                   ),
                 ),

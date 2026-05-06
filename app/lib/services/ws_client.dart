@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WsClient {
+  static final WsClient instance = WsClient._();
+  WsClient._();
+
   static const _baseUrl = 'ws://localhost:8000/ws/session/';
 
   WebSocketChannel? _channel;

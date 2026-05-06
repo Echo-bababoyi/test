@@ -36,7 +36,7 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
   late Animation<Offset> _slideAnim;
 
   final _session = SessionState();
-  final _ws = WsClient();
+  final _ws = WsClient.instance;
   final _scrollController = ScrollController();
   AgentCommandExecutor? _executor;
 

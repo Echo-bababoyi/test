@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../services/agent_element_registry.dart';
 
 class VerifyPage extends StatefulWidget {
   const VerifyPage({super.key});
@@ -12,11 +14,45 @@ class _VerifyPageState extends State<VerifyPage> {
   final _phoneController = TextEditingController();
   final _codeController = TextEditingController();
 
+  final _phoneKey = AgentElementRegistry.register('input_phone');
+  final _sendBtnKey = AgentElementRegistry.register('btn_send_code');
+  final _codeKey = AgentElementRegistry.register('input_verify_code');
+  final _loginBtnKey = AgentElementRegistry.register('btn_login');
+
+  int _countdown = 0;
+  Timer? _timer;
+
+  bool get _canLogin => _codeController.text == '123456';
+
+  @override
+  void initState() {
+    super.initState();
+    AgentElementRegistry.registerController('input_phone', _phoneController);
+    AgentElementRegistry.registerController('input_verify_code', _codeController);
+    _codeController.addListener(() => setState(() {}));
+  }
+
   @override
   void dispose() {
+    _timer?.cancel();
+    AgentElementRegistry.unregister('input_phone');
+    AgentElementRegistry.unregister('input_verify_code');
     _phoneController.dispose();
     _codeController.dispose();
     super.dispose();
+  }
+
+  void _sendCode() {
+    setState(() => _countdown = 60);
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_countdown <= 1) {
+        _timer?.cancel();
+        setState(() => _countdown = 0);
+      } else {
+        setState(() => _countdown--);
+      }
+    });
   }
 
   @override
@@ -30,6 +66,7 @@ class _VerifyPageState extends State<VerifyPage> {
           children: [
             const SizedBox(height: 24),
             TextField(
+              key: _phoneKey,
               controller: _phoneController,
               keyboardType: TextInputType.phone,
               decoration: const InputDecoration(
@@ -44,6 +81,7 @@ class _VerifyPageState extends State<VerifyPage> {
               children: [
                 Expanded(
                   child: TextField(
+                    key: _codeKey,
                     controller: _codeController,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
@@ -56,15 +94,20 @@ class _VerifyPageState extends State<VerifyPage> {
                 ),
                 const SizedBox(width: 12),
                 OutlinedButton(
-                  onPressed: () {},
+                  key: _sendBtnKey,
+                  onPressed: _countdown == 0 ? _sendCode : null,
                   style: OutlinedButton.styleFrom(minimumSize: const Size(100, 56)),
-                  child: const Text('发送', style: TextStyle(fontSize: 16)),
+                  child: Text(
+                    _countdown > 0 ? '${_countdown}s' : '发送',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 32),
             ElevatedButton(
-              onPressed: () => context.go('/elder'),
+              key: _loginBtnKey,
+              onPressed: _canLogin ? () => context.go('/elder') : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF6D00),
                 foregroundColor: Colors.white,

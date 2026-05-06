@@ -26,6 +26,14 @@ SCENE_TOOLS = {
     "yibao_query": [cmd_navigate, cmd_highlight, fill_field_normal, cmd_press_button],
 }
 
+SCENE_PROMPTS = {
+    "login_face": "scene_login_face.txt",
+    "login_verify": "scene_login_verify.txt",
+    "yibao_jiaofei": "scene_yibao_jiaofei.txt",
+    "pension_query": "scene_pension_query.txt",
+    "yibao_query": "scene_yibao_query.txt",
+}
+
 _SENSITIVE_TOOLS = {"fill_field_sensitive", "read_sms"}
 
 _PERMISSION_META = {
@@ -43,6 +51,14 @@ _PERMISSION_META = {
 
 _INTENT_PROMPT = (_PROMPTS_DIR / "intent_classify.txt").read_text(encoding="utf-8")
 _CONFIRM_PROMPT = (_PROMPTS_DIR / "confirm_rephrase.txt").read_text(encoding="utf-8")
+_OUT_OF_SCOPE_PROMPT = (_PROMPTS_DIR / "scene_out_of_scope.txt").read_text(encoding="utf-8")
+
+
+def _load_scene_prompt(scene_id: str) -> str:
+    filename = SCENE_PROMPTS.get(scene_id)
+    if filename:
+        return (_PROMPTS_DIR / filename).read_text(encoding="utf-8")
+    return f"你是小浙，正在帮用户完成：{scene_id}。按步骤调用工具完成任务，不要闲聊。"
 
 
 class AgentCore:
@@ -53,6 +69,9 @@ class AgentCore:
         self._current_scene: str | None = None
         self._permission_event: asyncio.Event = asyncio.Event()
         self._permission_granted: bool = False
+        # Pending query results forwarded from ws_handler
+        self._query_result: dict | None = None
+        self._query_event: asyncio.Event = asyncio.Event()
 
         self._classifier = Agent(
             model=DeepSeek(id="deepseek-chat"),
@@ -98,28 +117,46 @@ class AgentCore:
             "confirm_text": confirm_text,
         }
 
-    async def execute_task(self, intent_summary: str) -> None:
-        """Execute the task for the classified scene with HITL loop for sensitive tools."""
+    async def handle_out_of_scope(self, user_input: str) -> str:
+        """Generate a polite out-of-scope reply using the scene_out_of_scope prompt."""
+        agent = Agent(
+            model=DeepSeek(id="deepseek-chat"),
+            session_id=f"{self.session_id}_oos",
+            instructions=_OUT_OF_SCOPE_PROMPT,
+            markdown=False,
+            add_history_to_messages=False,
+        )
+        response = await agent.arun(user_input)
+        return (response.content or "抱歉，这个功能暂时帮不到您").strip()
+
+    async def execute_task(self, intent_summary: str) -> str:
+        """Execute the task for the classified scene with HITL loop for sensitive tools.
+
+        Returns a one-line summary for task_done.
+        """
         scene_id = self._current_scene
         if not scene_id or scene_id == "out_of_scope":
             logger.info("session=%s execute_task skipped: out_of_scope", self.session_id)
-            return
+            return ""
 
+        instructions = _load_scene_prompt(scene_id)
         tools = SCENE_TOOLS.get(scene_id, [cmd_navigate, cmd_highlight])
         self._executor = Agent(
             model=DeepSeek(id="deepseek-chat"),
             session_id=self.session_id,
             tools=tools,
-            instructions=f"你是小浙，正在帮用户完成：{intent_summary}。按步骤调用工具完成任务，不要闲聊。",
+            instructions=instructions,
             markdown=False,
             add_history_to_messages=True,
             num_history_runs=10,
         )
 
         input_msg = intent_summary
+        last_content = ""
         while True:
             logger.info("session=%s execute_task scene=%s input=%r", self.session_id, scene_id, input_msg)
             response = await self._executor.arun(input_msg)
+            last_content = response.content or ""
 
             stopped_tool = self._get_stopped_tool(response)
             if stopped_tool in _SENSITIVE_TOOLS:
@@ -138,11 +175,33 @@ class AgentCore:
                         "requires_confirmation": False,
                         "confirmation_timeout_ms": None,
                     })
-                    return
+                    return "已取消"
                 input_msg = "用户已授权，继续执行"
             else:
-                logger.info("session=%s execute_task done content=%s", self.session_id, response.content)
+                logger.info("session=%s execute_task done content=%s", self.session_id, last_content)
                 break
+
+        return last_content or intent_summary
+
+    def set_query_result(self, page_id: str, result_fields: dict) -> None:
+        """Called by ws_handler when query_result_ready arrives from frontend."""
+        self._query_result = {"page_id": page_id, "result_fields": result_fields}
+        self._query_event.set()
+
+    async def broadcast_query_result(self) -> str:
+        """Generate an oral summary of the query result via LLM and return the text."""
+        result = self._query_result or {}
+        result_text = json.dumps(result.get("result_fields", {}), ensure_ascii=False)
+        prompt = f"请用口语化方式，简短播报以下查询结果（不超过30字）：{result_text}"
+
+        agent = Agent(
+            model=DeepSeek(id="deepseek-chat"),
+            session_id=f"{self.session_id}_broadcast",
+            markdown=False,
+            add_history_to_messages=False,
+        )
+        response = await agent.arun(prompt)
+        return (response.content or result_text).strip()
 
     def _get_stopped_tool(self, response) -> str | None:
         """Return the tool_name of the message that caused stop_after_tool_call, or None."""

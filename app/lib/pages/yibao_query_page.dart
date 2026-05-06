@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/agent_element_registry.dart';
+import '../services/ws_client.dart';
 import '../widgets/elder_bottom_nav.dart';
 
 class YibaoQueryPage extends StatefulWidget {
@@ -11,10 +12,22 @@ class YibaoQueryPage extends StatefulWidget {
 
 class _YibaoQueryPageState extends State<YibaoQueryPage> {
   bool _hasResult = false;
-  String _balance = '';
+  static const _mockBalance = '12560';
 
-  final _queryKey = AgentElementRegistry.register('yibao_query_btn_query');
-  final _resultKey = AgentElementRegistry.register('yibao_query_result_amount');
+  final _queryKey = AgentElementRegistry.register('btn_query');
+  final _resultKey = AgentElementRegistry.register('result_yibao_amount');
+
+  void _doQuery() {
+    setState(() => _hasResult = true);
+    WsClient.instance.send('query_result_ready', {
+      'page_id': 'yibao_query',
+      'result_fields': {
+        'balance': _mockBalance,
+        'unit': '元',
+        'status': '正常',
+      },
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +40,7 @@ class _YibaoQueryPageState extends State<YibaoQueryPage> {
           children: [
             ElevatedButton(
               key: _queryKey,
-              onPressed: () => setState(() {
-                _hasResult = true;
-                _balance = '1,234.56';
-              }),
+              onPressed: _doQuery,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF6D00),
                 foregroundColor: Colors.white,
@@ -47,9 +57,9 @@ class _YibaoQueryPageState extends State<YibaoQueryPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('医保账户余额', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                      const Text('医保账户余额（状态：正常）', style: TextStyle(fontSize: 16, color: Colors.grey)),
                       const SizedBox(height: 8),
-                      Text('¥$_balance', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFFF6D00))),
+                      Text('¥$_mockBalance 元', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFFF6D00))),
                     ],
                   ),
                 ),

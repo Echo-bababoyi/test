@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import logging
+import uuid
 from enum import Enum
 from datetime import datetime, timezone
 
@@ -15,6 +16,7 @@ from backend.models import (
     AgentReplyPayload,
     AgentOutOfScopePayload,
     AgentErrorPayload,
+    TaskDonePayload,
 )
 
 logger = logging.getLogger(__name__)
@@ -137,6 +139,29 @@ class WSHandler:
 
     async def _on_query_result_ready(self, payload):
         logger.info("session=%s query_result_ready page=%s", self.session_id, payload.page_id)
+        if not self._agent_core:
+            return
+        self._agent_core.set_query_result(payload.page_id, payload.result_fields)
+        asyncio.create_task(self._broadcast_query_result())
+
+    async def _broadcast_query_result(self) -> None:
+        try:
+            summary_text = await self._agent_core.broadcast_query_result()
+            tts_b64 = await self._tts_to_b64(summary_text)
+            await self.send("agent_reply", AgentReplyPayload(
+                text=summary_text,
+                tts_audio_base64=tts_b64,
+                tts_format="mp3",
+                requires_confirmation=False,
+                confirmation_timeout_ms=None,
+            ).model_dump())
+            await self._push_task_done(
+                scene=self._pending_intent.get("scene_id", "") if self._pending_intent else "",
+                summary=summary_text,
+            )
+            self.state = SessionState.done
+        except Exception as exc:
+            logger.error("session=%s broadcast_query_result error: %s", self.session_id, exc)
 
     async def process_asr_text(self, text: str) -> None:
         """Called when final ASR transcript is ready."""
@@ -149,11 +174,12 @@ class WSHandler:
 
             if scene_id == "out_of_scope":
                 self.state = SessionState.idle
-                tts_b64 = await self._tts_to_b64("抱歉，这个功能暂时帮不到您")
+                reply_text = await self._agent_core.handle_out_of_scope(intent["intent_summary"])
+                tts_b64 = await self._tts_to_b64(reply_text)
                 await self.send("agent_out_of_scope", AgentOutOfScopePayload(
                     user_intent=intent["intent_summary"],
                     scope_type="not_supported",
-                    voice_hint="抱歉，这个功能暂时帮不到您",
+                    voice_hint=reply_text,
                     tts_audio_base64=tts_b64,
                 ).model_dump())
                 return
@@ -180,7 +206,12 @@ class WSHandler:
 
     async def _run_execute(self, intent_summary: str) -> None:
         try:
-            await self._agent_core.execute_task(intent_summary)
+            summary = await self._agent_core.execute_task(intent_summary)
+            if summary and summary != "已取消":
+                await self._push_task_done(
+                    scene=self._pending_intent.get("scene_id", "") if self._pending_intent else "",
+                    summary=summary,
+                )
             self.state = SessionState.done
         except Exception as exc:
             logger.error("session=%s execute_task error: %s", self.session_id, exc)
@@ -192,6 +223,16 @@ class WSHandler:
                 voice_hint="执行失败，请再试一次",
                 tts_audio_base64=None,
             ).model_dump())
+
+    async def _push_task_done(self, scene: str, summary: str) -> None:
+        tts_b64 = await self._tts_to_b64(summary)
+        await self.send("task_done", TaskDonePayload(
+            scene=scene,
+            summary=summary,
+            voice_hint=summary,
+            tts_audio_base64=tts_b64,
+            log_id=str(uuid.uuid4()),
+        ).model_dump())
 
     async def _tts_to_b64(self, text: str) -> str | None:
         """Synthesize text and return base64-encoded mp3, or None on failure."""

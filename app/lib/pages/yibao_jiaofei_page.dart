@@ -11,32 +11,40 @@ class YibaoJiaofeiPage extends StatefulWidget {
 }
 
 class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
-  String? _targetPerson;
-  String? _year;
+  String? _targetPerson = '本人';
+  String? _year = '2026年度';
   final _amountController = TextEditingController();
   final _idController = TextEditingController();
 
-  final _targetKey = AgentElementRegistry.register('yibao_jiaofei_target');
-  final _yearKey = AgentElementRegistry.register('yibao_jiaofei_year');
-  final _amountKey = AgentElementRegistry.register('yibao_jiaofei_amount');
-  final _idKey = AgentElementRegistry.register('yibao_jiaofei_id');
-  final _submitKey = AgentElementRegistry.register('yibao_jiaofei_submit');
+  final _targetKey = AgentElementRegistry.register('select_jiaofei_duixiang');
+  final _yearKey = AgentElementRegistry.register('select_jiaofei_niandu');
+  final _amountKey = AgentElementRegistry.register('input_jiaofei_jine');
+  final _idKey = AgentElementRegistry.register('input_id_card');
+  final _submitKey = AgentElementRegistry.register('btn_go_payment');
 
   static const _persons = ['本人', '配偶', '子女'];
   static const _years = ['2024年度', '2025年度', '2026年度'];
 
+  bool get _canSubmit =>
+      _targetPerson != null &&
+      _year != null &&
+      _amountController.text.isNotEmpty &&
+      _idController.text.isNotEmpty;
+
   @override
   void initState() {
     super.initState();
-    AgentElementRegistry.registerController('yibao_jiaofei_amount', _amountController);
-    AgentElementRegistry.registerController('yibao_jiaofei_id', _idController);
+    AgentElementRegistry.registerController('input_jiaofei_jine', _amountController);
+    AgentElementRegistry.registerController('input_id_card', _idController);
+    _amountController.addListener(() => setState(() {}));
+    _idController.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
     _autoSave();
-    AgentElementRegistry.unregister('yibao_jiaofei_amount');
-    AgentElementRegistry.unregister('yibao_jiaofei_id');
+    AgentElementRegistry.unregister('input_jiaofei_jine');
+    AgentElementRegistry.unregister('input_id_card');
     _amountController.dispose();
     _idController.dispose();
     super.dispose();
@@ -102,7 +110,7 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
           const SizedBox(height: 32),
           ElevatedButton(
             key: _submitKey,
-            onPressed: () {},
+            onPressed: _canSubmit ? () {} : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF6D00),
               foregroundColor: Colors.white,

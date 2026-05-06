@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../services/agent_element_registry.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,6 +11,10 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool _agreed = false;
+
+  final _chkKey = AgentElementRegistry.register('chk_agree_terms');
+  final _faceBtnKey = AgentElementRegistry.register('btn_face_login');
+  final _verifyBtnKey = AgentElementRegistry.register('btn_verify_login');
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +29,7 @@ class _LoginPageState extends State<LoginPage> {
             const Text('选择登录方式', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 32),
             ElevatedButton.icon(
+              key: _faceBtnKey,
               onPressed: _agreed ? () => context.push('/login/face') : null,
               icon: const Icon(Icons.face),
               label: const Text('刷脸登录', style: TextStyle(fontSize: 20)),
@@ -35,6 +41,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
+              key: _verifyBtnKey,
               onPressed: _agreed ? () => context.push('/login/verify') : null,
               icon: const Icon(Icons.sms),
               label: const Text('验证码登录', style: TextStyle(fontSize: 20)),
@@ -44,6 +51,7 @@ class _LoginPageState extends State<LoginPage> {
             Row(
               children: [
                 Checkbox(
+                  key: _chkKey,
                   value: _agreed,
                   onChanged: (v) => setState(() => _agreed = v ?? false),
                 ),
