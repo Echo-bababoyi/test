@@ -3,6 +3,15 @@ import '../services/agent_element_registry.dart';
 import '../services/ws_client.dart';
 import '../widgets/elder_bottom_nav.dart';
 
+const _kOrange = Color(0xFFFF6D00);
+const _kBg = Color(0xFFF5F5F5);
+const _kSurface = Colors.white;
+const _kShadow = BoxShadow(
+  color: Color(0x0D000000),
+  blurRadius: 8,
+  offset: Offset(0, 2),
+);
+
 class YibaoQueryPage extends StatefulWidget {
   const YibaoQueryPage({super.key});
 
@@ -32,36 +41,70 @@ class _YibaoQueryPageState extends State<YibaoQueryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('医保查询')),
+      backgroundColor: _kBg,
+      appBar: AppBar(
+        backgroundColor: _kOrange,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Text('医保查询', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ElevatedButton(
-              key: _queryKey,
-              onPressed: _doQuery,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF6D00),
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 56),
+            SizedBox(
+              height: 56,
+              child: ElevatedButton(
+                key: _queryKey,
+                onPressed: _doQuery,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _kOrange,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: const Text('查询', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
               ),
-              child: const Text('查询', style: TextStyle(fontSize: 20)),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             if (_hasResult)
-              Card(
+              Container(
                 key: _resultKey,
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('医保账户余额（状态：正常）', style: TextStyle(fontSize: 16, color: Colors.grey)),
-                      const SizedBox(height: 8),
-                      Text('¥$_mockBalance 元', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFFF6D00))),
-                    ],
-                  ),
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: _kSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: const [_kShadow],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('医保账户余额', style: TextStyle(fontSize: 18, color: Color(0xFF999999))),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: const [
+                        Icon(Icons.check_circle, color: Color(0xFF4CAF50), size: 18),
+                        SizedBox(width: 6),
+                        Text('状态：正常', style: TextStyle(fontSize: 16, color: Color(0xFF4CAF50))),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text('¥', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: _kOrange)),
+                        const SizedBox(width: 2),
+                        const Text(_mockBalance, style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: _kOrange)),
+                        const SizedBox(width: 6),
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 4),
+                          child: Text('元', style: TextStyle(fontSize: 18, color: Color(0xFF999999))),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
           ],

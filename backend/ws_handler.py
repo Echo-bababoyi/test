@@ -17,6 +17,7 @@ from backend.models import (
     AgentOutOfScopePayload,
     AgentErrorPayload,
     TaskDonePayload,
+    AsrResultPayload,
 )
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,7 @@ class WSHandler:
             InboundMessageType.user_confirm: self._on_user_confirm,
             InboundMessageType.permission_response: self._on_permission_response,
             InboundMessageType.query_result_ready: self._on_query_result_ready,
+            InboundMessageType.text_input: self._on_text_input,
         }.get(msg_type)
 
         if handler:
@@ -84,6 +86,17 @@ class WSHandler:
             has_draft=False,
             draft_id=None,
         ).model_dump())
+
+    async def _on_text_input(self, payload):
+        """直接文本输入（跳过 ASR，用于演示/测试）"""
+        logger.info("session=%s text_input text=%r", self.session_id, payload.text)
+        self.state = SessionState.confirming
+        await self.send("asr_result", AsrResultPayload(
+            text=payload.text,
+            is_final=True,
+            confidence=1.0,
+        ).model_dump())
+        await self.process_asr_text(payload.text)
 
     async def _on_audio_chunk(self, payload):
         logger.info("session=%s audio_chunk index=%d is_last=%s", self.session_id, payload.chunk_index, payload.is_last)

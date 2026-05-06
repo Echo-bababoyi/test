@@ -3,6 +3,15 @@ import '../services/agent_element_registry.dart';
 import '../services/draft_service.dart';
 import '../widgets/elder_bottom_nav.dart';
 
+const _kOrange = Color(0xFFFF6D00);
+const _kBg = Color(0xFFF5F5F5);
+const _kSurface = Colors.white;
+const _kShadow = BoxShadow(
+  color: Color(0x0D000000),
+  blurRadius: 8,
+  offset: Offset(0, 2),
+);
+
 class YibaoJiaofeiPage extends StatefulWidget {
   const YibaoJiaofeiPage({super.key});
 
@@ -69,54 +78,93 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('医保缴费')),
+      backgroundColor: _kBg,
+      appBar: AppBar(
+        backgroundColor: _kOrange,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Text('医保缴费', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+        centerTitle: true,
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _label('缴费对象'),
-          DropdownButtonFormField<String>(
-            key: _targetKey,
-            value: _targetPerson,
-            items: _persons.map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 18)))).toList(),
-            onChanged: (v) => setState(() => _targetPerson = v),
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-          ),
-          const SizedBox(height: 16),
-          _label('缴费年度'),
-          DropdownButtonFormField<String>(
-            key: _yearKey,
-            value: _year,
-            items: _years.map((y) => DropdownMenuItem(value: y, child: Text(y, style: const TextStyle(fontSize: 18)))).toList(),
-            onChanged: (v) => setState(() => _year = v),
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-          ),
-          const SizedBox(height: 16),
-          _label('缴费金额'),
-          TextField(
-            key: _amountKey,
-            controller: _amountController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(border: OutlineInputBorder(), suffixText: '元'),
-            style: const TextStyle(fontSize: 18),
-          ),
-          const SizedBox(height: 16),
-          _label('身份证号'),
-          TextField(
-            key: _idKey,
-            controller: _idController,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-            style: const TextStyle(fontSize: 18),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            key: _submitKey,
-            onPressed: _canSubmit ? () {} : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF6D00),
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 56),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _kSurface,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: const [_kShadow],
             ),
-            child: const Text('去支付', style: TextStyle(fontSize: 20)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _FieldLabel('缴费对象'),
+                DropdownButtonFormField<String>(
+                  key: _targetKey,
+                  value: _targetPerson,
+                  items: _persons.map((p) => DropdownMenuItem(
+                    value: p,
+                    child: Text(p, style: const TextStyle(fontSize: 18)),
+                  )).toList(),
+                  onChanged: (v) => setState(() => _targetPerson = v),
+                  decoration: _inputDecoration(),
+                  style: const TextStyle(fontSize: 18, color: Color(0xFF333333)),
+                ),
+                const SizedBox(height: 20),
+                _FieldLabel('缴费年度'),
+                DropdownButtonFormField<String>(
+                  key: _yearKey,
+                  value: _year,
+                  items: _years.map((y) => DropdownMenuItem(
+                    value: y,
+                    child: Text(y, style: const TextStyle(fontSize: 18)),
+                  )).toList(),
+                  onChanged: (v) => setState(() => _year = v),
+                  decoration: _inputDecoration(),
+                  style: const TextStyle(fontSize: 18, color: Color(0xFF333333)),
+                ),
+                const SizedBox(height: 20),
+                _FieldLabel('缴费金额'),
+                SizedBox(
+                  height: 56,
+                  child: TextField(
+                    key: _amountKey,
+                    controller: _amountController,
+                    keyboardType: TextInputType.number,
+                    decoration: _inputDecoration(suffixText: '元'),
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                _FieldLabel('身份证号'),
+                SizedBox(
+                  height: 56,
+                  child: TextField(
+                    key: _idKey,
+                    controller: _idController,
+                    decoration: _inputDecoration(),
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 56,
+            child: ElevatedButton(
+              key: _submitKey,
+              onPressed: _canSubmit ? () {} : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _kOrange,
+                disabledBackgroundColor: const Color(0xFFFFB07A),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
+              ),
+              child: const Text('去支付', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+            ),
           ),
         ],
       ),
@@ -124,10 +172,38 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
     );
   }
 
-  Widget _label(String text) {
+  InputDecoration _inputDecoration({String? suffixText}) {
+    return InputDecoration(
+      suffixText: suffixText,
+      suffixStyle: const TextStyle(fontSize: 18, color: Color(0xFF999999)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: _kOrange, width: 1.5),
+      ),
+      filled: true,
+      fillColor: const Color(0xFFFAFAFA),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  final String text;
+  const _FieldLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(text, style: const TextStyle(fontSize: 16, color: Colors.grey)),
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Text(text, style: const TextStyle(fontSize: 18, color: Color(0xFF999999), fontWeight: FontWeight.w500)),
     );
   }
 }

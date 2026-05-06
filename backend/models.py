@@ -10,6 +10,7 @@ class InboundMessageType(str, Enum):
     user_confirm = "user_confirm"
     permission_response = "permission_response"
     query_result_ready = "query_result_ready"
+    text_input = "text_input"
 
 
 class OutboundMessageType(str, Enum):
@@ -66,6 +67,11 @@ class QueryResultReadyPayload(BaseModel):
     result_fields: dict
 
 
+class TextInputPayload(BaseModel):
+    session_id: str
+    text: str
+
+
 INBOUND_PAYLOAD_MAP: dict[str, type] = {
     InboundMessageType.agent_wake: AgentWakePayload,
     InboundMessageType.audio_chunk: AudioChunkPayload,
@@ -73,6 +79,7 @@ INBOUND_PAYLOAD_MAP: dict[str, type] = {
     InboundMessageType.user_confirm: UserConfirmPayload,
     InboundMessageType.permission_response: PermissionResponsePayload,
     InboundMessageType.query_result_ready: QueryResultReadyPayload,
+    InboundMessageType.text_input: TextInputPayload,
 }
 
 
