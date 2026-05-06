@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/agent_element_registry.dart';
+import '../services/auth_state.dart';
 
 const _kOrange = Color(0xFFFF6D00);
 const _kBg = Color(0xFFF5F5F5);
@@ -167,7 +168,7 @@ class _VerifyPageState extends State<VerifyPage> {
               height: 56,
               child: ElevatedButton(
                 key: _loginBtnKey,
-                onPressed: _canLogin ? () => context.go('/elder') : null,
+                onPressed: _canLogin ? () { AuthState.instance.login(); context.go('/elder'); } : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _kOrange,
                   disabledBackgroundColor: const Color(0xFFFFB07A),

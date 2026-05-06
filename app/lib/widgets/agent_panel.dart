@@ -45,6 +45,7 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
 
   final List<Map<String, dynamic>> _items = [];
   Timer? _autoDismissTimer;
+  bool _isMinimized = false;
 
   @override
   void initState() {
@@ -105,16 +106,19 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
           final text = payload['text'] as String? ?? '';
           final requiresConfirmation = payload['requires_confirmation'] as bool? ?? false;
           _session.state = requiresConfirmation ? 'confirming' : 'executing';
+          _isMinimized = !requiresConfirmation;
           _session.addDialog('agent', text);
           _items.add({'role': 'agent', 'text': text});
           AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
 
         case 'permission_request':
         case 'agent_auth_request':
+          _isMinimized = false;
           _items.add({'type': 'auth', 'description': payload['description'] as String? ?? '需要您的授权'});
 
         case 'task_done':
           _session.state = 'done';
+          _isMinimized = false;
           LogService.saveFromTaskDone(payload);
           final summary = payload['summary'] as String?;
           if (summary != null && summary.isNotEmpty) {
@@ -128,6 +132,7 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
 
         case 'agent_executing':
           _session.state = 'executing';
+          _isMinimized = true;
 
         case 'agent_done':
           _session.state = 'done';
@@ -202,7 +207,9 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final panelHeight = MediaQuery.of(context).size.height * 0.55;
+    final fullHeight = MediaQuery.of(context).size.height * 0.55;
+    const miniHeight = 80.0;
+    final targetHeight = _isMinimized ? miniHeight : fullHeight;
 
     return GestureDetector(
       onTap: _close,
@@ -214,147 +221,176 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
             onTap: () {},
             child: SlideTransition(
               position: _slideAnim,
-              child: Container(
-                height: panelHeight,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                height: targetHeight,
                 width: double.infinity,
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
-                child: Column(
-                  children: [
-                    NetworkBanner(visible: !_session.websocketConnected),
-                    const SizedBox(height: 8),
-                    Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
-                    AgentStatusBar(state: _session.state),
-                    const Divider(height: 1),
-                    Expanded(
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.only(top: 8, bottom: 8),
-                        itemCount: _items.length,
-                        itemBuilder: (_, i) {
-                          final item = _items[i];
-                          if (item['type'] == 'auth') {
-                            return AuthCard(
-                              description: item['description'] as String,
-                              onApprove: () {
-                                setState(() => _items.removeAt(i));
-                                _session.grantPermission('granted');
-                                _ws.send('user_confirm', {'approved': true});
-                              },
-                              onReject: () {
-                                setState(() => _items.removeAt(i));
-                                _ws.send('user_confirm', {'approved': false});
-                              },
-                            );
-                          }
-                          if (item['type'] == 'thinking') {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF5F5F5),
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: const Text('小浙正在想…', style: TextStyle(fontSize: 15, color: Color(0xFF999999))),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-                          return AgentBubble(
-                            text: item['text'] as String,
-                            isAgent: item['role'] == 'agent',
-                          );
-                        },
-                      ),
-                    ),
-                    const Divider(height: 1),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 48,
-                              child: TextField(
-                                controller: _textController,
-                                style: const TextStyle(fontSize: 18),
-                                textInputAction: TextInputAction.send,
-                                onSubmitted: (_) => _sendText(),
-                                decoration: InputDecoration(
-                                  hintText: '输入文字指令…',
-                                  hintStyle: const TextStyle(fontSize: 18, color: Color(0xFFBBBBBB)),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(24),
-                                    borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(24),
-                                    borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(24),
-                                    borderSide: const BorderSide(color: Color(0xFFFF6D00), width: 1.5),
-                                  ),
-                                  filled: true,
-                                  fillColor: const Color(0xFFFAFAFA),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          SizedBox(
-                            width: 48,
-                            height: 48,
-                            child: Material(
-                              color: const Color(0xFFFF6D00),
-                              shape: const CircleBorder(),
-                              child: InkWell(
-                                customBorder: const CircleBorder(),
-                                onTap: _sendText,
-                                child: const Icon(Icons.send, color: Colors.white, size: 22),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: const [
-                          Expanded(child: Divider(indent: 24, endIndent: 8)),
-                          Text('或', style: TextStyle(fontSize: 13, color: Color(0xFFBBBBBB))),
-                          Expanded(child: Divider(indent: 8, endIndent: 24)),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        children: [
-                          MicButton(onAudioEnd: _onAudioEnd),
-                          const SizedBox(height: 4),
-                          Text(
-                            _session.state == 'listening' ? '按住说话' : '',
-                            style: const TextStyle(fontSize: 14, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                child: _isMinimized ? _buildMiniBar() : _buildFullPanel(),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildMiniBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          const Icon(Icons.sync, color: Color(0xFFFF6D00), size: 20),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              '小浙正在帮您操作…',
+              style: TextStyle(fontSize: 16, color: Color(0xFF333333), fontWeight: FontWeight.w500),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.keyboard_arrow_up, color: Color(0xFF999999)),
+            onPressed: () => setState(() => _isMinimized = false),
+            tooltip: '展开',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFullPanel() {
+    return Column(
+      children: [
+        NetworkBanner(visible: !_session.websocketConnected),
+        const SizedBox(height: 8),
+        Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+        AgentStatusBar(state: _session.state),
+        const Divider(height: 1),
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
+            itemCount: _items.length,
+            itemBuilder: (_, i) {
+              final item = _items[i];
+              if (item['type'] == 'auth') {
+                return AuthCard(
+                  description: item['description'] as String,
+                  onApprove: () {
+                    setState(() => _items.removeAt(i));
+                    _session.grantPermission('granted');
+                    _ws.send('user_confirm', {'approved': true});
+                  },
+                  onReject: () {
+                    setState(() => _items.removeAt(i));
+                    _ws.send('user_confirm', {'approved': false});
+                  },
+                );
+              }
+              if (item['type'] == 'thinking') {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Text('小浙正在想…', style: TextStyle(fontSize: 15, color: Color(0xFF999999))),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return AgentBubble(
+                text: item['text'] as String,
+                isAgent: item['role'] == 'agent',
+              );
+            },
+          ),
+        ),
+        const Divider(height: 1),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: TextField(
+                    controller: _textController,
+                    style: const TextStyle(fontSize: 18),
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _sendText(),
+                    decoration: InputDecoration(
+                      hintText: '输入文字指令…',
+                      hintStyle: const TextStyle(fontSize: 18, color: Color(0xFFBBBBBB)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: const BorderSide(color: Color(0xFFFF6D00), width: 1.5),
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFFFAFAFA),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: Material(
+                  color: const Color(0xFFFF6D00),
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: _sendText,
+                    child: const Icon(Icons.send, color: Colors.white, size: 22),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: const [
+              Expanded(child: Divider(indent: 24, endIndent: 8)),
+              Text('或', style: TextStyle(fontSize: 13, color: Color(0xFFBBBBBB))),
+              Expanded(child: Divider(indent: 8, endIndent: 24)),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            children: [
+              MicButton(onAudioEnd: _onAudioEnd),
+              const SizedBox(height: 4),
+              Text(
+                _session.state == 'listening' ? '按住说话' : '',
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

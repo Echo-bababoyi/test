@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../services/auth_state.dart';
 
 const _kOrange = Color(0xFFFF6D00);
 const _kBg = Color(0xFFF5F5F5);
@@ -23,7 +24,10 @@ class _FaceAuthPageState extends State<FaceAuthPage> {
   Future<void> _startRecognition() async {
     setState(() => _recognizing = true);
     await Future.delayed(const Duration(seconds: 2));
-    if (mounted) context.go('/elder');
+    if (mounted) {
+      AuthState.instance.login();
+      context.go('/elder');
+    }
   }
 
   @override

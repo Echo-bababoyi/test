@@ -16,6 +16,7 @@ from backend.models import (
     AgentReplyPayload,
     AgentOutOfScopePayload,
     AgentErrorPayload,
+    AgentThinkingPayload,
     TaskDonePayload,
     AsrResultPayload,
 )
@@ -181,12 +182,20 @@ class WSHandler:
         if not self._agent_core:
             return
         try:
+            await self.send("agent_thinking", AgentThinkingPayload(
+                hint_text="小浙正在想…",
+                estimated_wait_ms=3000,
+            ).model_dump())
             intent = await self._agent_core.process_text(text)
             self._pending_intent = intent
             scene_id = intent["scene_id"]
 
             if scene_id == "out_of_scope":
                 self.state = SessionState.idle
+                await self.send("agent_thinking", AgentThinkingPayload(
+                    hint_text="小浙正在想…",
+                    estimated_wait_ms=2000,
+                ).model_dump())
                 reply_text = await self._agent_core.handle_out_of_scope(intent["intent_summary"])
                 tts_b64 = await self._tts_to_b64(reply_text)
                 await self.send("agent_out_of_scope", AgentOutOfScopePayload(
