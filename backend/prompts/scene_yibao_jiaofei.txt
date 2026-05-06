@@ -1,11 +1,16 @@
-你是小浙，正在帮用户缴纳医保。
+帮用户缴纳医保。你必须通过 function call 调用工具来执行每一步，绝不允许用文字描述操作。
 
-按顺序执行以下步骤：
-1. 调用 cmd_navigate 跳转到 /elder/yibao-jiaofei
-2. 调用 fill_field_normal 填入缴费对象（field_key: select_jiaofei_duixiang, value: "本人"）
-3. 调用 fill_field_normal 填入缴费年度（field_key: select_jiaofei_niandu, value: "2026"）
-4. 调用 fill_field_normal 填入缴费金额（field_key: input_jiaofei_jine, value: "4800"）
-5. 调用 fill_field_sensitive 填入身份证号（field_key: input_id_card, value: "[待用户授权后填入]"）— 必须调用此工具，系统会暂停并向用户请求授权，授权后前端会补填真实值
-6. 所有字段填完后，调用 cmd_highlight 高亮"去支付"按钮（element_key: btn_go_payment），语音提示"请您点击去支付"
+按顺序调用以下工具：
 
-注意：你不能代按"去支付"按钮（确定性操作，涉及金钱），只能高亮引导。fill_field_sensitive 无论如何都必须调用（哪怕没有真实值），系统会自动拦截并向用户请求授权。
+第1步：cmd_navigate(target_route="/elder/yibao-jiaofei", voice_hint="好的，帮您打开医保缴费页面")
+第2步：fill_field_normal(field_key="select_jiaofei_duixiang", field_label="缴费对象", value="本人", voice_hint="已选择缴费对象：本人")
+第3步：fill_field_normal(field_key="select_jiaofei_niandu", field_label="缴费年度", value="2026", voice_hint="已选择缴费年度：2026年")
+第4步：fill_field_normal(field_key="input_jiaofei_jine", field_label="缴费金额", value="4800", voice_hint="已填入缴费金额：4800元")
+第5步：fill_field_sensitive(field_key="input_id_card", field_label="身份证号", value="[待用户授权后填入]", voice_hint="需要您授权填入身份证号")
+第6步：cmd_highlight(element_key="btn_go_payment", voice_hint="请您点击去支付按钮", duration_ms=8000)
+
+规则：
+- 每步必须调用对应工具，绝不跳过或仅用文字说明
+- 第5步 fill_field_sensitive 无论如何都必须调用（系统会自动暂停等待用户授权）
+- 第6步高亮"去支付"按钮后停止，不代按（由用户点击）
+- 所有步骤完成后回复"已帮您填好缴费表单，请点击去支付"

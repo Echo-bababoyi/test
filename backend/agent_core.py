@@ -53,12 +53,35 @@ _INTENT_PROMPT = (_PROMPTS_DIR / "intent_classify.txt").read_text(encoding="utf-
 _CONFIRM_PROMPT = (_PROMPTS_DIR / "confirm_rephrase.txt").read_text(encoding="utf-8")
 _OUT_OF_SCOPE_PROMPT = (_PROMPTS_DIR / "scene_out_of_scope.txt").read_text(encoding="utf-8")
 
+_EXECUTOR_PREFIX = """\
+你是小浙智能助手的执行引擎。你的唯一职责是通过调用工具（function call）来完成用户任务。
+
+【关键规则】：
+1. 你必须通过调用工具来执行操作，绝不允许仅用文字描述你会做什么
+2. 每次只调用一个工具，等待返回结果后再调用下一个
+3. 不要在回复中解释你在做什么，直接调用工具
+4. 如果所有步骤执行完毕，回复一句简短总结即可
+
+以下是你要完成的具体任务：
+"""
+
+# Tool names that map to WebSocket cmd_* message types
+_TOOL_TO_MSG_TYPE: dict[str, str] = {
+    "cmd_navigate": "cmd_navigate",
+    "cmd_highlight": "cmd_highlight",
+    "cmd_press_button": "cmd_press_button",
+    "fill_field_normal": "cmd_fill_field",
+    "fill_field_sensitive": "cmd_fill_field",
+}
+
 
 def _load_scene_prompt(scene_id: str) -> str:
     filename = SCENE_PROMPTS.get(scene_id)
     if filename:
-        return (_PROMPTS_DIR / filename).read_text(encoding="utf-8")
-    return f"你是小浙，正在帮用户完成：{scene_id}。按步骤调用工具完成任务，不要闲聊。"
+        scene_text = (_PROMPTS_DIR / filename).read_text(encoding="utf-8")
+    else:
+        scene_text = f"帮用户完成：{scene_id}。按步骤调用工具完成任务，不要闲聊。"
+    return _EXECUTOR_PREFIX + scene_text
 
 
 class AgentCore:
@@ -158,6 +181,8 @@ class AgentCore:
             response = await self._executor.arun(input_msg)
             last_content = response.content or ""
 
+            await self._push_tool_results(response)
+
             stopped_tool = self._get_stopped_tool(response)
             if stopped_tool in _SENSITIVE_TOOLS:
                 permission_id = str(uuid.uuid4())
@@ -203,6 +228,31 @@ class AgentCore:
         )
         response = await agent.arun(prompt)
         return (response.content or result_text).strip()
+
+    async def _push_tool_results(self, response) -> None:
+        """Forward current-round tool call results to the frontend as cmd_* WebSocket messages."""
+        import ast
+        for msg in (response.messages or []):
+            if getattr(msg, "from_history", False):
+                continue
+            if msg.role != "tool":
+                continue
+            tool_name = getattr(msg, "tool_name", None)
+            msg_type = _TOOL_TO_MSG_TYPE.get(tool_name)
+            if not msg_type:
+                continue
+            content = msg.content
+            if isinstance(content, dict):
+                payload = content
+            elif isinstance(content, str):
+                try:
+                    payload = ast.literal_eval(content)
+                except Exception:
+                    payload = {}
+            else:
+                payload = {}
+            logger.info("session=%s push tool result: %s %s", self.session_id, msg_type, payload)
+            await self._send_fn(msg_type, payload)
 
     def _get_stopped_tool(self, response) -> str | None:
         """Return the tool_name of the message that caused stop_after_tool_call, or None.

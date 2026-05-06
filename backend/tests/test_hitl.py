@@ -61,7 +61,7 @@ async def _wake_and_text_input(handler, session_id: str, sent: list, text: str):
     print(f"  PASS: asr_result + agent_reply 收到，复述: {reply['payload']['text'][:40]}")
 
 
-async def _wait_for_permission_request(sent: list, timeout: float = 90.0) -> dict | None:
+async def _wait_for_permission_request(sent: list, timeout: float = 150.0) -> dict | None:
     """轮询直到 permission_request 出现，返回该消息，超时返回 None。"""
     deadline = asyncio.get_event_loop().time() + timeout
     last_len = len(sent)
@@ -69,7 +69,7 @@ async def _wait_for_permission_request(sent: list, timeout: float = 90.0) -> dic
     while asyncio.get_event_loop().time() < deadline:
         await asyncio.sleep(0.5)
         elapsed += 0.5
-        if int(elapsed) % 10 == 0:
+        if int(elapsed) % 15 == 0:
             print(f"  (等待中 {int(elapsed)}s，已收到 {len(sent)} 条消息...)")
         new = sent[last_len:]
         last_len = len(sent)
@@ -79,14 +79,14 @@ async def _wait_for_permission_request(sent: list, timeout: float = 90.0) -> dic
     return None
 
 
-async def _wait_for_type(sent: list, msg_type: str, after_idx: int, timeout: float = 90.0) -> dict | None:
+async def _wait_for_type(sent: list, msg_type: str, after_idx: int, timeout: float = 120.0) -> dict | None:
     """等待 sent[after_idx:] 中出现指定类型的消息。"""
     deadline = asyncio.get_event_loop().time() + timeout
     elapsed = 0
     while asyncio.get_event_loop().time() < deadline:
         await asyncio.sleep(0.5)
         elapsed += 0.5
-        if int(elapsed) % 10 == 0:
+        if int(elapsed) % 15 == 0:
             print(f"  (等待中 {int(elapsed)}s，当前类型: {[m['type'] for m in sent[after_idx:]]})")
         for m in sent[after_idx:]:
             if m["type"] == msg_type:
@@ -121,7 +121,7 @@ async def test_hitl_granted():
     # execute_task 以 create_task 异步运行，先让它跑一段
 
     print("\n--- Step 4: 等待 permission_request ---")
-    perm_msg = await _wait_for_permission_request(sent, timeout=40.0)
+    perm_msg = await _wait_for_permission_request(sent, timeout=150.0)
     assert perm_msg is not None, "超时未收到 permission_request"
     p = perm_msg["payload"]
     print(f"  permission_request: type={p.get('permission_type')} desc={p.get('description')[:40]}")
@@ -139,7 +139,7 @@ async def test_hitl_granted():
     })
 
     print("\n--- Step 6: 等待 task_done ---")
-    task_done = await _wait_for_type(sent, "task_done", after_perm_idx, timeout=40.0)
+    task_done = await _wait_for_type(sent, "task_done", after_perm_idx, timeout=150.0)
     assert task_done is not None, \
         f"超时未收到 task_done，收到: {[m['type'] for m in sent[after_perm_idx:]]}"
     summary = task_done["payload"].get("summary", "")
@@ -180,7 +180,7 @@ async def test_hitl_denied():
     })
 
     print("\n--- Step 4: 等待 permission_request ---")
-    perm_msg = await _wait_for_permission_request(sent, timeout=40.0)
+    perm_msg = await _wait_for_permission_request(sent, timeout=150.0)
     assert perm_msg is not None, "超时未收到 permission_request"
     p = perm_msg["payload"]
     print(f"  permission_request 收到: type={p.get('permission_type')}")

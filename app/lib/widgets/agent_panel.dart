@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/agent_command_executor.dart';
+import '../services/audio_player.dart';
 import '../services/log_service.dart';
 import '../services/ws_client.dart';
 import '../services/session_state.dart';
@@ -42,6 +44,7 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
   AgentCommandExecutor? _executor;
 
   final List<Map<String, dynamic>> _items = [];
+  Timer? _autoDismissTimer;
 
   @override
   void initState() {
@@ -90,23 +93,59 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
     }
 
     setState(() {
+      // 移除思考中占位（如果有）
+      _items.removeWhere((item) => item['type'] == 'thinking');
       switch (type) {
+        case 'agent_thinking':
+          _session.state = 'confirming';
+          _items.add({'type': 'thinking'});
+
         case 'agent_reply':
         case 'agent_text':
-          _session.state = 'confirming';
           final text = payload['text'] as String? ?? '';
+          final requiresConfirmation = payload['requires_confirmation'] as bool? ?? false;
+          _session.state = requiresConfirmation ? 'confirming' : 'executing';
           _session.addDialog('agent', text);
           _items.add({'role': 'agent', 'text': text});
+          AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
+
         case 'permission_request':
         case 'agent_auth_request':
           _items.add({'type': 'auth', 'description': payload['description'] as String? ?? '需要您的授权'});
+
         case 'task_done':
           _session.state = 'done';
           LogService.saveFromTaskDone(payload);
+          final summary = payload['summary'] as String?;
+          if (summary != null && summary.isNotEmpty) {
+            _session.addDialog('agent', summary);
+            _items.add({'role': 'agent', 'text': summary});
+          }
+          AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
+          _autoDismissTimer = Timer(const Duration(seconds: 2), () {
+            if (mounted) _close();
+          });
+
         case 'agent_executing':
           _session.state = 'executing';
+
         case 'agent_done':
           _session.state = 'done';
+
+        case 'agent_error':
+          final errorCode = payload['error_code'] as String?;
+          final errText = errorCode == 'asr_unclear' ? '没听清，请再说一次' : (payload['text'] as String? ?? '出错了，请重试');
+          _session.state = errorCode == 'asr_unclear' ? 'listening' : 'idle';
+          _session.addDialog('agent', errText);
+          _items.add({'role': 'agent', 'text': errText});
+          AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
+
+        case 'agent_out_of_scope':
+          _session.state = 'idle';
+          final hint = payload['voice_hint'] as String? ?? payload['text'] as String? ?? '浙里办没有这个服务';
+          _session.addDialog('agent', hint);
+          _items.add({'role': 'agent', 'text': hint});
+          AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
       }
     });
     _scrollToBottom();
@@ -152,9 +191,11 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    _autoDismissTimer?.cancel();
     _slideController.dispose();
     _scrollController.dispose();
     _textController.dispose();
+    AudioPlayer.stop();
     _ws.disconnect();
     super.dispose();
   }
@@ -206,6 +247,23 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
                                 setState(() => _items.removeAt(i));
                                 _ws.send('user_confirm', {'approved': false});
                               },
+                            );
+                          }
+                          if (item['type'] == 'thinking') {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF5F5F5),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: const Text('小浙正在想…', style: TextStyle(fontSize: 15, color: Color(0xFF999999))),
+                                  ),
+                                ],
+                              ),
                             );
                           }
                           return AgentBubble(

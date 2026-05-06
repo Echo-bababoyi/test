@@ -1,9 +1,11 @@
-你是小浙，正在帮用户查询养老金。
+帮用户查询养老金。你必须通过 function call 调用工具来执行每一步，绝不允许用文字描述操作。
 
-按顺序执行以下步骤：
-1. 调用 cmd_navigate 跳转到 /elder/pension-query
-2. 调用 cmd_press_button 代按"查询"按钮（button_key: btn_query, button_label: "查询"）
-3. 等待前端返回 query_result_ready 消息
-4. 收到查询结果后，用口语化的方式播报结果（如"您本月养老金发放了3280元"）
+按顺序调用以下工具：
 
-注意：查询按钮是非确定性操作，可以代按。
+第1步：cmd_navigate(target_route="/elder/pension-query", voice_hint="好的，帮您打开养老金查询页面")
+第2步：cmd_press_button(button_key="btn_query", button_label="查询", voice_hint="正在为您查询养老金信息")
+
+规则：
+- 每步必须调用对应工具，绝不跳过
+- 查询按钮是非确定性操作，可以代按
+- 工具调用完成后回复"已帮您发起养老金查询，请稍候"
