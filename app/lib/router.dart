@@ -13,6 +13,21 @@ import 'pages/mine_page.dart';
 import 'pages/operation_logs_page.dart';
 import 'pages/drafts_page.dart';
 
+Page<void> _slidePage(Widget child, GoRouterState state) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 300),
+    transitionsBuilder: (_, animation, __, child) {
+      return SlideTransition(
+        position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+            .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+        child: child,
+      );
+    },
+  );
+}
+
 final appRouter = GoRouter(
   routes: [
     GoRoute(path: '/', builder: (_, __) => const StandardHome()),
@@ -20,18 +35,18 @@ final appRouter = GoRouter(
       path: '/elder',
       pageBuilder: (_, __) => const NoTransitionPage(child: ElderHome()),
     ),
-    GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
-    GoRoute(path: '/login/face', builder: (_, __) => const FaceAuthPage()),
-    GoRoute(path: '/login/verify', builder: (_, __) => const VerifyPage()),
-    GoRoute(path: '/elder/yibao-jiaofei', builder: (_, __) => const YibaoJiaofeiPage()),
-    GoRoute(path: '/elder/yibao-query', builder: (_, __) => const YibaoQueryPage()),
-    GoRoute(path: '/elder/pension-query', builder: (_, __) => const PensionQueryPage()),
-    GoRoute(path: '/elder/search', builder: (_, __) => const SearchPage()),
+    GoRoute(path: '/login', pageBuilder: (c, s) => _slidePage(const LoginPage(), s)),
+    GoRoute(path: '/login/face', pageBuilder: (c, s) => _slidePage(const FaceAuthPage(), s)),
+    GoRoute(path: '/login/verify', pageBuilder: (c, s) => _slidePage(const VerifyPage(), s)),
+    GoRoute(path: '/elder/yibao-jiaofei', pageBuilder: (c, s) => _slidePage(const YibaoJiaofeiPage(), s)),
+    GoRoute(path: '/elder/yibao-query', pageBuilder: (c, s) => _slidePage(const YibaoQueryPage(), s)),
+    GoRoute(path: '/elder/pension-query', pageBuilder: (c, s) => _slidePage(const PensionQueryPage(), s)),
+    GoRoute(path: '/elder/search', pageBuilder: (c, s) => _slidePage(const SearchPage(), s)),
     GoRoute(
       path: '/elder/mine',
       pageBuilder: (_, __) => const NoTransitionPage(child: MinePage()),
     ),
-    GoRoute(path: '/elder/operation-logs', builder: (_, __) => const OperationLogsPage()),
-    GoRoute(path: '/elder/drafts', builder: (_, __) => const DraftsPage()),
+    GoRoute(path: '/elder/operation-logs', pageBuilder: (c, s) => _slidePage(const OperationLogsPage(), s)),
+    GoRoute(path: '/elder/drafts', pageBuilder: (c, s) => _slidePage(const DraftsPage(), s)),
   ],
 );

@@ -137,7 +137,11 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
           _session.state = requiresConfirmation ? 'confirming' : 'executing';
           _isMinimized = !requiresConfirmation;
           _session.addDialog('agent', text);
-          _items.add({'role': 'agent', 'text': text});
+          _items.add({
+            'role': 'agent',
+            'text': text,
+            if (requiresConfirmation) 'showConfirm': true,
+          });
           AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
 
         case 'permission_request':
@@ -364,9 +368,56 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
                   },
                 );
               }
-              return AgentBubble(
-                text: item['text'] as String,
-                isAgent: item['role'] == 'agent',
+              final showConfirm = item['showConfirm'] as bool? ?? false;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AgentBubble(
+                    text: item['text'] as String,
+                    isAgent: item['role'] == 'agent',
+                  ),
+                  if (showConfirm)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                      child: Row(
+                        children: [
+                          _ConfirmButton(
+                            label: '对的',
+                            isPrimary: true,
+                            onTap: () {
+                              setState(() => item.remove('showConfirm'));
+                              _session.addDialog('user', '对的');
+                              setState(() => _items.add({'role': 'user', 'text': '对的'}));
+                              _ws.send('user_confirm', {
+                                'session_id': _session.sessionId,
+                                'answer': 'yes',
+                                'input_mode': 'text',
+                                'raw_text': '对的',
+                              });
+                              _scrollToBottom();
+                            },
+                          ),
+                          const SizedBox(width: 10),
+                          _ConfirmButton(
+                            label: '不是',
+                            isPrimary: false,
+                            onTap: () {
+                              setState(() => item.remove('showConfirm'));
+                              _session.addDialog('user', '不是');
+                              setState(() => _items.add({'role': 'user', 'text': '不是'}));
+                              _ws.send('user_confirm', {
+                                'session_id': _session.sessionId,
+                                'answer': 'no',
+                                'input_mode': 'text',
+                                'raw_text': '不是',
+                              });
+                              _scrollToBottom();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               );
             },
           ),
@@ -447,6 +498,38 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ConfirmButton extends StatelessWidget {
+  final String label;
+  final bool isPrimary;
+  final VoidCallback onTap;
+
+  const _ConfirmButton({required this.label, required this.isPrimary, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: isPrimary ? const Color(0xFFFF6D00) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isPrimary ? const Color(0xFFFF6D00) : const Color(0xFFE5E5E5)),
+          boxShadow: const [BoxShadow(color: Color(0x0D000000), blurRadius: 4, offset: Offset(0, 1))],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: isPrimary ? Colors.white : const Color(0xFF666666),
+          ),
+        ),
+      ),
     );
   }
 }

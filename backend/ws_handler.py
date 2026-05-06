@@ -51,6 +51,10 @@ class WSHandler:
                 await self._dispatch(raw)
         except Exception as exc:
             logger.info("session=%s disconnected: %s", self.session_id, exc)
+        finally:
+            if self._agent_core:
+                self._agent_core.resolve_permission(False)  # 释放可能挂起的 HITL
+                self._agent_core = None
 
     async def _dispatch(self, raw: dict):
         msg = InboundMessage(**raw)
@@ -194,7 +198,21 @@ class WSHandler:
                 hint_text="小浙正在想…",
                 estimated_wait_ms=3000,
             ).model_dump())
-            intent = await self._agent_core.process_text(text)
+            try:
+                intent = await asyncio.wait_for(
+                    self._agent_core.process_text(text), timeout=30.0
+                )
+            except asyncio.TimeoutError:
+                logger.error("session=%s LLM timeout for text=%r", self.session_id, text)
+                await self.send("agent_error", AgentErrorPayload(
+                    error_code="llm_timeout",
+                    retry_count=0,
+                    max_retries=1,
+                    voice_hint="网络有点慢，请您稍后再试",
+                    tts_audio_base64=None,
+                ).model_dump())
+                self.state = SessionState.listening
+                return
             self._pending_intent = intent
             scene_id = intent["scene_id"]
 
@@ -236,7 +254,21 @@ class WSHandler:
 
     async def _run_execute(self, intent_summary: str) -> None:
         try:
-            summary = await self._agent_core.execute_task(intent_summary)
+            try:
+                summary = await asyncio.wait_for(
+                    self._agent_core.execute_task(intent_summary), timeout=60.0
+                )
+            except asyncio.TimeoutError:
+                logger.error("session=%s execute_task timeout", self.session_id)
+                self.state = SessionState.idle
+                await self.send("agent_error", AgentErrorPayload(
+                    error_code="llm_timeout",
+                    retry_count=0,
+                    max_retries=1,
+                    voice_hint="网络有点慢，请您稍后再试",
+                    tts_audio_base64=None,
+                ).model_dump())
+                return
             if summary and summary != "已取消":
                 await self._push_task_done(
                     scene=self._pending_intent.get("scene_id", "") if self._pending_intent else "",
