@@ -11,7 +11,7 @@
 | 3 | 产出 PRD.md 产品需求文档 | PM | ✅ |
 | 4 | 产出系统架构设计（ARCHITECTURE.md v1.2） | architect | ✅ |
 | 5 | 产出 UI/UX 交互设计（UI_UX_DESIGN.md v1.0） | PM | ✅ |
-| 6 | 编码实施（前端 Flutter Web + 后端 FastAPI） | frontend / backend | 🔧 |
+| 6 | 编码实施（前端 Flutter Web + 后端 FastAPI） | frontend / backend | 🧪 |
 | 7 | 实施计划修订（采纳 PM 3 条调整建议） | architect | ✅ |
 
 ---
