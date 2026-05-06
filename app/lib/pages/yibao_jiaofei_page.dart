@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/agent_element_registry.dart';
+import '../services/draft_service.dart';
 import '../widgets/elder_bottom_nav.dart';
 
 class YibaoJiaofeiPage extends StatefulWidget {
@@ -25,10 +26,36 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
   static const _years = ['2024年度', '2025年度', '2026年度'];
 
   @override
+  void initState() {
+    super.initState();
+    AgentElementRegistry.registerController('yibao_jiaofei_amount', _amountController);
+    AgentElementRegistry.registerController('yibao_jiaofei_id', _idController);
+  }
+
+  @override
   void dispose() {
+    _autoSave();
+    AgentElementRegistry.unregister('yibao_jiaofei_amount');
+    AgentElementRegistry.unregister('yibao_jiaofei_id');
     _amountController.dispose();
     _idController.dispose();
     super.dispose();
+  }
+
+  void _autoSave() {
+    final fields = {
+      'target_person': _targetPerson,
+      'year': _year,
+      'amount': _amountController.text,
+    };
+    final hasContent = fields.values.any((v) => v != null && v.toString().isNotEmpty);
+    if (!hasContent) return;
+    DraftService.autoSave(
+      'yibao_jiaofei',
+      '医保缴费',
+      fields,
+      _idController.text.isNotEmpty,
+    );
   }
 
   @override

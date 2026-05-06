@@ -1,5 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../services/agent_command_executor.dart';
+import '../services/log_service.dart';
 import '../services/ws_client.dart';
 import '../services/session_state.dart';
 import 'agent_bubble.dart';
@@ -35,8 +38,8 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
   final _session = SessionState();
   final _ws = WsClient();
   final _scrollController = ScrollController();
+  AgentCommandExecutor? _executor;
 
-  // dialog items: Map with keys 'role','text' or 'type','description' for auth cards
   final List<Map<String, dynamic>> _items = [];
 
   @override
@@ -50,6 +53,12 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
       CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
     );
     _slideController.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _executor = AgentCommandExecutor(
+        router: GoRouter.of(context),
+        overlayContext: context,
+      );
+    });
     _initSession();
   }
 
@@ -72,19 +81,31 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
   void _handleMessage(Map<String, dynamic> msg) {
     final type = msg['type'] as String?;
     final payload = msg['payload'] as Map<String, dynamic>? ?? {};
+
+    // 指令类消息直接分发给 executor，不进对话列表
+    if (type != null && type.startsWith('cmd_')) {
+      _executor?.handleMessage(msg);
+      return;
+    }
+
     setState(() {
       switch (type) {
+        case 'agent_reply':
         case 'agent_text':
           _session.state = 'confirming';
           final text = payload['text'] as String? ?? '';
           _session.addDialog('agent', text);
           _items.add({'role': 'agent', 'text': text});
+        case 'permission_request':
         case 'agent_auth_request':
           _items.add({'type': 'auth', 'description': payload['description'] as String? ?? '需要您的授权'});
-        case 'agent_done':
+        case 'task_done':
           _session.state = 'done';
+          LogService.saveFromTaskDone(payload);
         case 'agent_executing':
           _session.state = 'executing';
+        case 'agent_done':
+          _session.state = 'done';
       }
     });
     _scrollToBottom();

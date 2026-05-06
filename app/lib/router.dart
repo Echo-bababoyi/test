@@ -10,6 +10,7 @@ import 'pages/pension_query_page.dart';
 import 'pages/search_page.dart';
 import 'pages/mine_page.dart';
 import 'pages/operation_logs_page.dart';
+import 'pages/drafts_page.dart';
 
 final appRouter = GoRouter(
   routes: [
@@ -24,5 +25,6 @@ final appRouter = GoRouter(
     GoRoute(path: '/elder/search', builder: (_, __) => const SearchPage()),
     GoRoute(path: '/elder/mine', builder: (_, __) => const MinePage()),
     GoRoute(path: '/elder/operation-logs', builder: (_, __) => const OperationLogsPage()),
+    GoRoute(path: '/elder/drafts', builder: (_, __) => const DraftsPage()),
   ],
 );

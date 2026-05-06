@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../widgets/elder_bottom_nav.dart';
 
 class MinePage extends StatelessWidget {
@@ -18,12 +19,12 @@ class MinePage extends StatelessWidget {
             icon: Icons.edit_document,
             label: '草稿箱',
             badge: _draftCount,
-            onTap: () {},
+            onTap: () => context.push('/elder/drafts'),
           ),
           _MenuTile(
             icon: Icons.history,
             label: '操作记录',
-            onTap: () {},
+            onTap: () => context.push('/elder/operation-logs'),
           ),
         ],
       ),
