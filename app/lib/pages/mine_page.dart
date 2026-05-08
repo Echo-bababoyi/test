@@ -1,188 +1,84 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_state.dart';
-import '../services/draft_store.dart';
-import '../widgets/connection_indicator.dart';
+import '../theme/design_tokens.dart';
 import '../widgets/elder_bottom_nav.dart';
+import '../widgets/persistent_banner.dart';
 
-const _kOrange = Color(0xFFFF6D00);
-const _kBg = Color(0xFFF5F5F5);
-const _kSurface = Colors.white;
-const _kShadow = BoxShadow(
-  color: Color(0x0D000000),
-  blurRadius: 8,
-  offset: Offset(0, 2),
-);
-
-class MinePage extends StatefulWidget {
+class MinePage extends StatelessWidget {
   const MinePage({super.key});
 
   @override
-  State<MinePage> createState() => _MinePageState();
-}
+  Widget build(BuildContext context) {
+    final authState = AuthState.instance;
 
-class _MinePageState extends State<MinePage> {
-  int _draftCount = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDraftCount();
-  }
-
-  Future<void> _loadDraftCount() async {
-    final drafts = await DraftStore.getAllDrafts();
-    if (mounted) setState(() => _draftCount = drafts.length);
-  }
-
-  void _showAbout() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('关于小浙', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('版本：1.0.0', style: TextStyle(fontSize: 16, color: Color(0xFF999999))),
-            SizedBox(height: 12),
-            Text(
-              '小浙是浙里办的智能助手，帮助老年用户完成常用操作。',
-              style: TextStyle(fontSize: 18, color: Color(0xFF333333), height: 1.5),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: AppColors.elderPrimary,
+        elevation: 0,
+        title: Row(
+          children: [
+            const Text(
+              '个人账号',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white),
+            ),
+            const SizedBox(width: Spacing.sm),
+            OutlinedButton.icon(
+              onPressed: null,
+              icon: const Icon(Icons.person_outline, size: 14),
+              label: const Text('切换', style: TextStyle(fontSize: 13)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: Spacing.sm, vertical: 2),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                backgroundColor: Colors.white,
+                side: BorderSide.none,
+                foregroundColor: AppColors.textPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('知道了', style: TextStyle(fontSize: 18, color: _kOrange)),
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+            onPressed: null,
           ),
         ],
       ),
-    );
-  }
-
-  void _logout() {
-    AuthState.instance.logout();
-    setState(() {});
-    context.go('/');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isLoggedIn = AuthState.instance.isLoggedIn;
-    final userName = AuthState.instance.userName ?? '张大爷';
-
-    return Scaffold(
-      backgroundColor: _kBg,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: _kOrange,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: const Text('我的', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
-        centerTitle: true,
-        actions: const [ConnectionIndicator()],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: Stack(
         children: [
-          // 用户信息卡片
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: _kSurface,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [_kShadow],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: const BoxDecoration(color: Color(0xFFFFF3E0), shape: BoxShape.circle),
-                  child: const Icon(Icons.person, size: 40, color: _kOrange),
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isLoggedIn ? userName : '未登录',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF333333)),
-                    ),
-                    const SizedBox(height: 4),
-                    if (!isLoggedIn)
-                      GestureDetector(
-                        onTap: () => context.push('/login'),
-                        child: const Text('点击登录 ›', style: TextStyle(fontSize: 16, color: _kOrange)),
-                      )
-                    else
-                      const Text('已登录', style: TextStyle(fontSize: 15, color: Color(0xFF4CAF50))),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 功能菜单卡片
-          Container(
-            decoration: BoxDecoration(
-              color: _kSurface,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [_kShadow],
-            ),
+          SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 80),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _MenuTile(
-                  icon: Icons.edit_document,
-                  label: '草稿箱',
-                  badge: _draftCount,
-                  onTap: () => context.push('/elder/drafts'),
-                  isFirst: true,
-                ),
-                const Divider(height: 1, indent: 60),
-                _MenuTile(
-                  icon: Icons.history,
-                  label: '操作记录',
-                  onTap: () => context.push('/elder/operation-logs'),
-                ),
-                const Divider(height: 1, indent: 60),
-                _MenuTile(
-                  icon: Icons.format_size,
-                  label: '字体大小',
-                  trailing: const Text('大字', style: TextStyle(fontSize: 16, color: Color(0xFF999999))),
-                  onTap: null,
-                ),
-                const Divider(height: 1, indent: 60),
-                _MenuTile(
-                  icon: Icons.info_outline,
-                  label: '关于小浙',
-                  onTap: _showAbout,
-                  isLast: true,
-                ),
+                _MyHeaderSection(authState: authState),
+                const _MyActivitySection(),
+                const SizedBox(height: Spacing.sm),
+                const _MyCertSection(),
+                _MyInfoSection(),
+                const SizedBox(height: Spacing.sm),
+                const _MyManagementSection(),
+                const SizedBox(height: Spacing.sm),
+                const _MyRecommendSection(),
+                const _MySettingsSection(),
+                if (authState.isLoggedIn) _LogoutSection(),
               ],
             ),
           ),
-
-          // 退出登录（仅已登录时显示）
-          if (isLoggedIn) ...[
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 56,
-              child: OutlinedButton(
-                onPressed: _logout,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFFF3B30),
-                  side: const BorderSide(color: Color(0xFFFF3B30)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('退出登录', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
-              ),
-            ),
-          ],
+          const Align(
+            alignment: Alignment.bottomCenter,
+            child: PersistentBanner(),
+          ),
         ],
       ),
       bottomNavigationBar: const ElderBottomNav(currentIndex: 2),
@@ -190,62 +86,617 @@ class _MinePageState extends State<MinePage> {
   }
 }
 
-class _MenuTile extends StatelessWidget {
+// ─── 头部用户卡 ───────────────────────────────────────────────────────────────
+
+class _MyHeaderSection extends StatelessWidget {
+  final AuthState authState;
+  const _MyHeaderSection({required this.authState});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(Spacing.lg),
+      child: Row(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF90CAF9), Color(0xFF42A5F5)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.person, color: Colors.white, size: 36),
+          ),
+          const SizedBox(width: Spacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  authState.isLoggedIn
+                      ? (authState.userName ?? '*宇澄')
+                      : '游客',
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: Spacing.xs),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF3E0),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFFB300)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.verified,
+                              size: 12, color: Color(0xFFFFB300)),
+                          SizedBox(width: 2),
+                          Text('高级实名',
+                              style: TextStyle(
+                                  fontSize: 11, color: Color(0xFFFFB300))),
+                          Icon(Icons.chevron_right,
+                              size: 12, color: Color(0xFFFFB300)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: Spacing.md),
+                    const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.edit_outlined,
+                            size: 13, color: AppColors.textSecondary),
+                        SizedBox(width: 2),
+                        Text('编辑资料',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary)),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── 活动记录 2-col 图标区 ─────────────────────────────────────────────────────
+
+class _MyActivitySection extends StatelessWidget {
+  const _MyActivitySection();
+
+  static const _items = [
+    (Icons.work_outline, '办事记录', '/elder/operation-logs'),
+    (Icons.edit_note_outlined, '我的草稿', '/elder/drafts'),
+    (Icons.history, '我的足迹', null),
+    (Icons.bookmark_add_outlined, '我的订阅', null),
+    (Icons.chat_bubble_outline, '诉求记录', null),
+    (Icons.star_rate_outlined, '评价记录', null),
+    (Icons.feedback_outlined, '反馈记录', null),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.lg,
+        vertical: Spacing.lg,
+      ),
+      child: Column(
+        children: [
+          for (int row = 0; row < (_items.length / 2).ceil(); row++)
+            Padding(
+              padding: row > 0
+                  ? const EdgeInsets.only(top: Spacing.xl)
+                  : EdgeInsets.zero,
+              child: Row(
+                children: [
+                  for (int col = 0; col < 2; col++)
+                    if (row * 2 + col < _items.length)
+                      Expanded(
+                        child: _ActivityIcon(
+                          icon: _items[row * 2 + col].$1,
+                          label: _items[row * 2 + col].$2,
+                          route: _items[row * 2 + col].$3,
+                        ),
+                      )
+                    else
+                      const Expanded(child: SizedBox.shrink()),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActivityIcon extends StatelessWidget {
   final IconData icon;
   final String label;
-  final int badge;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-  final bool isFirst;
-  final bool isLast;
+  final String? route;
+  const _ActivityIcon(
+      {required this.icon, required this.label, required this.route});
 
-  const _MenuTile({
-    required this.icon,
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: route != null ? () => context.push(route!) : null,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: AppColors.elderPrimary.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppColors.elderPrimary, size: 26),
+          ),
+          const SizedBox(height: Spacing.sm),
+          Text(label,
+              style: const TextStyle(fontSize: 13),
+              textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── 我的证照（横向滑动卡片）────────────────────────────────────────────────────
+
+class _MyCertSection extends StatelessWidget {
+  const _MyCertSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: Spacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: const [
+                Text('我的证照',
+                    style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w700)),
+                Row(
+                  children: [
+                    Text('全部',
+                        style: TextStyle(
+                            fontSize: 13, color: AppColors.textSecondary)),
+                    Icon(Icons.chevron_right,
+                        size: 16, color: AppColors.textSecondary),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: Spacing.md),
+          SizedBox(
+            height: 80,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: Spacing.lg),
+              children: const [
+                _CertCard(
+                  label: '老年人优待证',
+                  color1: Color(0xFFA5D6A7),
+                  color2: Color(0xFF66BB6A),
+                  icon: Icons.elderly,
+                ),
+                SizedBox(width: Spacing.md),
+                _CertCard(
+                  label: '医保电子凭证',
+                  color1: Color(0xFF64B5F6),
+                  color2: Color(0xFF2196F3),
+                  icon: Icons.health_and_safety_outlined,
+                ),
+                SizedBox(width: Spacing.md),
+                _CertCard(
+                  label: '住房公积金',
+                  color1: Color(0xFF80CBC4),
+                  color2: Color(0xFF26A69A),
+                  icon: Icons.home_work_outlined,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CertCard extends StatelessWidget {
+  final String label;
+  final Color color1;
+  final Color color2;
+  final IconData icon;
+
+  const _CertCard({
     required this.label,
-    this.badge = 0,
-    this.trailing,
-    required this.onTap,
-    this.isFirst = false,
-    this.isLast = false,
+    required this.color1,
+    required this.color2,
+    required this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.vertical(
-        top: isFirst ? const Radius.circular(16) : Radius.zero,
-        bottom: isLast ? const Radius.circular(16) : Radius.zero,
+    return Container(
+      width: 160,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color1, color2],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.large),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3E0),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: _kOrange, size: 22),
+      padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.md, vertical: Spacing.sm),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white, size: 28),
+          const SizedBox(width: Spacing.sm),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                  fontSize: 13,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500),
             ),
-            const SizedBox(width: 16),
-            Expanded(child: Text(label, style: const TextStyle(fontSize: 18, color: Color(0xFF333333)))),
-            if (badge > 0)
-              Container(
-                margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFF3B30),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text('$badge', style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── 我的信息（3-col 图标）─────────────────────────────────────────────────────
+
+class _MyInfoSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.lg, vertical: Spacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              Text('我的信息',
+                  style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w700)),
+              Row(
+                children: [
+                  Text('全部',
+                      style: TextStyle(
+                          fontSize: 13, color: AppColors.textSecondary)),
+                  Icon(Icons.chevron_right,
+                      size: 16, color: AppColors.textSecondary),
+                ],
               ),
-            if (trailing != null) trailing!,
-            if (onTap != null)
-              const Icon(Icons.chevron_right, color: Color(0xFFCCCCCC), size: 22),
-          ],
+            ],
+          ),
+          const SizedBox(height: Spacing.md),
+          Container(
+            padding: const EdgeInsets.all(Spacing.md),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(AppRadius.large),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: const [
+                _InfoIcon(
+                    icon: Icons.security_outlined,
+                    color: Color(0xFFFF6D00),
+                    label: '社保'),
+                _InfoIcon(
+                    icon: Icons.home_work_outlined,
+                    color: Color(0xFFFFB300),
+                    label: '公积金'),
+                _InfoIcon(
+                    icon: Icons.receipt_long_outlined,
+                    color: Color(0xFF26C6DA),
+                    label: '票据'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+  const _InfoIcon(
+      {required this.icon, required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          child: Icon(icon, color: Colors.white, size: 24),
+        ),
+        const SizedBox(height: Spacing.sm),
+        Text(label, style: const TextStyle(fontSize: 13)),
+      ],
+    );
+  }
+}
+
+// ─── 我的管理（2+1 图标区）────────────────────────────────────────────────────
+
+class _MyManagementSection extends StatelessWidget {
+  const _MyManagementSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.lg, vertical: Spacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('我的管理',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          const SizedBox(height: Spacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: _ManageIcon(
+                    icon: Icons.people_outline, label: '亲友联系人'),
+              ),
+              Expanded(
+                child: _ManageIcon(
+                    icon: Icons.verified_user_outlined, label: '我的授权'),
+              ),
+            ],
+          ),
+          const SizedBox(height: Spacing.xl),
+          Row(
+            children: [
+              Expanded(
+                child: _ManageIcon(
+                    icon: Icons.approval_outlined, label: '我的印章'),
+              ),
+              const Expanded(child: SizedBox.shrink()),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ManageIcon extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _ManageIcon({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: AppColors.elderPrimary.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: AppColors.elderPrimary, size: 26),
+        ),
+        const SizedBox(height: Spacing.sm),
+        Text(label, style: const TextStyle(fontSize: 13)),
+      ],
+    );
+  }
+}
+
+// ─── 服务推荐（2×2 图标网格）─────────────────────────────────────────────────
+
+class _MyRecommendSection extends StatelessWidget {
+  const _MyRecommendSection();
+
+  static const _items = [
+    (Icons.shield_outlined, '社保医保税...'),
+    (Icons.manage_search, '社保查询'),
+    (Icons.person_search_outlined, '个人权益记...'),
+    (Icons.home_work_outlined, '住房公积金'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.lg, vertical: Spacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              Text('服务推荐',
+                  style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w700)),
+              Row(
+                children: [
+                  Text('全部',
+                      style: TextStyle(
+                          fontSize: 13, color: AppColors.textSecondary)),
+                  Icon(Icons.chevron_right,
+                      size: 16, color: AppColors.textSecondary),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: Spacing.lg),
+          Row(
+            children: [
+              for (int i = 0; i < 2; i++)
+                Expanded(
+                  child: _RecommendIcon(
+                      icon: _items[i].$1, label: _items[i].$2),
+                ),
+            ],
+          ),
+          const SizedBox(height: Spacing.xl),
+          Row(
+            children: [
+              for (int i = 2; i < 4; i++)
+                Expanded(
+                  child: _RecommendIcon(
+                      icon: _items[i].$1, label: _items[i].$2),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecommendIcon extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _RecommendIcon({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: AppColors.standardPrimary.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: AppColors.standardPrimary, size: 26),
+        ),
+        const SizedBox(height: Spacing.sm),
+        Text(label,
+            style: const TextStyle(fontSize: 13),
+            textAlign: TextAlign.center),
+      ],
+    );
+  }
+}
+
+// ─── 设置区 ───────────────────────────────────────────────────────────────────
+
+class _MySettingsSection extends StatelessWidget {
+  const _MySettingsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: Column(
+        children: [
+          ListTile(
+            leading: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.elderPrimary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.settings_outlined,
+                  color: AppColors.elderPrimary, size: 18),
+            ),
+            title: const Text('设置', style: TextStyle(fontSize: 15)),
+            trailing: const Icon(Icons.chevron_right,
+                color: AppColors.textSecondary),
+            onTap: null,
+          ),
+          const Divider(height: 1, indent: 16),
+          ListTile(
+            leading: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.elderPrimary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.info_outline,
+                  color: AppColors.elderPrimary, size: 18),
+            ),
+            title:
+                const Text('关于浙里办', style: TextStyle(fontSize: 15)),
+            trailing: const Icon(Icons.chevron_right,
+                color: AppColors.textSecondary),
+            onTap: null,
+          ),
+          const SizedBox(height: Spacing.lg),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── 退出登录 ─────────────────────────────────────────────────────────────────
+
+class _LogoutSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.lg, vertical: Spacing.lg),
+      child: SizedBox(
+        height: 52,
+        child: OutlinedButton(
+          onPressed: () {
+            AuthState.instance.logout();
+            context.go('/elder');
+          },
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFFFF3B30),
+            side: const BorderSide(color: Color(0xFFFF3B30)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+          child: const Text('退出登录',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
         ),
       ),
     );

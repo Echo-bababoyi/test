@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../theme/design_tokens.dart';
+import '../widgets/in_app_overlay.dart';
 import '../services/agent_element_registry.dart';
-
-const _kOrange = Color(0xFFFF6D00);
-const _kBannerBg = Color(0xFFFFF3E0);
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,146 +12,213 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  bool _agreed = false;
+  final _phoneController = TextEditingController();
+  final _loginBtnKey = AgentElementRegistry.register('btn_login');
 
-  final _chkKey = AgentElementRegistry.register('chk_agree_terms');
-  final _faceBtnKey = AgentElementRegistry.register('btn_face_login');
-  final _verifyBtnKey = AgentElementRegistry.register('btn_verify_login');
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _kBannerBg,
+      backgroundColor: const Color(0xFFDEEAF8),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: const Color(0xFF333333),
+        foregroundColor: AppColors.textPrimary,
       ),
       body: Column(
         children: [
-          // 顶部 logo/标题区（橙色调背景）
+          // 顶部：图标 + 欢迎语
           Padding(
-            padding: const EdgeInsets.fromLTRB(0, 8, 0, 28),
+            padding: const EdgeInsets.only(bottom: Spacing.xl),
             child: Column(
               children: [
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: 72,
+                  height: 72,
                   decoration: BoxDecoration(
-                    color: _kOrange,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _kOrange.withValues(alpha: 0.35),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
+                    color: AppColors.standardPrimary,
+                    borderRadius: BorderRadius.circular(AppRadius.xlarge),
                   ),
-                  child: const Icon(Icons.security, color: Colors.white, size: 44),
+                  child: const Icon(Icons.sync, color: Colors.white, size: 40),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: Spacing.lg),
                 const Text(
-                  '小浙助手',
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Color(0xFF333333)),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  '安全便捷，一站式政务服务',
-                  style: TextStyle(fontSize: 15, color: Color(0xFF999999)),
+                  '欢迎使用"浙里办"',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF0D1B6E),
+                  ),
                 ),
               ],
             ),
           ),
-
-          // 底部白色圆角卡片（登录方式选择 + 协议）
+          // 底部：白色圆角卡片
           Expanded(
             child: Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
                 ),
               ),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                padding: const EdgeInsets.fromLTRB(
+                  Spacing.lg, Spacing.lg, Spacing.lg, 0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text('选择登录方式', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF333333))),
-                    const SizedBox(height: 28),
-
-                    SizedBox(
-                      height: 56,
-                      child: ElevatedButton.icon(
-                        key: _faceBtnKey,
-                        onPressed: _agreed ? () => context.push('/login/face') : null,
-                        icon: const Icon(Icons.face, size: 24),
-                        label: const Text('刷脸登录', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _kOrange,
-                          disabledBackgroundColor: const Color(0xFFFFB07A),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 0,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      height: 56,
-                      child: OutlinedButton.icon(
-                        key: _verifyBtnKey,
-                        onPressed: _agreed ? () => context.push('/login/verify') : null,
-                        icon: const Icon(Icons.sms, size: 24),
-                        label: const Text('验证码登录', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: _kOrange,
-                          side: const BorderSide(color: _kOrange, width: 1.5),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // 协议勾选区
+                    // 个人 / 法人 Tab
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: Checkbox(
-                            key: _chkKey,
-                            value: _agreed,
-                            activeColor: _kOrange,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                            onChanged: (v) => setState(() => _agreed = v ?? false),
+                        const _LoginTab(label: '个人用户', selected: true),
+                        Container(
+                          width: 1,
+                          height: 16,
+                          margin: const EdgeInsets.symmetric(horizontal: Spacing.lg),
+                          color: AppColors.divider,
+                        ),
+                        const _LoginTab(label: '法人用户', selected: false),
+                      ],
+                    ),
+                    const SizedBox(height: Spacing.lg),
+                    // 输入框标签
+                    const Text(
+                      '手机号/用户名/身份证',
+                      style: TextStyle(
+                        fontSize: AppFontSize.body,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: Spacing.sm),
+                    TextField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                      decoration: InputDecoration(
+                        hintText: '请输入',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
+                          borderSide: const BorderSide(color: Color(0xFFDDDDDD)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
+                          borderSide: const BorderSide(color: Color(0xFFDDDDDD)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
+                          borderSide: const BorderSide(
+                            color: AppColors.standardPrimary,
+                            width: 1.5,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: Spacing.md,
+                          vertical: Spacing.md,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: Spacing.lg),
+                    // 条款勾选（装饰性，不控制按钮）
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 18,
+                          height: 18,
+                          margin: const EdgeInsets.only(top: 1),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.grey.shade400),
+                          ),
+                        ),
+                        const SizedBox(width: Spacing.sm),
                         Expanded(
                           child: RichText(
                             text: const TextSpan(
-                              style: TextStyle(fontSize: 14, color: Color(0xFF666666)),
+                              style: TextStyle(
+                                fontSize: AppFontSize.small,
+                                color: AppColors.textSecondary,
+                              ),
                               children: [
-                                TextSpan(text: '我已阅读并同意'),
-                                TextSpan(text: '《用户协议》', style: TextStyle(color: _kOrange)),
+                                TextSpan(text: '已阅读并同意'),
+                                TextSpan(
+                                  text: '《用户服务协议》',
+                                  style: TextStyle(color: AppColors.standardPrimary),
+                                ),
                                 TextSpan(text: '和'),
-                                TextSpan(text: '《隐私政策》', style: TextStyle(color: _kOrange)),
+                                TextSpan(
+                                  text: '《隐私政策》',
+                                  style: TextStyle(color: AppColors.standardPrimary),
+                                ),
                               ],
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    if (!_agreed)
-                      const Text(
-                        '请先勾选同意协议才能登录',
-                        style: TextStyle(fontSize: 13, color: Color(0xFFFF6D00)),
+                    const SizedBox(height: Spacing.lg),
+                    // 登录按钮（始终可点击，R7 处理）
+                    FilledButton(
+                      key: _loginBtnKey,
+                      onPressed: () => _showTermsOverlay(context),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.standardPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.xlarge),
+                        ),
                       ),
+                      child: const Text(
+                        '登录',
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(height: Spacing.md),
+                    // 辅助链接行
+                    const Row(
+                      children: [
+                        Text('新用户注册',
+                            style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                        SizedBox(width: Spacing.md),
+                        Text('忘记密码',
+                            style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                        Spacer(),
+                        Text('登录遇到问题?',
+                            style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                      ],
+                    ),
+                    const SizedBox(height: Spacing.lg),
+                    // 其他登录方式分割线
+                    const Row(
+                      children: [
+                        Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: Spacing.sm),
+                          child: Text(
+                            '其他登录方式',
+                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                        ),
+                        Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: Spacing.md),
+                    const Center(
+                      child: Text(
+                        '其他证件',
+                        style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                      ),
+                    ),
+                    const SizedBox(height: Spacing.lg),
                   ],
                 ),
               ),
@@ -160,6 +226,134 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showTermsOverlay(BuildContext context) {
+    InAppOverlay.show<void>(
+      context,
+      child: _TermsOverlayContent(
+        onAgree: () {
+          Navigator.of(context).pop();
+          context.push('/login/face');
+        },
+        onDisagree: () => Navigator.of(context).pop(),
+      ),
+    );
+  }
+}
+
+// ─── 个人/法人 Tab 项 ──────────────────────────────────────────────────────────
+
+class _LoginTab extends StatelessWidget {
+  final String label;
+  final bool selected;
+
+  const _LoginTab({required this.label, required this.selected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            color: selected ? AppColors.standardPrimary : AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          height: 2,
+          width: 52,
+          color: selected ? AppColors.standardPrimary : Colors.transparent,
+        ),
+      ],
+    );
+  }
+}
+
+// ─── 同意条款浮层内容（InAppOverlay，非阻塞）─────────────────────────────────
+
+class _TermsOverlayContent extends StatelessWidget {
+  final VoidCallback onAgree;
+  final VoidCallback onDisagree;
+
+  const _TermsOverlayContent({
+    required this.onAgree,
+    required this.onDisagree,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          '请阅读并同意以下条款',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: Spacing.lg),
+        RichText(
+          text: const TextSpan(
+            style: TextStyle(
+              fontSize: AppFontSize.body,
+              color: AppColors.textPrimary,
+              height: 1.5,
+            ),
+            children: [
+              TextSpan(text: '我已阅读并同意'),
+              TextSpan(
+                text: '《用户服务协议》',
+                style: TextStyle(color: AppColors.standardPrimary),
+              ),
+              TextSpan(text: '和'),
+              TextSpan(
+                text: '《隐私政策》',
+                style: TextStyle(color: AppColors.standardPrimary),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: Spacing.xl),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: onDisagree,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade200,
+                  foregroundColor: AppColors.standardPrimary,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: Spacing.md),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.xlarge),
+                  ),
+                ),
+                child: const Text('不同意'),
+              ),
+            ),
+            const SizedBox(width: Spacing.md),
+            Expanded(
+              child: FilledButton(
+                onPressed: onAgree,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.standardPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: Spacing.md),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.xlarge),
+                  ),
+                ),
+                child: const Text('同意并继续'),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

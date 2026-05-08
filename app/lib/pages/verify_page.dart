@@ -1,17 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../theme/design_tokens.dart';
+import '../widgets/system_dialog.dart';
 import '../services/agent_element_registry.dart';
 import '../services/auth_state.dart';
-
-const _kOrange = Color(0xFFFF6D00);
-const _kBg = Color(0xFFF5F5F5);
-const _kSurface = Colors.white;
-const _kShadow = BoxShadow(
-  color: Color(0x0D000000),
-  blurRadius: 8,
-  offset: Offset(0, 2),
-);
 
 class VerifyPage extends StatefulWidget {
   const VerifyPage({super.key});
@@ -28,7 +21,7 @@ class _VerifyPageState extends State<VerifyPage> {
   final _phoneKey = AgentElementRegistry.register('input_phone');
   final _sendBtnKey = AgentElementRegistry.register('btn_send_code');
   final _codeKey = AgentElementRegistry.register('input_verify_code');
-  final _loginBtnKey = AgentElementRegistry.register('btn_login');
+  final _loginBtnKey = AgentElementRegistry.register('btn_verify_login');
 
   int _countdown = 0;
   Timer? _timer;
@@ -74,27 +67,40 @@ class _VerifyPageState extends State<VerifyPage> {
         setState(() => _countdown--);
       }
     });
-    // autofocus 验证码框
     _codeFocusNode.requestFocus();
+  }
+
+  void _confirmSmsCode(BuildContext context) {
+    SystemDialog.show(
+      context,
+      title: '验证码确认',
+      message: '验证码已验证，即将完成登录',
+      confirmLabel: '确认',
+      denyLabel: '取消',
+      onConfirm: () {
+        AuthState.instance.login(name: '用户');
+        context.go('/elder');
+      },
+    );
   }
 
   InputDecoration _inputDecoration({String? label, IconData? prefix}) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(fontSize: 18, color: Color(0xFF999999)),
-      prefixIcon: prefix != null ? Icon(prefix, color: const Color(0xFF999999)) : null,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+      labelStyle: const TextStyle(fontSize: AppFontSize.elderBody, color: AppColors.textSecondary),
+      prefixIcon: prefix != null ? Icon(prefix, color: AppColors.textSecondary) : null,
+      contentPadding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: 0),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        borderSide: const BorderSide(color: AppColors.divider),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        borderSide: const BorderSide(color: AppColors.divider),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: _kOrange, width: 1.5),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        borderSide: const BorderSide(color: AppColors.standardPrimary, width: 1.5),
       ),
       filled: true,
       fillColor: const Color(0xFFFAFAFA),
@@ -104,26 +110,41 @@ class _VerifyPageState extends State<VerifyPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: const Color(0xFFDEEAF8),
       appBar: AppBar(
-        backgroundColor: _kOrange,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('验证码登录', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
-        centerTitle: true,
+        foregroundColor: AppColors.textPrimary,
+        title: const Text('短信验证登录'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(Spacing.lg, Spacing.lg, Spacing.lg, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 16),
+            const Text(
+              '请输入验证码',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: Spacing.sm),
+            const Text(
+              '输入手机号并获取验证码完成登录',
+              style: TextStyle(fontSize: AppFontSize.body, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: Spacing.xl),
+            // 输入卡片
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(Spacing.xl),
               decoration: BoxDecoration(
-                color: _kSurface,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: const [_kShadow],
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppRadius.large),
+                boxShadow: const [
+                  BoxShadow(color: Color(0x0D000000), blurRadius: 8, offset: Offset(0, 2)),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -135,15 +156,18 @@ class _VerifyPageState extends State<VerifyPage> {
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
                       decoration: _inputDecoration(label: '手机号', prefix: Icons.phone),
-                      style: const TextStyle(fontSize: 18),
+                      style: const TextStyle(fontSize: AppFontSize.elderBody),
                     ),
                   ),
                   if (_phoneInvalid)
                     const Padding(
                       padding: EdgeInsets.only(top: 6),
-                      child: Text('请输入11位手机号（首位为1）', style: TextStyle(fontSize: 15, color: Color(0xFFFF3B30))),
+                      child: Text(
+                        '请输入11位手机号（首位为1）',
+                        style: TextStyle(fontSize: AppFontSize.caption, color: Color(0xFFFF3B30)),
+                      ),
                     ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: Spacing.lg),
                   Row(
                     children: [
                       Expanded(
@@ -156,48 +180,62 @@ class _VerifyPageState extends State<VerifyPage> {
                             keyboardType: TextInputType.number,
                             autofocus: false,
                             decoration: _inputDecoration(label: '验证码', prefix: Icons.sms),
-                            style: const TextStyle(fontSize: 18),
+                            style: const TextStyle(fontSize: AppFontSize.elderBody),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: Spacing.md),
                       SizedBox(
                         height: 56,
                         child: OutlinedButton(
                           key: _sendBtnKey,
                           onPressed: (_countdown == 0 && _phoneValid) ? _sendCode : null,
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: _kOrange,
-                            side: const BorderSide(color: _kOrange),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            foregroundColor: AppColors.standardPrimary,
+                            side: const BorderSide(color: AppColors.standardPrimary),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.medium),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
                           ),
                           child: Text(
                             _countdown > 0 ? '${_countdown}s 后重发' : '发送',
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            style: const TextStyle(fontSize: AppFontSize.bodyLarge, fontWeight: FontWeight.w600),
                           ),
                         ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: Spacing.sm),
+                  // 重新发送倒计时提示
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.timer_outlined, size: 14, color: AppColors.textSecondary),
+                      const SizedBox(width: 4),
+                      Text(
+                        _countdown > 0 ? '重新发送 $_countdown秒' : '点击"发送"获取验证码',
+                        style: const TextStyle(fontSize: AppFontSize.body, color: AppColors.textSecondary),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 56,
-              child: ElevatedButton(
-                key: _loginBtnKey,
-                onPressed: _canLogin ? () { AuthState.instance.login(name: '张大爷'); context.go('/elder'); } : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _kOrange,
-                  disabledBackgroundColor: const Color(0xFFFFB07A),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
+            const SizedBox(height: Spacing.xl),
+            // 确认登录按钮
+            FilledButton(
+              key: _loginBtnKey,
+              onPressed: _canLogin ? () => _confirmSmsCode(context) : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.standardPrimary,
+                disabledBackgroundColor: Colors.grey.shade300,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.xlarge),
                 ),
-                child: const Text('登录', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
               ),
+              child: const Text('确认', style: TextStyle(fontSize: 18)),
             ),
           ],
         ),

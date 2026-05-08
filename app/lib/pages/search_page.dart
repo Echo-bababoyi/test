@@ -1,39 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../theme/design_tokens.dart';
+import '../widgets/in_app_overlay.dart';
+import '../widgets/permission_flow_helper.dart';
+import '../widgets/search_suggestion_list.dart';
 import '../widgets/elder_bottom_nav.dart';
-
-const _kOrange = Color(0xFFFF6D00);
-const _kBg = Color(0xFFF5F5F5);
-const _kSurface = Colors.white;
-const _kShadow = BoxShadow(
-  color: Color(0x0D000000),
-  blurRadius: 8,
-  offset: Offset(0, 2),
-);
-
-// mock 服务数据：(名称, 路由, 关键词)
-const _allServices = [
-  _Service('医保缴费', '/elder/yibao-jiaofei', ['医保', '缴费', '社保', '保险']),
-  _Service('医保查询', '/elder/yibao-query',   ['医保', '查询', '余额', '账户']),
-  _Service('养老金查询', '/elder/pension-query', ['养老', '养老金', '退休', '查询']),
-  _Service('搜索服务', '/elder/search',         ['搜索', '查找']),
-];
-
-// 热门标签：名称 → 路由（null 表示仅展示）
-const _hotTags = [
-  ('医保缴费',   '/elder/yibao-jiaofei'),
-  ('养老金查询', '/elder/pension-query'),
-  ('公积金',     null),
-  ('社保卡',     null),
-  ('健康码',     null),
-];
-
-class _Service {
-  final String name;
-  final String route;
-  final List<String> keywords;
-  const _Service(this.name, this.route, this.keywords);
-}
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -44,194 +15,510 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final _controller = TextEditingController();
-  List<_Service> _results = [];
+  String _text = '';
 
   @override
   void initState() {
     super.initState();
-    _controller.addListener(_onSearch);
+    _controller.addListener(_onTextChanged);
   }
+
+  void _onTextChanged() => setState(() => _text = _controller.text);
 
   @override
   void dispose() {
+    _controller.removeListener(_onTextChanged);
     _controller.dispose();
     super.dispose();
   }
 
-  void _onSearch() {
-    final q = _controller.text.trim();
-    if (q.isEmpty) {
-      setState(() => _results = []);
-      return;
-    }
-    setState(() {
-      _results = _allServices.where((s) {
-        return s.name.contains(q) || s.keywords.any((k) => k.contains(q) || q.contains(k));
-      }).toList();
-    });
+  void _submitSearch(String q) {
+    final trimmed = q.trim();
+    if (trimmed.isEmpty) return;
+    context.push('/elder/search-result?q=${Uri.encodeComponent(trimmed)}');
+  }
+
+  void _showMicPermissionOverlay() {
+    PermissionFlowHelper.request(
+      context: context,
+      guideContentBuilder: (onProceed) => _MicPermissionContent(
+        onNotNow: () => Navigator.of(context).pop(),
+        onEnable: onProceed,
+      ),
+      systemTitle: '"浙里办"请求使用麦克风',
+      systemMessage: '用于通过麦克风实现语音搜索等功能',
+      systemConfirmLabel: '使用应用时允许',
+      systemDenyLabel: '禁止',
+      onGranted: _showVoiceInputOverlay,
+    );
+  }
+
+  void _showVoiceInputOverlay() {
+    InAppOverlay.show<void>(
+      context,
+      child: _VoiceInputContent(
+        onResult: (result) async {
+          if (!mounted) return;
+          Navigator.of(context).pop();
+          _controller.text = result;
+          _submitSearch(result);
+        },
+        onClose: () => Navigator.of(context).pop(),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _kBg,
-      appBar: AppBar(
-        backgroundColor: _kOrange,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: const Text('搜索服务', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
-        centerTitle: true,
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 搜索框区（橙色延续 AppBar）
-          Container(
-            color: _kOrange,
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Container(
-              height: 48,
-              decoration: BoxDecoration(
-                color: _kSurface,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: TextField(
-                controller: _controller,
-                style: const TextStyle(fontSize: 18),
-                textAlignVertical: TextAlignVertical.center,
-                decoration: const InputDecoration(
-                  hintText: '请输入服务关键词',
-                  hintStyle: TextStyle(fontSize: 16, color: Color(0xFFBBBBBB)),
-                  prefixIcon: Icon(Icons.search, color: Color(0xFF999999)),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 0),
-                  isDense: true,
-                ),
-              ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _SearchBar(
+              controller: _controller,
+              text: _text,
+              onMicTap: _showMicPermissionOverlay,
+              onSubmit: _submitSearch,
+              onClear: () {
+                _controller.clear();
+                setState(() => _text = '');
+              },
+              onCancel: () => context.pop(),
             ),
-          ),
-
-          // 内容区
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (_controller.text.isEmpty) ...[
-                    // 热门搜索标签
-                    const Text('热门搜索', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF333333))),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: _hotTags.map((tag) {
-                        final (name, route) = tag;
-                        return _HotChip(
-                          label: name,
-                          onTap: route != null ? () => context.push(route) : null,
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text('全部服务', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF333333))),
-                    const SizedBox(height: 12),
-                    ..._allServices.map((s) => _ServiceTile(service: s)),
-                  ] else if (_results.isEmpty) ...[
-                    const SizedBox(height: 40),
-                    const Center(
-                      child: Column(
-                        children: [
-                          Icon(Icons.search_off, size: 64, color: Color(0xFFCCCCCC)),
-                          SizedBox(height: 12),
-                          Text('没有找到相关服务', style: TextStyle(fontSize: 16, color: Color(0xFF999999))),
-                        ],
-                      ),
-                    ),
-                  ] else ...[
-                    Text('找到 ${_results.length} 个服务', style: const TextStyle(fontSize: 15, color: Color(0xFF999999))),
-                    const SizedBox(height: 12),
-                    ..._results.map((s) => _ServiceTile(service: s)),
-                  ],
-                ],
-              ),
+            const Divider(height: 1),
+            Expanded(
+              child: _text.isEmpty
+                  ? const _DefaultBody()
+                  : SearchSuggestionList(query: _text, onSelect: _submitSearch),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
     );
   }
 }
 
-class _HotChip extends StatelessWidget {
-  final String label;
-  final VoidCallback? onTap;
-  const _HotChip({required this.label, this.onTap});
+// ─── 顶部搜索栏 ───────────────────────────────────────────────────────────────
+
+class _SearchBar extends StatelessWidget {
+  final TextEditingController controller;
+  final String text;
+  final VoidCallback onMicTap;
+  final ValueChanged<String> onSubmit;
+  final VoidCallback onClear;
+  final VoidCallback onCancel;
+
+  const _SearchBar({
+    required this.controller,
+    required this.text,
+    required this.onMicTap,
+    required this.onSubmit,
+    required this.onClear,
+    required this.onCancel,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: _kSurface,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: const [_kShadow],
-          border: onTap != null ? Border.all(color: const Color(0xFFFFCC80)) : null,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 16,
-            color: onTap != null ? _kOrange : const Color(0xFF666666),
-            fontWeight: onTap != null ? FontWeight.w500 : FontWeight.normal,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.md,
+        vertical: Spacing.sm,
+      ),
+      child: Row(
+        children: [
+          const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '西湖区',
+                style: TextStyle(fontSize: AppFontSize.body, color: AppColors.textPrimary),
+              ),
+              Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textPrimary),
+            ],
           ),
-        ),
+          const SizedBox(width: Spacing.sm),
+          Expanded(
+            child: Container(
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: TextField(
+                controller: controller,
+                autofocus: true,
+                textInputAction: TextInputAction.search,
+                onSubmitted: onSubmit,
+                style: const TextStyle(fontSize: 15),
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 9,
+                  ),
+                  suffixIcon: text.isNotEmpty
+                      ? GestureDetector(
+                          onTap: onClear,
+                          child: const Icon(Icons.cancel, size: 18, color: Colors.grey),
+                        )
+                      : GestureDetector(
+                          onTap: onMicTap,
+                          child: const Icon(Icons.mic, size: 18, color: Colors.grey),
+                        ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: Spacing.sm),
+          TextButton(
+            onPressed: onCancel,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text(
+              '取消',
+              style: TextStyle(fontSize: 15, color: AppColors.standardPrimary),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _ServiceTile extends StatelessWidget {
-  final _Service service;
-  const _ServiceTile({required this.service});
+// ─── 空输入时默认内容 ─────────────────────────────────────────────────────────
+
+class _DefaultBody extends StatelessWidget {
+  const _DefaultBody();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: InkWell(
-        onTap: () => context.push(service.route),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          decoration: BoxDecoration(
-            color: _kSurface,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: const [_kShadow],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.lg,
+        vertical: Spacing.md,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '我的常用',
+            style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w700),
           ),
-          child: Row(
+          const SizedBox(height: Spacing.md),
+          const Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF3E0),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.assignment, color: _kOrange, size: 24),
-              ),
-              const SizedBox(width: 14),
               Expanded(
-                child: Text(service.name, style: const TextStyle(fontSize: 18, color: Color(0xFF333333), fontWeight: FontWeight.w500)),
+                child: _QuickItem(
+                  icon: Icons.health_and_safety_outlined,
+                  iconColor: AppColors.standardPrimary,
+                  label: '浙里医保',
+                ),
               ),
-              const Icon(Icons.chevron_right, color: Color(0xFFCCCCCC)),
+              SizedBox(width: Spacing.lg),
+              Expanded(
+                child: _QuickItem(
+                  icon: Icons.manage_search,
+                  iconColor: AppColors.standardPrimary,
+                  label: '社保查询',
+                ),
+              ),
             ],
           ),
-        ),
+          const SizedBox(height: Spacing.lg),
+          const Row(
+            children: [
+              Expanded(
+                child: _QuickItem(
+                  icon: Icons.home_work_outlined,
+                  iconColor: AppColors.standardPrimary,
+                  label: '住房公积金',
+                ),
+              ),
+              SizedBox(width: Spacing.lg),
+              Expanded(
+                child: _QuickItem(
+                  icon: Icons.print_outlined,
+                  iconColor: AppColors.elderPrimary,
+                  label: '社保证明...',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: Spacing.xl),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                '最近搜索',
+                style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w700),
+              ),
+              OutlinedButton(
+                onPressed: null,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Spacing.md,
+                    vertical: 4,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: const Text('清空', style: TextStyle(fontSize: AppFontSize.caption)),
+              ),
+            ],
+          ),
+          const SizedBox(height: Spacing.md),
+          const Row(
+            children: [
+              _RecentPill('医保'),
+              SizedBox(width: Spacing.md),
+              _RecentPill('养老金'),
+            ],
+          ),
+          const SizedBox(height: Spacing.xl),
+          const Text(
+            '为你推荐',
+            style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: Spacing.md),
+          const Wrap(
+            spacing: Spacing.md,
+            runSpacing: Spacing.md,
+            children: [
+              _RecommendPill('办居住证'),
+              _RecommendPill('浙里医保'),
+              _RecommendPill('健康杭州'),
+              _RecommendPill('流动人口居住登记'),
+              _RecommendPill('小客车摇号'),
+              _RecommendPill('不动产智治'),
+              _RecommendPill('市场监管业务办理'),
+              _RecommendPill('e房通'),
+              _RecommendPill('校园建身'),
+              _RecommendPill('公积金'),
+              _RecommendPill('入学早知道'),
+              _RecommendPill('医保查询'),
+            ],
+          ),
+          const SizedBox(height: Spacing.lg),
+        ],
       ),
+    );
+  }
+}
+
+class _QuickItem extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+
+  const _QuickItem({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: iconColor, size: 22),
+        ),
+        const SizedBox(width: Spacing.sm),
+        Text(
+          label,
+          style: const TextStyle(fontSize: AppFontSize.body, color: AppColors.textPrimary),
+        ),
+      ],
+    );
+  }
+}
+
+class _RecentPill extends StatelessWidget {
+  final String label;
+  const _RecentPill(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.sm),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(label, style: const TextStyle(fontSize: AppFontSize.body)),
+    );
+  }
+}
+
+class _RecommendPill extends StatelessWidget {
+  final String label;
+  const _RecommendPill(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(label, style: const TextStyle(fontSize: AppFontSize.caption)),
+    );
+  }
+}
+
+// ─── 麦克风权限引导浮层内容 ────────────────────────────────────────────────────
+
+class _MicPermissionContent extends StatelessWidget {
+  final VoidCallback onNotNow;
+  final VoidCallback onEnable;
+
+  const _MicPermissionContent({required this.onNotNow, required this.onEnable});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          '浙里办需要获取麦克风权限',
+          style: TextStyle(fontSize: AppFontSize.title, fontWeight: FontWeight.w700),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: Spacing.md),
+        const Text(
+          '开启麦克风权限，浙里办可以为您提供通过麦克风实现语音搜索等功能',
+          style: TextStyle(fontSize: AppFontSize.body, color: AppColors.textSecondary),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: Spacing.xl),
+        Row(
+          children: [
+            TextButton(
+              onPressed: onNotNow,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.lg,
+                  vertical: Spacing.md,
+                ),
+              ),
+              child: const Text('暂不开启'),
+            ),
+            const Spacer(),
+            FilledButton(
+              onPressed: onEnable,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.standardPrimary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.xl,
+                  vertical: Spacing.md,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.xlarge),
+                ),
+              ),
+              child: const Text('去开启'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ─── 语音输入浮层内容 ─────────────────────────────────────────────────────────
+
+class _VoiceInputContent extends StatefulWidget {
+  final Future<void> Function(String) onResult;
+  final VoidCallback onClose;
+
+  const _VoiceInputContent({required this.onResult, required this.onClose});
+
+  @override
+  State<_VoiceInputContent> createState() => _VoiceInputContentState();
+}
+
+class _VoiceInputContentState extends State<_VoiceInputContent> {
+  bool _listening = false;
+
+  Future<void> _onMicTap() async {
+    setState(() => _listening = true);
+    final result = await Future.delayed(
+      const Duration(seconds: 2),
+      () => '医保缴费',
+    );
+    if (!mounted) return;
+    widget.onResult(result);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const micColor = Color(0xFFFF6D00);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Align(
+          alignment: Alignment.topRight,
+          child: IconButton(
+            icon: const Icon(Icons.close, color: Colors.grey),
+            onPressed: widget.onClose,
+          ),
+        ),
+        Text(
+          _listening ? '正在听...' : '您可以这样说：',
+          style: const TextStyle(
+            fontSize: AppFontSize.subtitle,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: Spacing.md),
+        if (!_listening)
+          const Text(
+            '公积金查询、社保查询、预防接种',
+            style: TextStyle(
+              fontSize: AppFontSize.bodyLarge,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        const SizedBox(height: Spacing.xl),
+        const Text(
+          '按住话筒说话',
+          style: TextStyle(fontSize: AppFontSize.body, color: micColor),
+        ),
+        const SizedBox(height: Spacing.md),
+        GestureDetector(
+          onTap: _listening ? null : _onMicTap,
+          child: Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: _listening
+                  ? micColor.withValues(alpha: 0.6)
+                  : micColor,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.mic, color: Colors.white, size: 32),
+          ),
+        ),
+        const SizedBox(height: Spacing.xl),
+      ],
     );
   }
 }

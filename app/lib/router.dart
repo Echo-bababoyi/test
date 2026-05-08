@@ -12,6 +12,9 @@ import 'pages/search_page.dart';
 import 'pages/mine_page.dart';
 import 'pages/operation_logs_page.dart';
 import 'pages/drafts_page.dart';
+import 'pages/shebao_jiaona_page.dart';
+import 'pages/shebao_query_page.dart';
+import 'pages/search_result_page.dart';
 
 Page<void> _slidePage(Widget child, GoRouterState state) {
   return CustomTransitionPage<void>(
@@ -48,5 +51,8 @@ final appRouter = GoRouter(
     ),
     GoRoute(path: '/elder/operation-logs', pageBuilder: (c, s) => _slidePage(const OperationLogsPage(), s)),
     GoRoute(path: '/elder/drafts', pageBuilder: (c, s) => _slidePage(const DraftsPage(), s)),
+    GoRoute(path: '/elder/shebao-jiaona', pageBuilder: (c, s) => _slidePage(const ShebaoJiaonaPage(), s)),
+    GoRoute(path: '/elder/shebao-query', pageBuilder: (c, s) => _slidePage(const ShebaoQueryPage(), s)),
+    GoRoute(path: '/elder/search-result', pageBuilder: (c, s) => _slidePage(const SearchResultPage(), s)),
   ],
 );
