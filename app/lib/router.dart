@@ -17,6 +17,7 @@ import 'pages/yibao_jiaofei_page.dart';
 import 'pages/yibao_query_page.dart';
 import 'pages/operation_logs_page.dart';
 import 'pages/drafts_page.dart';
+import 'pages/agent_settings_page.dart';
 import 'widgets/phone_frame.dart';
 
 class AppRoutes {
@@ -36,6 +37,7 @@ class AppRoutes {
   static const yibaoQuery = '/service/yibao-query';
   static const operationLogs = '/elder/operation-logs';
   static const drafts = '/elder/drafts';
+  static const agentSettings = '/elder/agent-settings';
 
   static const all = [
     ('闪屏页', splash),
@@ -54,6 +56,7 @@ class AppRoutes {
     ('医保查询', yibaoQuery),
     ('操作日志', operationLogs),
     ('草稿箱', drafts),
+    ('小浙设置', agentSettings),
   ];
 }
 
@@ -85,6 +88,7 @@ final appRouter = GoRouter(
         GoRoute(path: AppRoutes.yibaoQuery, builder: (_, __) => const YibaoQueryPage()),
         GoRoute(path: AppRoutes.operationLogs, builder: (_, __) => const OperationLogsPage()),
         GoRoute(path: AppRoutes.drafts, builder: (_, __) => const DraftsPage()),
+        GoRoute(path: AppRoutes.agentSettings, builder: (_, __) => const AgentSettingsPage()),
       ],
     ),
   ],

@@ -642,6 +642,21 @@ class _MySettingsSection extends StatelessWidget {
                 color: AppColors.elderPrimary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
+              child: const Icon(Icons.smart_toy_outlined, color: AppColors.elderPrimary, size: 18),
+            ),
+            title: const Text('小浙助手', style: TextStyle(fontSize: 15)),
+            trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+            onTap: () => context.push(AppRoutes.agentSettings),
+          ),
+          const Divider(height: 1, indent: 16),
+          ListTile(
+            leading: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.elderPrimary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
               child: const Icon(Icons.settings_outlined,
                   color: AppColors.elderPrimary, size: 18),
             ),

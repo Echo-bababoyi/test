@@ -171,10 +171,7 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
             _session.addDialog('agent', summary);
             _items.add({'role': 'agent', 'text': summary});
           }
-          AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
-          _autoDismissTimer = Timer(const Duration(seconds: 2), () {
-            if (mounted) _close();
-          });
+          _scheduleAutoDismiss(payload['tts_audio_base64'] as String?);
 
         case 'agent_executing':
           _session.state = 'executing';
@@ -223,6 +220,12 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
     await _slideController.reverse();
     _ws.disconnect();
     if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _scheduleAutoDismiss(String? base64Audio) async {
+    await AudioPlayer.playBase64AndWait(base64Audio);
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) _close();
   }
 
   void _sendText() {

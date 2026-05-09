@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'agent_element_registry.dart';
 import 'draft_service.dart';
+import 'agent_settings_service.dart';
 
 class AgentCommandExecutor {
   final GoRouter router;
@@ -34,13 +35,15 @@ class AgentCommandExecutor {
   }
 
   void _speakHint(String text) {
+    final settings = AgentSettingsService.instance;
+    if (!settings.voiceEnabled) return;
     try {
       final synth = html.window.speechSynthesis;
       if (synth == null) return;
       synth.cancel();
       final utterance = html.SpeechSynthesisUtterance(text);
       utterance.lang = 'zh-CN';
-      utterance.rate = 0.9;
+      utterance.rate = settings.speechRate;
       synth.speak(utterance);
     } catch (_) {}
   }
