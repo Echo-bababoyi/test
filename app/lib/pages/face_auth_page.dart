@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/state/app_state.dart';
+import '../router.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/in_app_overlay.dart';
 import '../widgets/permission_flow_helper.dart';
-import '../services/auth_state.dart';
 import '../services/agent_element_registry.dart';
 
-class FaceAuthPage extends StatefulWidget {
+class FaceAuthPage extends ConsumerStatefulWidget {
   const FaceAuthPage({super.key});
 
   @override
-  State<FaceAuthPage> createState() => _FaceAuthPageState();
+  ConsumerState<FaceAuthPage> createState() => _FaceAuthPageState();
 }
 
-class _FaceAuthPageState extends State<FaceAuthPage> {
+class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
   bool _isAuthenticating = false;
 
   final _faceBtnKey = AgentElementRegistry.register('btn_face_login');
@@ -43,8 +45,8 @@ class _FaceAuthPageState extends State<FaceAuthPage> {
       body: _isAuthenticating
           ? _AuthenticatingView(
               onComplete: () {
-                AuthState.instance.login(name: '用户');
-                context.go('/elder');
+                ref.read(loginProvider.notifier).login('用户');
+                context.go(AppRoutes.elderHome);
               },
             )
           : _DefaultView(
@@ -77,7 +79,7 @@ class _FaceAuthPageState extends State<FaceAuthPage> {
       child: _OtherAuthContent(
         onSmsVerify: () {
           Navigator.of(context).pop();
-          context.push('/login/verify');
+          context.push(AppRoutes.verify);
         },
         onCancel: () => Navigator.of(context).pop(),
       ),

@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/state/app_state.dart';
+import '../router.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/connection_indicator.dart';
 import '../widgets/elder_bottom_nav.dart';
 import '../widgets/persistent_banner.dart';
 
-class ElderHome extends StatefulWidget {
+class ElderHome extends ConsumerStatefulWidget {
   const ElderHome({super.key});
 
   @override
-  State<ElderHome> createState() => _ElderHomeState();
+  ConsumerState<ElderHome> createState() => _ElderHomeState();
 }
 
-class _ElderHomeState extends State<ElderHome>
+class _ElderHomeState extends ConsumerState<ElderHome>
     with SingleTickerProviderStateMixin {
   late final TabController _tab = TabController(length: 3, vsync: this);
 
@@ -81,7 +84,11 @@ class _ElderHomeState extends State<ElderHome>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _EldToolBarSection(onStandardTap: () => context.go('/')),
+                _EldToolBarSection(onStandardTap: () {
+                  ref.read(modeProvider.notifier).toStandard();
+                  context.go(AppRoutes.home);
+                }),
+                const _EldSearchBar(),
                 const _EldGovHotlineSection(key: ValueKey('eld_hotline')),
                 _EldTabCardSection(controller: _tab),
                 const _EldOnlineServiceSection(key: ValueKey('eld_online')),
@@ -91,9 +98,12 @@ class _ElderHomeState extends State<ElderHome>
               ],
             ),
           ),
-          const Align(
+          Align(
             alignment: Alignment.bottomCenter,
-            child: PersistentBanner(),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: PersistentBanner(),
+            ),
           ),
         ],
       ),
@@ -388,7 +398,7 @@ class _EldFavoritesContent extends StatelessWidget {
               const SizedBox(width: Spacing.md),
               Expanded(
                 child: GestureDetector(
-                  onTap: () => context.push('/elder/shebao-query'),
+                  onTap: () => context.push(AppRoutes.shebaoQuery),
                   child: const _EldServiceCard(
                     icon: Icons.manage_search,
                     iconColor: Color(0xFF5B6BF5),
@@ -544,7 +554,7 @@ class _EldOnlineServiceSection extends StatelessWidget {
                 _EldOnlineGridItem(
                   item: item,
                   onTap: item.label == '健康医保'
-                      ? () => context.push('/elder/shebao-jiaona')
+                      ? () => context.push(AppRoutes.shebaoJiaona)
                       : null,
                 ),
             ],
@@ -821,6 +831,42 @@ class _EldFooterSection extends StatelessWidget {
           fontSize: AppFontSize.caption,
           color: AppColors.textSecondary,
           fontStyle: FontStyle.italic,
+        ),
+      ),
+    );
+  }
+}
+
+class _EldSearchBar extends StatelessWidget {
+  const _EldSearchBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.elderPrimary,
+      padding: const EdgeInsets.fromLTRB(Spacing.lg, 0, Spacing.lg, Spacing.md),
+      child: GestureDetector(
+        onTap: () => context.push(AppRoutes.search),
+        child: Container(
+          height: 52,
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppRadius.xlarge),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.search, color: AppColors.textSecondary, size: 22),
+              const SizedBox(width: Spacing.sm),
+              const Text(
+                '搜索服务、政策、证件...',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: AppFontSize.bodyLarge,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

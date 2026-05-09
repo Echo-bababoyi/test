@@ -13,6 +13,16 @@
 | 5 | 产出 UI/UX 交互设计（UI_UX_DESIGN.md v1.0） | PM | ✅ |
 | 6 | 编码实施（前端 Flutter Web + 后端 FastAPI） | frontend / backend | 🧪 |
 | 7 | 实施计划修订（采纳 PM 3 条调整建议） | architect | ✅ |
+| 8 | 前端流程回退（旧版闪屏页+标准首页+PhoneFrame+Riverpod+双模式主题） | frontend | ✅ |
+| 9 | 路由路径统一 AppRoutes 常量（18 处硬编码替换） | frontend | ✅ |
+| 10 | PersistentBanner 改 Riverpod 响应式 | frontend | ✅ |
+| 11 | AgentPanel 协议对齐（agent_wake payload + permission_response + field_key/button_key） | frontend | ✅ |
+| 12 | 草稿写入链路打通（DraftService.autoSave） | frontend | 🧪 |
+| 13 | 语音引导 TTS（voice_hint Web Speech API） | frontend | 🧪 |
+| 14 | 长辈首页搜索条入口 | frontend | ✅ |
+| 15 | WakeWordListener 单例竞争修复 | frontend | ✅ |
+| 16 | 后端 prompt 路由前缀同步 | backend | ✅ |
+| 17 | 用户旅程图文档（docs/USER_JOURNEY.md） | PM | ✅ |
 
 ---
 
@@ -71,6 +81,30 @@
 **前置条件**：先出实施计划（任务拆分 + 优先级），再开始编码。→ 实施计划初稿已出（`docs/IMPLEMENTATION_PLAN.md`），待修订后开工。
 
 **验收标准**：4 个核心场景（登录刷脸 / 登录验证码 / 医保缴费 / 养老金查询）均可在浏览器端完整演示，三条横切原则在代码层面有保障。
+
+### #8–#17 本次会话（2026-05-09）
+
+**#8 前端流程回退**：将前端恢复为旧版（archive/scene-canvas-v1）的层级结构，包含闪屏页、标准首页、PhoneFrame 壳、Riverpod ProviderScope、双模式主题（AppTheme.of(mode)）。完成时间：2026-05-09
+
+**#9 路由路径统一 AppRoutes 常量**：消除 18 处硬编码路径字符串，全部改用 `AppRoutes.xxx` 常量，防止路径拼写不一致。完成时间：2026-05-09
+
+**#10 PersistentBanner 改 Riverpod 响应式**：登录引导横幅改为监听 `authProvider`，登录后自动消失，不再依赖静态变量。完成时间：2026-05-09
+
+**#11 AgentPanel 协议对齐**：修复 `agent_wake` payload 字段缺失、`permission_response` 消息类型错误、`cmd_fill_field`/`cmd_press_button` 使用 `field_key`/`button_key` 与后端协议不一致等 P0 Bug。完成时间：2026-05-09
+
+**#12 草稿写入链路打通**：补全 `DraftService.autoSave`，在表单字段变化时自动写入 IndexedDB；`AgentPanel` 在 `agent_ready` 收到 `draft_hint` 时显示草稿恢复提示。状态：已实现待真机验证。
+
+**#13 语音引导 TTS**：`cmd_highlight`/`cmd_fill_field`/`cmd_navigate` 的 `voice_hint` 字段接入 Web Speech API (`SpeechSynthesis`)，代理操作时同步语音播报。状态：已实现待真机验证。
+
+**#14 长辈首页搜索条入口**：在长辈首页 `_EldToolBarSection` 下方插入 `_EldSearchBar`，橙色背景圆角白色搜索框（高 52dp），点击跳 `/search`。弥补小浙助手按钮占用原搜索 FAB 后的入口缺失。完成时间：2026-05-09
+
+**#15 WakeWordListener 单例竞争修复**：修复多页面挂载时 `WakeWordListener` 重复 `start()` 导致的竞争问题，改为引用计数模式。完成时间：2026-05-09
+
+**#16 后端 prompt 路由前缀同步**：后端场景 prompt 中的路由路径与前端 `AppRoutes` 常量同步对齐，消除路由前缀不一致导致 `cmd_navigate` 跳转失败的问题。完成时间：2026-05-09
+
+**#17 用户旅程图文档**：产出 `docs/USER_JOURNEY.md` v1.0，覆盖 4 场景完整旅程图、情感曲线、前端支撑评估、3 条调整建议（含 PM + architect 联合定稿）。完成时间：2026-05-09
+
+---
 
 ### #7 实施计划修订（采纳 PM 3 条调整建议）
 

@@ -45,6 +45,7 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
   final _scrollController = ScrollController();
   final _textController = TextEditingController();
   AgentCommandExecutor? _executor;
+  StreamSubscription<Map<String, dynamic>>? _wsSub;
 
   final List<Map<String, dynamic>> _items = [];
   Timer? _autoDismissTimer;
@@ -62,9 +63,13 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
     );
     _slideController.forward();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final loc = widget.currentPath ?? '';
+      final entry = _pageIdMap[loc];
       _executor = AgentCommandExecutor(
         router: GoRouter.of(context),
         overlayContext: context,
+        pageId: entry?.$1,
+        pageTitle: entry?.$2,
       );
     });
     _initSession();
@@ -79,8 +84,12 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
         _session.websocketConnected = true;
         _session.state = 'listening';
       });
-      _ws.send('agent_wake', {});
-      _ws.messages.listen(_handleMessage);
+      _ws.send('agent_wake', {
+        'session_id': _session.sessionId ?? '',
+        'trigger': 'button',
+        'current_page': widget.currentPath ?? '',
+      });
+      _wsSub = _ws.messages.listen(_handleMessage);
       await _checkPageDraft();
     } catch (_) {
       setState(() => _session.websocketConnected = false);
@@ -88,9 +97,9 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
   }
 
   static const _pageIdMap = {
-    '/elder/yibao-jiaofei': ('yibao_jiaofei', '医保缴费'),
-    '/elder/yibao-query':   ('yibao_query',   '医保查询'),
-    '/elder/pension-query': ('pension_query',  '养老金查询'),
+    '/service/yibao-jiaofei': ('yibao_jiaofei', '医保缴费'),
+    '/service/yibao-query':   ('yibao_query',   '医保查询'),
+    '/service/pension-query': ('pension_query',  '养老金查询'),
   };
 
   Future<void> _checkPageDraft() async {
@@ -147,7 +156,11 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
         case 'permission_request':
         case 'agent_auth_request':
           _isMinimized = false;
-          _items.add({'type': 'auth', 'description': payload['description'] as String? ?? '需要您的授权'});
+          _items.add({
+            'type': 'auth',
+            'permission_id': payload['permission_id'] as String? ?? '',
+            'description': payload['description'] as String? ?? '需要您的授权',
+          });
 
         case 'task_done':
           _session.state = 'done';
@@ -229,6 +242,7 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    _wsSub?.cancel();
     _autoDismissTimer?.cancel();
     _slideController.dispose();
     _scrollController.dispose();
@@ -240,7 +254,7 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final fullHeight = MediaQuery.of(context).size.height * 0.55;
+    final fullHeight = 880.0 * 0.55; // DesignSize.height * 0.55
     const miniHeight = 80.0;
     final targetHeight = _isMinimized ? miniHeight : fullHeight;
 
@@ -254,16 +268,16 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
             onTap: () {},
             child: SlideTransition(
               position: _slideAnim,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                height: targetHeight,
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              child: Material(
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  height: targetHeight,
+                  width: double.infinity,
+                  child: _isMinimized ? _buildMiniBar() : _buildFullPanel(),
                 ),
-                child: _isMinimized ? _buildMiniBar() : _buildFullPanel(),
               ),
             ),
           ),
@@ -311,16 +325,27 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
             itemBuilder: (_, i) {
               final item = _items[i];
               if (item['type'] == 'auth') {
+                final permissionId = item['permission_id'] as String? ?? '';
                 return AuthCard(
                   description: item['description'] as String,
                   onApprove: () {
                     setState(() => _items.removeAt(i));
                     _session.grantPermission('granted');
-                    _ws.send('user_confirm', {'approved': true});
+                    _ws.send('permission_response', {
+                      'permission_id': permissionId,
+                      'granted': true,
+                      'input_mode': 'touch',
+                      'raw_text': '可以',
+                    });
                   },
                   onReject: () {
                     setState(() => _items.removeAt(i));
-                    _ws.send('user_confirm', {'approved': false});
+                    _ws.send('permission_response', {
+                      'permission_id': permissionId,
+                      'granted': false,
+                      'input_mode': 'touch',
+                      'raw_text': '不行',
+                    });
                   },
                 );
               }
@@ -351,9 +376,9 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
                     // 跳转到对应页面，草稿仍在 IndexedDB 可供恢复
                     final pageId = item['pageId'] as String;
                     final routeMap = {
-                      'yibao_jiaofei': '/elder/yibao-jiaofei',
-                      'yibao_query':   '/elder/yibao-query',
-                      'pension_query': '/elder/pension-query',
+                      'yibao_jiaofei': '/service/yibao-jiaofei',
+                      'yibao_query':   '/service/yibao-query',
+                      'pension_query': '/service/pension-query',
                     };
                     final route = routeMap[pageId];
                     if (route != null) {

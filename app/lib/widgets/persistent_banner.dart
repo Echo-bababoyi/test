@@ -1,28 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/state/app_state.dart';
+import '../router.dart';
 import '../theme/design_tokens.dart';
-import '../services/auth_state.dart';
 
-/// 声明式登录引导横幅。
-/// 挂载方：在 Scaffold.body 的 Stack 底层用
-/// `Align(alignment: Alignment.bottomCenter, child: PersistentBanner())`。
-/// 两个条件同时满足才显示：未登录 且 用户未点 × 关闭。
-class PersistentBanner extends StatefulWidget {
+class PersistentBanner extends ConsumerWidget {
   const PersistentBanner({super.key});
 
   @override
-  State<PersistentBanner> createState() => _PersistentBannerState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isLoggedIn = ref.watch(loginProvider).isLoggedIn;
+    final isDismissed = ref.watch(loginBannerDismissedProvider);
 
-class _PersistentBannerState extends State<PersistentBanner> {
-  // 静态变量：整个 App 生命周期内保持，组件重建也记住关闭状态
-  static bool _dismissed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final isLoggedIn = AuthState.instance.isLoggedIn;
-
-    if (isLoggedIn || _dismissed) return const SizedBox.shrink();
+    if (isLoggedIn || isDismissed) return const SizedBox.shrink();
 
     return Container(
       margin: const EdgeInsets.all(Spacing.md),
@@ -36,13 +27,12 @@ class _PersistentBannerState extends State<PersistentBanner> {
       ),
       child: Row(
         children: [
-          // × 关闭按钮
           IconButton(
             icon: const Icon(Icons.close, color: Color(0xFFAAAAAA), size: 18),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             onPressed: () {
-              setState(() => _dismissed = true);
+              ref.read(loginBannerDismissedProvider.notifier).dismiss();
             },
           ),
           const Expanded(
@@ -52,7 +42,7 @@ class _PersistentBannerState extends State<PersistentBanner> {
             ),
           ),
           TextButton(
-            onPressed: () => context.go('/login'),
+            onPressed: () => context.go(AppRoutes.login),
             style: TextButton.styleFrom(
               backgroundColor: const Color(0xFFFF6D00),
               foregroundColor: Colors.white,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../router.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/in_app_overlay.dart';
 import '../services/agent_element_registry.dart';
@@ -235,7 +236,7 @@ class _LoginPageState extends State<LoginPage> {
       child: _TermsOverlayContent(
         onAgree: () {
           Navigator.of(context).pop();
-          context.push('/login/face');
+          context.push(AppRoutes.faceAuth);
         },
         onDisagree: () => Navigator.of(context).pop(),
       ),

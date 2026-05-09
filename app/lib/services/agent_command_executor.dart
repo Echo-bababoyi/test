@@ -1,13 +1,22 @@
 import 'dart:async';
+import 'dart:html' as html; // ignore: avoid_web_libraries_in_flutter
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'agent_element_registry.dart';
+import 'draft_service.dart';
 
 class AgentCommandExecutor {
   final GoRouter router;
   final BuildContext overlayContext;
+  final String? pageId;
+  final String? pageTitle;
 
-  AgentCommandExecutor({required this.router, required this.overlayContext});
+  AgentCommandExecutor({
+    required this.router,
+    required this.overlayContext,
+    this.pageId,
+    this.pageTitle,
+  });
 
   void handleMessage(Map<String, dynamic> message) {
     final type = message['type'] as String?;
@@ -24,6 +33,18 @@ class AgentCommandExecutor {
     }
   }
 
+  void _speakHint(String text) {
+    try {
+      final synth = html.window.speechSynthesis;
+      if (synth == null) return;
+      synth.cancel();
+      final utterance = html.SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-CN';
+      utterance.rate = 0.9;
+      synth.speak(utterance);
+    } catch (_) {}
+  }
+
   void _onNavigate(Map<String, dynamic> payload) {
     final route = payload['target_route'] as String? ?? '/';
     final transition = payload['transition'] as String? ?? 'push';
@@ -31,6 +52,10 @@ class AgentCommandExecutor {
       router.replace(route);
     } else {
       router.push(route);
+    }
+    final voiceHint = payload['voice_hint'] as String?;
+    if (voiceHint != null && voiceHint.isNotEmpty) {
+      _speakHint(voiceHint);
     }
   }
 
@@ -61,10 +86,15 @@ class AgentCommandExecutor {
     Future.delayed(Duration(milliseconds: durationMs), () {
       if (entry.mounted) entry.remove();
     });
+
+    final voiceHint = payload['voice_hint'] as String?;
+    if (voiceHint != null && voiceHint.isNotEmpty) {
+      _speakHint(voiceHint);
+    }
   }
 
   Future<void> _onFillField(Map<String, dynamic> payload) async {
-    final elementKey = payload['element_key'] as String?;
+    final elementKey = payload['field_key'] as String?;
     final value = payload['value'] as String? ?? '';
     final isSensitive = payload['is_sensitive'] as bool? ?? false;
     if (elementKey == null) return;
@@ -79,10 +109,15 @@ class AgentCommandExecutor {
       controller.text = displayValue.substring(0, i + 1);
       controller.selection = TextSelection.collapsed(offset: controller.text.length);
     }
+
+    if (pageId != null && pageTitle != null) {
+      final fields = {elementKey: isSensitive ? '[已脱敏]' : value};
+      DraftService.autoSave(pageId!, pageTitle!, fields, isSensitive);
+    }
   }
 
   void _onPressButton(Map<String, dynamic> payload) {
-    final elementKey = payload['element_key'] as String?;
+    final elementKey = payload['button_key'] as String?;
     final isDeterministic = payload['is_deterministic'] as bool? ?? true;
     if (elementKey == null || isDeterministic) return;
 

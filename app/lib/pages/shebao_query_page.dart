@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../router.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/design_tokens.dart';
 import '../services/agent_element_registry.dart';
@@ -129,7 +130,7 @@ class ShebaoQueryPage extends StatelessWidget {
               title: '企业职工基本养老保险',
               icon: Icons.person_outline,
               basicInfoKey: AgentElementRegistry.register('btn_yanglao_jibenxinxi'),
-              onBasicInfoTap: () => context.push('/elder/pension-query'),
+              onBasicInfoTap: () => context.push(AppRoutes.pensionQuery),
             ),
             const _InsuranceCard(
               title: '失业保险',

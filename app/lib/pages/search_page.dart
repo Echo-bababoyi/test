@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../router.dart';
+import '../services/wake_word_listener.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/in_app_overlay.dart';
 import '../widgets/permission_flow_helper.dart';
@@ -35,7 +37,7 @@ class _SearchPageState extends State<SearchPage> {
   void _submitSearch(String q) {
     final trimmed = q.trim();
     if (trimmed.isEmpty) return;
-    context.push('/elder/search-result?q=${Uri.encodeComponent(trimmed)}');
+    context.push('${AppRoutes.searchResult}?q=${Uri.encodeComponent(trimmed)}');
   }
 
   void _showMicPermissionOverlay() {
@@ -54,16 +56,21 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _showVoiceInputOverlay() {
+    WakeWordListener.instance.pause();
     InAppOverlay.show<void>(
       context,
       child: _VoiceInputContent(
         onResult: (result) async {
           if (!mounted) return;
           Navigator.of(context).pop();
+          WakeWordListener.instance.resume();
           _controller.text = result;
           _submitSearch(result);
         },
-        onClose: () => Navigator.of(context).pop(),
+        onClose: () {
+          Navigator.of(context).pop();
+          WakeWordListener.instance.resume();
+        },
       ),
     );
   }

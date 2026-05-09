@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../router.dart';
 import '../services/auth_state.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/elder_bottom_nav.dart';
@@ -179,8 +180,8 @@ class _MyActivitySection extends StatelessWidget {
   const _MyActivitySection();
 
   static const _items = [
-    (Icons.work_outline, '办事记录', '/elder/operation-logs'),
-    (Icons.edit_note_outlined, '我的草稿', '/elder/drafts'),
+    (Icons.work_outline, '办事记录', AppRoutes.operationLogs),
+    (Icons.edit_note_outlined, '我的草稿', AppRoutes.drafts),
     (Icons.history, '我的足迹', null),
     (Icons.bookmark_add_outlined, '我的订阅', null),
     (Icons.chat_bubble_outline, '诉求记录', null),
@@ -687,7 +688,7 @@ class _LogoutSection extends StatelessWidget {
         child: OutlinedButton(
           onPressed: () {
             AuthState.instance.logout();
-            context.go('/elder');
+            context.go(AppRoutes.elderHome);
           },
           style: OutlinedButton.styleFrom(
             foregroundColor: const Color(0xFFFF3B30),

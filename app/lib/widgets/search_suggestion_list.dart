@@ -13,25 +13,33 @@ class SearchSuggestionList extends StatelessWidget {
     required this.onSelect,
   });
 
+  static const _suggestionMap = {
+    '医保缴费': [
+      '医保缴费',
+      '少儿医保缴费',
+      '医保缴费记录',
+      '农村医保缴费',
+      '医保缴费查询',
+      '浙里医保缴费',
+      '个人医保缴费',
+      '儿童医保缴费',
+      '子女医保缴费',
+      '农医保缴费',
+      '浙江医保缴费',
+    ],
+    '养老金查询': ['养老金查询'],
+  };
+
   List<String> _suggestions() {
     if (query.isEmpty) return [];
-    if (query == '医保缴费') {
-      return [
-        '医保缴费',
-        '少儿医保缴费',
-        '医保缴费记录',
-        '农村医保缴费',
-        '医保缴费查询',
-        '浙里医保缴费',
-        '个人医保缴费',
-        '儿童医保缴费',
-        '子女医保缴费',
-        '农医保缴费',
-        '浙江医保缴费',
-      ];
+    final results = <String>[];
+    for (final entry in _suggestionMap.entries) {
+      if (entry.key.contains(query) || query.contains(entry.key)) {
+        results.addAll(entry.value);
+      }
     }
-    if (query == '养老金查询') return ['养老金查询'];
-    return [query];
+    if (results.isEmpty) return [query];
+    return results;
   }
 
   @override

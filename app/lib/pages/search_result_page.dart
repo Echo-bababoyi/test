@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../router.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/search_suggestion_list.dart';
 import '../widgets/elder_bottom_nav.dart';
@@ -59,7 +60,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
     _controller.text = trimmed;
-    context.replace('/elder/search-result?q=${Uri.encodeComponent(trimmed)}');
+    context.replace('${AppRoutes.searchResult}?q=${Uri.encodeComponent(trimmed)}');
     setState(() => _isEditing = false);
     _focusNode.unfocus();
   }
@@ -307,7 +308,7 @@ class _ResultBody extends StatelessWidget {
           title: '社保费缴纳',
           chips: const ['社保医保缴费', '城乡居民基本医'],
           department: '省税务局',
-          onTap: () => context.push('/elder/shebao-jiaona'),
+          onTap: () => context.push(AppRoutes.shebaoJiaona),
         ),
         const Divider(height: 1, indent: Spacing.lg),
         _ServiceItem(
@@ -328,7 +329,7 @@ class _ResultBody extends StatelessWidget {
           title: '社保查询',
           chips: const ['养老险查询', '养老金', '失业险查'],
           department: '省人力社保厅',
-          onTap: () => context.push('/elder/shebao-query'),
+          onTap: () => context.push(AppRoutes.shebaoQuery),
         ),
         const Divider(height: 1, indent: Spacing.lg),
         _ServiceItem(

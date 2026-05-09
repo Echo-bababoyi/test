@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../router.dart';
 import '../services/wake_word_listener.dart';
 import 'agent_panel.dart';
 
@@ -26,7 +27,9 @@ class _ElderBottomNavState extends State<ElderBottomNav> {
 
   @override
   void dispose() {
-    WakeWordListener.instance.stop();
+    if (WakeWordListener.instance.onWakeWord == _onWakeWord) {
+      WakeWordListener.instance.onWakeWord = null;
+    }
     super.dispose();
   }
 
@@ -37,7 +40,7 @@ class _ElderBottomNavState extends State<ElderBottomNav> {
 
   void _openPanel() {
     if (_panelOpen) return;
-    final path = GoRouter.of(context).state.uri.path;
+    final path = GoRouterState.of(context).uri.path;
     setState(() => _panelOpen = true);
     showDialog<void>(
       context: context,
@@ -81,14 +84,14 @@ class _ElderBottomNavState extends State<ElderBottomNav> {
                   icon: widget.currentIndex == 0 ? Icons.home : Icons.home_outlined,
                   label: '首页',
                   selected: widget.currentIndex == 0,
-                  onTap: () => context.go('/elder'),
+                  onTap: () => context.go(AppRoutes.elderHome),
                 ),
                 _AssistantButton(onTap: _openPanel),
                 _NavItem(
                   icon: widget.currentIndex == 2 ? Icons.person : Icons.person_outline,
                   label: '我的',
                   selected: widget.currentIndex == 2,
-                  onTap: () => context.go('/elder/mine'),
+                  onTap: () => context.go(AppRoutes.my),
                 ),
               ],
             ),

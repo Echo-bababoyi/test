@@ -151,9 +151,9 @@ class _DraftsPageState extends State<DraftsPage> {
 
   String _routeForPageId(String pageId) {
     return switch (pageId) {
-      'yibao_jiaofei' => '/elder/yibao-jiaofei',
-      'yibao_query' => '/elder/yibao-query',
-      'pension_query' => '/elder/pension-query',
+      'yibao_jiaofei' => '/service/yibao-jiaofei',
+      'yibao_query' => '/service/yibao-query',
+      'pension_query' => '/service/pension-query',
       _ => '',
     };
   }

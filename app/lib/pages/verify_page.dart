@@ -1,19 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/state/app_state.dart';
+import '../router.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/system_dialog.dart';
 import '../services/agent_element_registry.dart';
-import '../services/auth_state.dart';
 
-class VerifyPage extends StatefulWidget {
+class VerifyPage extends ConsumerStatefulWidget {
   const VerifyPage({super.key});
 
   @override
-  State<VerifyPage> createState() => _VerifyPageState();
+  ConsumerState<VerifyPage> createState() => _VerifyPageState();
 }
 
-class _VerifyPageState extends State<VerifyPage> {
+class _VerifyPageState extends ConsumerState<VerifyPage> {
   final _phoneController = TextEditingController();
   final _codeController = TextEditingController();
   final _codeFocusNode = FocusNode();
@@ -78,8 +80,8 @@ class _VerifyPageState extends State<VerifyPage> {
       confirmLabel: '确认',
       denyLabel: '取消',
       onConfirm: () {
-        AuthState.instance.login(name: '用户');
-        context.go('/elder');
+        ref.read(loginProvider.notifier).login('用户');
+        context.go(AppRoutes.elderHome);
       },
     );
   }

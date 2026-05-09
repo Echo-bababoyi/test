@@ -2,7 +2,7 @@
 
 按顺序调用以下工具：
 
-第1步：cmd_navigate(target_route="/elder/yibao-query", voice_hint="好的，帮您打开医保查询页面")
+第1步：cmd_navigate(target_route="/service/yibao-query", voice_hint="好的，帮您打开医保查询页面")
 第2步：cmd_press_button(button_key="btn_query", button_label="查询", voice_hint="正在为您查询医保信息")
 
 规则：

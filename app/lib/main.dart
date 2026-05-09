@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'router.dart';
-import 'theme.dart';
+import 'core/state/app_state.dart';
+import 'core/theme/app_theme.dart';
 
 void main() {
-  runApp(const XiaozheApp());
+  runApp(const ProviderScope(child: ZlbElderApp()));
 }
 
-class XiaozheApp extends StatelessWidget {
-  const XiaozheApp({super.key});
+class ZlbElderApp extends ConsumerWidget {
+  const ZlbElderApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mode = ref.watch(modeProvider);
     return MaterialApp.router(
-      title: '小浙助手',
-      theme: appTheme,
+      title: '浙里办长辈版',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.of(mode),
       routerConfig: appRouter,
     );
   }

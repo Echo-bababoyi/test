@@ -2,7 +2,7 @@
 
 按顺序调用以下工具：
 
-第1步：cmd_navigate(target_route="/elder/pension-query", voice_hint="好的，帮您打开养老金查询页面")
+第1步：cmd_navigate(target_route="/service/pension-query", voice_hint="好的，帮您打开养老金查询页面")
 第2步：cmd_press_button(button_key="btn_query", button_label="查询", voice_hint="正在为您查询养老金信息")
 
 规则：

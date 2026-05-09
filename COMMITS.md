@@ -4,6 +4,27 @@
 
 ---
 
+### 2026-05-09（会话 5）— 前端 P0 修复 + 功能补全 + 产品文档
+
+**前端流程回退 + P0 Bug 修复**
+- 还原旧版层级结构：闪屏页（1.5s）→ 标准首页 → 长辈首页，PhoneFrame 壳包裹所有路由
+- main.dart 恢复 Riverpod ProviderScope + 双模式主题（AppTheme.of(mode)）
+- 路由路径全部改用 AppRoutes 常量（消除 18 处硬编码）
+- PersistentBanner 改为 Riverpod authProvider 响应式，登录后自动消失
+- AgentPanel 协议对齐：修复 agent_wake payload、permission_response 消息类型、field_key/button_key 字段名与后端协议不一致等 P0 Bug
+- WakeWordListener 单例竞争修复（引用计数模式）
+
+**功能补全（待测）**
+- 草稿写入链路：DraftService.autoSave 补全，字段变化自动写 IndexedDB；AgentPanel 收到 draft_hint 显示恢复提示
+- 语音引导 TTS：cmd_highlight/cmd_fill_field/cmd_navigate 的 voice_hint 接入 Web Speech API SpeechSynthesis
+
+**产品侧**
+- 长辈首页插入搜索条入口（_EldSearchBar，橙底白框 52dp），弥补小浙助手占用搜索 FAB 后的入口缺失
+- 后端 scene prompt 路由前缀与 AppRoutes 同步
+- 产出 docs/USER_JOURNEY.md v1.0（4 场景用户旅程图 + 情感曲线 + 前端支撑评估 + 3 条 PM/architect 联合调整建议）
+
+---
+
 ### c7e1d55 refactor: 项目重构 — 设计阶段全部完成，进入实施准备
 - 项目结构重构，设计阶段收尾
 - 更新 CLAUDE.md 当前阶段描述

@@ -3,3 +3,4 @@
 - [编码通用纪律](feedback_coding_disciplines.md) — Config 保护/编辑前查调用方/Search-first/Checkpoint/服务重启/反复 bug 升级等
 - [团队模式规则（休眠）](feedback_team_mode.md) — 默认 4 人（不含 reviewer）/6 铁律/派活纪律/成员约束模板/Bug 7 步/功能 6 步
 - [四文档机制](feedback_project_documentation.md) — ISSUES + COMMITS + SESSION-LOG + CLAUDE.md 四文档分工与会话恢复流程
+- [项目开发进展](project_progress.md) — 编码实施完成，下一步：Web Speech API 接入 + 云部署 + 真机测试（NEXT_PLAN v2.0）
