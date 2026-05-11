@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../services/wake_word_listener.dart';
 import 'agent_panel.dart';
+import 'press_scale_wrapper.dart';
 
 const _kOrange = Color(0xFFFF6D00);
 
@@ -113,10 +114,11 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = selected ? _kOrange : const Color(0xFF999999);
-    return InkWell(
+    return PressScaleWrapper(
+      pressedScale: 0.88,
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
-      child: SizedBox(
+      builder: (_) => SizedBox(
         width: 80,
         height: 64,
         child: Column(
@@ -145,14 +147,15 @@ class _AssistantButton extends StatelessWidget {
         shape: const CircleBorder(),
         elevation: 4,
         shadowColor: _kOrange.withValues(alpha: 0.45),
-        child: InkWell(
+        child: PressScaleWrapper(
+          pressedScale: 0.92,
           onTap: onTap,
           customBorder: const CircleBorder(),
           splashColor: Colors.white24,
-          child: SizedBox(
+          builder: (_) => const SizedBox(
             width: 60,
             height: 60,
-            child: const Icon(Icons.mic, color: Colors.white, size: 30),
+            child: Icon(Icons.mic, color: Colors.white, size: 30),
           ),
         ),
       ),

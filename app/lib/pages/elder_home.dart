@@ -7,6 +7,16 @@ import '../theme/design_tokens.dart';
 import '../widgets/connection_indicator.dart';
 import '../widgets/elder_bottom_nav.dart';
 import '../widgets/persistent_banner.dart';
+import '../widgets/press_scale_wrapper.dart';
+
+void _showTodo(BuildContext context) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('该功能正在建设中'),
+      duration: Duration(seconds: 2),
+    ),
+  );
+}
 
 class ElderHome extends ConsumerStatefulWidget {
   const ElderHome({super.key});
@@ -33,58 +43,66 @@ class _ElderHomeState extends ConsumerState<ElderHome>
         automaticallyImplyLeading: false,
         backgroundColor: AppColors.elderPrimary,
         titleSpacing: Spacing.lg,
-        title: InkWell(
-          onTap: () {},
+        title: PressScaleWrapper(
+          pressedScale: 0.92,
+          onTap: () => _showTodo(context),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           splashColor: Colors.white24,
           highlightColor: Colors.white12,
-          borderRadius: BorderRadius.circular(AppRadius.small),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                '西湖区',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: AppFontSize.body,
-                  fontWeight: FontWeight.w600,
+          builder: (_) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Text(
+                  '西湖区',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: AppFontSize.body,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
-            ],
+                Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
+              ],
+            ),
           ),
         ),
         actions: [
           Material(
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.xlarge),
-            child: InkWell(
-              onTap: () {},
+            child: PressScaleWrapper(
+              pressedScale: 0.96,
+              onTap: () => _showTodo(context),
               borderRadius: BorderRadius.circular(AppRadius.xlarge),
               splashColor: Colors.white24,
               highlightColor: Colors.white12,
-              child: Container(
-                margin: const EdgeInsets.only(right: Spacing.sm),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Spacing.sm,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white54),
-                  borderRadius: BorderRadius.circular(AppRadius.xlarge),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.sync, color: Colors.white, size: 14),
-                    SizedBox(width: 4),
-                    Text(
-                      '个人频道',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: AppFontSize.small,
+              builder: (pressed) => Padding(
+                padding: const EdgeInsets.only(right: Spacing.sm),
+                child: Ink(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Spacing.sm,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: pressed ? Colors.white60 : Colors.white24,
+                    border: Border.all(color: Colors.white54),
+                    borderRadius: BorderRadius.circular(AppRadius.xlarge),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.sync, color: Colors.white, size: 14),
+                      SizedBox(width: 4),
+                      Text(
+                        '个人频道',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: AppFontSize.small,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -147,8 +165,8 @@ class _EldToolBarSection extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _EldToolBarItem(icon: Icons.qr_code_scanner, label: '扫一扫', onTap: () {}),
-          _EldToolBarItem(icon: Icons.chat_bubble_outline, label: '消息', onTap: () {}),
+          _EldToolBarItem(icon: Icons.qr_code_scanner, label: '扫一扫', onTap: () => _showTodo(context)),
+          _EldToolBarItem(icon: Icons.chat_bubble_outline, label: '消息', onTap: () => _showTodo(context)),
           _EldToolBarItem(icon: Icons.swap_horiz, label: '常规版', onTap: onStandardTap),
         ],
       ),
@@ -164,29 +182,32 @@ class _EldToolBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.medium),
-        splashColor: Colors.white24,
-        highlightColor: Colors.white12,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: Spacing.xs, horizontal: Spacing.md),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: Colors.white, size: 22),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: AppFontSize.body,
-                ),
+    return PressScaleWrapper(
+      pressedScale: 0.88,
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.medium),
+      splashColor: Colors.white24,
+      highlightColor: Colors.white12,
+      builder: (pressed) => AnimatedContainer(
+        duration: const Duration(milliseconds: 100),
+        padding: const EdgeInsets.symmetric(vertical: Spacing.xs, horizontal: Spacing.md),
+        decoration: BoxDecoration(
+          color: pressed ? Colors.white12 : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white, size: 22),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: AppFontSize.body,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -231,23 +252,29 @@ class _EldGovHotlineSection extends StatelessWidget {
               ),
             ),
           ),
-          InkWell(
-            onTap: () {},
+          Material(
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.xlarge),
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.md,
-                vertical: Spacing.sm,
-              ),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[400]!),
-                borderRadius: BorderRadius.circular(AppRadius.xlarge),
-              ),
-              child: const Text(
-                '去拨打',
-                style: TextStyle(
-                  fontSize: AppFontSize.body,
-                  color: AppColors.textPrimary,
+            child: PressScaleWrapper(
+              pressedScale: 0.94,
+              onTap: () => _showTodo(context),
+              borderRadius: BorderRadius.circular(AppRadius.xlarge),
+              splashColor: Colors.white24,
+              builder: (_) => Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.md,
+                  vertical: Spacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[400]!),
+                  borderRadius: BorderRadius.circular(AppRadius.xlarge),
+                ),
+                child: const Text(
+                  '去拨打',
+                  style: TextStyle(
+                    fontSize: AppFontSize.body,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ),
@@ -334,33 +361,23 @@ class _EldTabLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (selected) {
-      return Ink(
-        padding: const EdgeInsets.symmetric(
-          horizontal: Spacing.md,
-          vertical: Spacing.xs,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.elderPrimary,
-          borderRadius: BorderRadius.circular(AppRadius.medium),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: AppFontSize.body,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-        ),
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: Spacing.xs),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.md,
+        vertical: Spacing.xs,
+      ),
+      decoration: selected
+          ? BoxDecoration(
+              color: AppColors.elderPrimary,
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+            )
+          : null,
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: AppFontSize.body,
-          color: AppColors.textSecondary,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
+          color: selected ? Colors.white : AppColors.textSecondary,
         ),
       ),
     );
@@ -384,7 +401,7 @@ class _EldHotContent extends StatelessWidget {
                   icon: Icons.home_work,
                   iconColor: const Color(0xFF3B82F6),
                   label: '住址变动落户',
-                  onTap: () {},
+                  onTap: () => _showTodo(context),
                 ),
               ),
               const SizedBox(width: Spacing.md),
@@ -393,7 +410,7 @@ class _EldHotContent extends StatelessWidget {
                   icon: Icons.verified_user,
                   iconColor: const Color(0xFF5B6BF5),
                   label: '权益记录查询',
-                  onTap: () {},
+                  onTap: () => _showTodo(context),
                 ),
               ),
             ],
@@ -423,7 +440,7 @@ class _EldFavoritesContent extends StatelessWidget {
                   icon: Icons.health_and_safety,
                   iconColor: const Color(0xFF3B82F6),
                   label: '浙里医保',
-                  onTap: () {},
+                  onTap: () => _showTodo(context),
                 ),
               ),
               const SizedBox(width: Spacing.md),
@@ -490,32 +507,34 @@ class _EldServiceCard extends StatelessWidget {
     return Material(
       color: iconColor.withValues(alpha: 0.08),
       borderRadius: BorderRadius.circular(AppRadius.large),
-      child: InkWell(
+      child: PressScaleWrapper(
+        pressedScale: 0.96,
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.large),
-        child: Padding(
+        splashColor: const Color(0x33FF6D00),
+        builder: (_) => Padding(
           padding: const EdgeInsets.symmetric(vertical: Spacing.lg),
           child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(AppRadius.medium),
-            ),
-            child: Icon(icon, color: iconColor, size: 30),
-          ),
-          const SizedBox(height: Spacing.sm),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: AppFontSize.elderBody,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Ink(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
+                ),
+                child: Icon(icon, color: iconColor, size: 30),
+              ),
+              const SizedBox(height: Spacing.sm),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: AppFontSize.elderBody,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -529,15 +548,17 @@ class _EldViewAllButton extends StatelessWidget {
     return Material(
       color: Colors.grey[100],
       borderRadius: BorderRadius.circular(AppRadius.xlarge),
-      child: InkWell(
-        onTap: () {},
+      child: PressScaleWrapper(
+        pressedScale: 0.94,
+        onTap: () => _showTodo(context),
         borderRadius: BorderRadius.circular(AppRadius.xlarge),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
+        splashColor: const Color(0x33FF6D00),
+        builder: (_) => const Padding(
+          padding: EdgeInsets.symmetric(
             horizontal: Spacing.xl,
             vertical: Spacing.xs,
           ),
-          child: const Text(
+          child: Text(
             '查看全部  ›',
             style: TextStyle(
               fontSize: AppFontSize.body,
@@ -594,7 +615,7 @@ class _EldOnlineServiceSection extends StatelessWidget {
                   item: item,
                   onTap: item.label == '健康医保'
                       ? () => context.push(AppRoutes.shebaoJiaona)
-                      : () {},
+                      : () => _showTodo(context),
                 ),
             ],
           ),
@@ -612,40 +633,64 @@ class _EldGridItem {
   const _EldGridItem(this.icon, this.iconColor, this.bgColor, this.label);
 }
 
-class _EldOnlineGridItem extends StatelessWidget {
+class _EldOnlineGridItem extends StatefulWidget {
   final _EldGridItem item;
   final VoidCallback? onTap;
   const _EldOnlineGridItem({required this.item, this.onTap});
 
   @override
+  State<_EldOnlineGridItem> createState() => _EldOnlineGridItemState();
+}
+
+class _EldOnlineGridItemState extends State<_EldOnlineGridItem> {
+  bool _pressed = false;
+
+  Color get _iconBg =>
+      _pressed ? Color.lerp(widget.item.iconColor, Colors.black, 0.20)! : widget.item.iconColor;
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
-      color: item.bgColor,
-      borderRadius: BorderRadius.circular(AppRadius.large),
-      child: InkWell(
-        onTap: onTap,
+    return Listener(
+      onPointerDown: (_) => setState(() => _pressed = true),
+      onPointerUp: (_) => setState(() => _pressed = false),
+      onPointerCancel: (_) => setState(() => _pressed = false),
+      child: Material(
+        color: widget.item.bgColor,
         borderRadius: BorderRadius.circular(AppRadius.large),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Ink(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: item.iconColor,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(item.icon, color: Colors.white, size: 26),
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(AppRadius.large),
+          child: AnimatedScale(
+            scale: _pressed ? 0.96 : 1.0,
+            duration: const Duration(milliseconds: 100),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedScale(
+                  scale: _pressed ? 0.85 : 1.0,
+                  duration: const Duration(milliseconds: 100),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: _iconBg,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(widget.item.icon, color: Colors.white, size: 26),
+                  ),
+                ),
+                const SizedBox(height: Spacing.sm),
+                Text(
+                  widget.item.label,
+                  style: const TextStyle(
+                    fontSize: AppFontSize.elderBody,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: Spacing.sm),
-            Text(
-              item.label,
-              style: const TextStyle(
-                fontSize: AppFontSize.elderBody,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -690,16 +735,17 @@ class _EldOfflineServiceSection extends StatelessWidget {
             child: Material(
               color: AppColors.elderPrimary,
               borderRadius: BorderRadius.circular(AppRadius.xlarge),
-              child: InkWell(
-                onTap: () {},
+              child: PressScaleWrapper(
+                pressedScale: 0.94,
+                onTap: () => _showTodo(context),
                 borderRadius: BorderRadius.circular(AppRadius.xlarge),
                 splashColor: Colors.white24,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
+                builder: (_) => const Padding(
+                  padding: EdgeInsets.symmetric(
                     horizontal: Spacing.xl,
                     vertical: Spacing.sm,
                   ),
-                  child: const Text(
+                  child: Text(
                     '从地图上查找更多大厅  ›',
                     style: TextStyle(color: Colors.white, fontSize: AppFontSize.body),
                   ),
@@ -789,16 +835,17 @@ class _EldOfficeItem extends StatelessWidget {
           Material(
             color: AppColors.elderPrimary,
             borderRadius: BorderRadius.circular(AppRadius.xlarge),
-            child: InkWell(
-              onTap: () {},
+            child: PressScaleWrapper(
+              pressedScale: 0.94,
+              onTap: () => _showTodo(context),
               borderRadius: BorderRadius.circular(AppRadius.xlarge),
               splashColor: Colors.white24,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
+              builder: (_) => const Padding(
+                padding: EdgeInsets.symmetric(
                   horizontal: Spacing.lg,
                   vertical: Spacing.sm,
                 ),
-                child: const Text(
+                child: Text(
                   '去办事',
                   style: TextStyle(
                     fontSize: AppFontSize.body,
@@ -852,7 +899,7 @@ class _EldAuthorizedServiceSection extends StatelessWidget {
             crossAxisSpacing: Spacing.md,
             childAspectRatio: 1.5,
             children: [
-              for (final item in _items) _EldOnlineGridItem(item: item, onTap: () {}),
+              for (final item in _items) _EldOnlineGridItem(item: item, onTap: () => _showTodo(context)),
             ],
           ),
         ],
