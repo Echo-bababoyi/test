@@ -28,23 +28,58 @@ class _SplashPageState extends State<SplashPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              color: Colors.grey[300],
+      body: Column(
+        children: [
+          const Expanded(
+            flex: 35,
+            child: Center(
+              child: Text(
+                '伴你一生大小事',
+                style: TextStyle(
+                  color: Color(0xFF2D74DC),
+                  fontSize: 36,
+                  fontWeight: FontWeight.w700,
+                  fontStyle: FontStyle.italic,
+                  letterSpacing: 2,
+                ),
+              ),
             ),
-            const SizedBox(height: Spacing.lg),
-            Container(
-              width: 120,
-              height: 24,
-              color: Colors.grey[300],
+          ),
+          Expanded(
+            flex: 65,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Color(0xFF2D74DC),
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                      ),
+                      child: SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: Icon(Icons.waves, color: Colors.white, size: 28),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      '浙里办',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 80),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../core/state/app_state.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
+import 'press_scale_wrapper.dart';
 
 class PersistentBanner extends ConsumerWidget {
   const PersistentBanner({super.key});
@@ -16,7 +17,7 @@ class PersistentBanner extends ConsumerWidget {
     if (isLoggedIn || isDismissed) return const SizedBox.shrink();
 
     return Container(
-      margin: const EdgeInsets.all(Spacing.md),
+      margin: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: Spacing.md),
       padding: const EdgeInsets.symmetric(
         horizontal: Spacing.sm,
         vertical: Spacing.sm,
@@ -27,13 +28,16 @@ class PersistentBanner extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Color(0xFFAAAAAA), size: 18),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            onPressed: () {
-              ref.read(loginBannerDismissedProvider.notifier).dismiss();
-            },
+          PressScaleWrapper(
+            pressedScale: 0.85,
+            pressedOpacity: 0.5,
+            onTap: () => ref.read(loginBannerDismissedProvider.notifier).dismiss(),
+            customBorder: const CircleBorder(),
+            builder: (_) => const SizedBox(
+              width: 32,
+              height: 32,
+              child: Icon(Icons.close, color: Color(0xFFAAAAAA), size: 18),
+            ),
           ),
           const Expanded(
             child: Text(
@@ -41,22 +45,24 @@ class PersistentBanner extends ConsumerWidget {
               style: TextStyle(color: Color(0xFFD0D0D0), fontSize: AppFontSize.caption),
             ),
           ),
-          TextButton(
-            onPressed: () => context.go(AppRoutes.login),
-            style: TextButton.styleFrom(
-              backgroundColor: const Color(0xFFFF6D00),
-              foregroundColor: Colors.white,
+          PressScaleWrapper(
+            pressedScale: 0.94,
+            onTap: () => context.go(AppRoutes.login),
+            borderRadius: BorderRadius.circular(AppRadius.xlarge),
+            builder: (pressed) => Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: Spacing.md,
                 vertical: Spacing.xs,
               ),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              shape: RoundedRectangleBorder(
+              decoration: BoxDecoration(
+                color: pressed ? const Color(0xFF1A5CAF) : const Color(0xFF2D74DC),
                 borderRadius: BorderRadius.circular(AppRadius.xlarge),
               ),
+              child: const Text(
+                '立即登录',
+                style: TextStyle(fontSize: AppFontSize.caption, color: Colors.white),
+              ),
             ),
-            child: const Text('立即登录', style: TextStyle(fontSize: AppFontSize.caption)),
           ),
         ],
       ),

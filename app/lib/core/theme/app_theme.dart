@@ -16,6 +16,15 @@ class AppTheme {
         brightness: Brightness.light,
       ),
       scaffoldBackgroundColor: AppColors.background,
+      splashColor: mode == AppMode.standard
+          ? const Color(0x332D74DC)
+          : const Color(0x33FF6D00),
+      highlightColor: mode == AppMode.standard
+          ? const Color(0x1A2D74DC)
+          : const Color(0x1AFF6D00),
+      hoverColor: mode == AppMode.standard
+          ? const Color(0x0A2D74DC)
+          : const Color(0x0AFF6D00),
     );
   }
 }
