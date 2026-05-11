@@ -135,15 +135,19 @@ class _SearchBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '西湖区',
-                style: TextStyle(fontSize: AppFontSize.body, color: AppColors.textPrimary),
-              ),
-              Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textPrimary),
-            ],
+          InkWell(
+            onTap: () {},
+            borderRadius: BorderRadius.circular(4),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '西湖区',
+                  style: TextStyle(fontSize: AppFontSize.body, color: AppColors.textPrimary),
+                ),
+                Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textPrimary),
+              ],
+            ),
           ),
           const SizedBox(width: Spacing.sm),
           Expanded(
@@ -166,13 +170,17 @@ class _SearchBar extends StatelessWidget {
                     vertical: 9,
                   ),
                   suffixIcon: text.isNotEmpty
-                      ? GestureDetector(
-                          onTap: onClear,
-                          child: const Icon(Icons.cancel, size: 18, color: Colors.grey),
+                      ? IconButton(
+                          icon: const Icon(Icons.cancel, size: 18, color: Colors.grey),
+                          onPressed: onClear,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                         )
-                      : GestureDetector(
-                          onTap: onMicTap,
-                          child: const Icon(Icons.mic, size: 18, color: Colors.grey),
+                      : IconButton(
+                          icon: const Icon(Icons.mic, size: 18, color: Colors.grey),
+                          onPressed: onMicTap,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                         ),
                 ),
               ),
@@ -182,9 +190,8 @@ class _SearchBar extends StatelessWidget {
           TextButton(
             onPressed: onCancel,
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
+              minimumSize: const Size(48, 44),
             ),
             child: const Text(
               '取消',
@@ -333,23 +340,30 @@ class _QuickItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.12),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: iconColor, size: 22),
+    return InkWell(
+      onTap: () {},
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.all(Spacing.xs),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 22),
+            ),
+            const SizedBox(width: Spacing.sm),
+            Text(
+              label,
+              style: const TextStyle(fontSize: AppFontSize.body, color: AppColors.textPrimary),
+            ),
+          ],
         ),
-        const SizedBox(width: Spacing.sm),
-        Text(
-          label,
-          style: const TextStyle(fontSize: AppFontSize.body, color: AppColors.textPrimary),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -360,13 +374,17 @@ class _RecentPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.sm),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
+    return Material(
+      color: Colors.grey[100],
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: () {},
         borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.sm),
+          child: Text(label, style: const TextStyle(fontSize: AppFontSize.body)),
+        ),
       ),
-      child: Text(label, style: const TextStyle(fontSize: AppFontSize.body)),
     );
   }
 }
@@ -377,13 +395,17 @@ class _RecommendPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
+    return Material(
+      color: Colors.grey[100],
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: () {},
         borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm),
+          child: Text(label, style: const TextStyle(fontSize: AppFontSize.caption)),
+        ),
       ),
-      child: Text(label, style: const TextStyle(fontSize: AppFontSize.caption)),
     );
   }
 }
@@ -510,18 +532,19 @@ class _VoiceInputContentState extends State<_VoiceInputContent> {
           style: TextStyle(fontSize: AppFontSize.body, color: micColor),
         ),
         const SizedBox(height: Spacing.md),
-        GestureDetector(
-          onTap: _listening ? null : _onMicTap,
-          child: Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: _listening
-                  ? micColor.withValues(alpha: 0.6)
-                  : micColor,
-              shape: BoxShape.circle,
+        Material(
+          color: _listening ? micColor.withValues(alpha: 0.6) : micColor,
+          shape: const CircleBorder(),
+          child: InkWell(
+            onTap: _listening ? null : _onMicTap,
+            customBorder: const CircleBorder(),
+            splashColor: Colors.white24,
+            highlightColor: Colors.white12,
+            child: const SizedBox(
+              width: 64,
+              height: 64,
+              child: Icon(Icons.mic, color: Colors.white, size: 32),
             ),
-            child: const Icon(Icons.mic, color: Colors.white, size: 32),
           ),
         ),
         const SizedBox(height: Spacing.xl),

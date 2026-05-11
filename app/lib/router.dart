@@ -60,35 +60,87 @@ class AppRoutes {
   ];
 }
 
+Page<T> _fadePage<T>(Widget child) => CustomTransitionPage<T>(
+      child: child,
+      transitionDuration: const Duration(milliseconds: 180),
+      transitionsBuilder: (ctx, animation, secondary, child) =>
+          FadeTransition(opacity: animation, child: child),
+    );
+
 final appRouter = GoRouter(
   initialLocation: AppRoutes.splash,
   routes: [
     ShellRoute(
       builder: (context, state, child) => PhoneFrame(child: child),
       routes: [
-        GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashPage()),
-        GoRoute(path: AppRoutes.home, builder: (_, __) => const StandardHome()),
+        GoRoute(
+          path: AppRoutes.splash,
+          pageBuilder: (ctx, st) => const NoTransitionPage(child: SplashPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.home,
+          pageBuilder: (ctx, st) => _fadePage(const StandardHome()),
+        ),
         GoRoute(
           path: AppRoutes.elderHome,
-          pageBuilder: (_, __) => const NoTransitionPage(child: ElderHome()),
+          pageBuilder: (ctx, st) => const NoTransitionPage(child: ElderHome()),
         ),
-        GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginPage()),
-        GoRoute(path: AppRoutes.faceAuth, builder: (_, __) => const FaceAuthPage()),
-        GoRoute(path: AppRoutes.verify, builder: (_, __) => const VerifyPage()),
-        GoRoute(path: AppRoutes.search, builder: (_, __) => const SearchPage()),
-        GoRoute(path: AppRoutes.searchResult, builder: (_, __) => const SearchResultPage()),
+        GoRoute(
+          path: AppRoutes.login,
+          pageBuilder: (ctx, st) => _fadePage(const LoginPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.faceAuth,
+          pageBuilder: (ctx, st) => _fadePage(const FaceAuthPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.verify,
+          pageBuilder: (ctx, st) => _fadePage(const VerifyPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.search,
+          pageBuilder: (ctx, st) => _fadePage(const SearchPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.searchResult,
+          pageBuilder: (ctx, st) => _fadePage(const SearchResultPage()),
+        ),
         GoRoute(
           path: AppRoutes.my,
-          pageBuilder: (_, __) => const NoTransitionPage(child: MinePage()),
+          pageBuilder: (ctx, st) => const NoTransitionPage(child: MinePage()),
         ),
-        GoRoute(path: AppRoutes.shebaoJiaona, builder: (_, __) => const ShebaoJiaonaPage()),
-        GoRoute(path: AppRoutes.shebaoQuery, builder: (_, __) => const ShebaoQueryPage()),
-        GoRoute(path: AppRoutes.pensionQuery, builder: (_, __) => const PensionQueryPage()),
-        GoRoute(path: AppRoutes.yibaoJiaofei, builder: (_, __) => const YibaoJiaofeiPage()),
-        GoRoute(path: AppRoutes.yibaoQuery, builder: (_, __) => const YibaoQueryPage()),
-        GoRoute(path: AppRoutes.operationLogs, builder: (_, __) => const OperationLogsPage()),
-        GoRoute(path: AppRoutes.drafts, builder: (_, __) => const DraftsPage()),
-        GoRoute(path: AppRoutes.agentSettings, builder: (_, __) => const AgentSettingsPage()),
+        GoRoute(
+          path: AppRoutes.shebaoJiaona,
+          pageBuilder: (ctx, st) => _fadePage(const ShebaoJiaonaPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.shebaoQuery,
+          pageBuilder: (ctx, st) => _fadePage(const ShebaoQueryPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.pensionQuery,
+          pageBuilder: (ctx, st) => _fadePage(const PensionQueryPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.yibaoJiaofei,
+          pageBuilder: (ctx, st) => _fadePage(const YibaoJiaofeiPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.yibaoQuery,
+          pageBuilder: (ctx, st) => _fadePage(const YibaoQueryPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.operationLogs,
+          pageBuilder: (ctx, st) => _fadePage(const OperationLogsPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.drafts,
+          pageBuilder: (ctx, st) => _fadePage(const DraftsPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.agentSettings,
+          pageBuilder: (ctx, st) => _fadePage(const AgentSettingsPage()),
+        ),
       ],
     ),
   ],

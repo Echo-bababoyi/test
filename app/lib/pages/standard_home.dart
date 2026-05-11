@@ -96,22 +96,40 @@ class _TopBarRow extends StatelessWidget {
       children: [
         const Text('浙里办', style: TextStyle(color: Colors.white, fontSize: AppFontSize.titleLarge, fontWeight: FontWeight.w700)),
         const Spacer(),
-        Container(
-          width: 32, height: 32,
-          decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
-          child: const Icon(Icons.smart_toy, color: Colors.white, size: 20),
+        Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          child: InkWell(
+            onTap: () {},
+            customBorder: const CircleBorder(),
+            splashColor: Colors.white24,
+            child: Ink(
+              width: 32, height: 32,
+              decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
+              child: const Icon(Icons.smart_toy, color: Colors.white, size: 20),
+            ),
+          ),
         ),
         const SizedBox(width: Spacing.sm),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: 4),
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppRadius.xlarge), border: Border.all(color: Colors.white38)),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('个人', style: TextStyle(color: Colors.white, fontSize: AppFontSize.caption, fontWeight: FontWeight.w600)),
-              SizedBox(width: 6),
-              Text('法人', style: TextStyle(color: Colors.white54, fontSize: AppFontSize.caption)),
-            ],
+        Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.xlarge),
+          child: InkWell(
+            onTap: () {},
+            borderRadius: BorderRadius.circular(AppRadius.xlarge),
+            splashColor: Colors.white24,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: 4),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppRadius.xlarge), border: Border.all(color: Colors.white38)),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('个人', style: TextStyle(color: Colors.white, fontSize: AppFontSize.caption, fontWeight: FontWeight.w600)),
+                  SizedBox(width: 6),
+                  Text('法人', style: TextStyle(color: Colors.white54, fontSize: AppFontSize.caption)),
+                ],
+              ),
+            ),
           ),
         ),
       ],
@@ -128,8 +146,8 @@ class _QuickActionsRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _QuickActionItem(icon: Icons.qr_code_scanner, label: '扫一扫'),
-        _QuickActionItem(icon: Icons.credit_card, label: '卡包'),
+        _QuickActionItem(icon: Icons.qr_code_scanner, label: '扫一扫', onTap: () {}),
+        _QuickActionItem(icon: Icons.credit_card, label: '卡包', onTap: () {}),
         _QuickActionItem(icon: Icons.elderly, label: '长辈版', onTap: onElderEntryTap),
       ],
     );
@@ -144,14 +162,20 @@ class _QuickActionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      child: Column(
-        children: [
-          Icon(icon, color: Colors.white70, size: 28),
-          const SizedBox(height: Spacing.xs),
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: AppFontSize.small)),
-        ],
+      borderRadius: BorderRadius.circular(8),
+      splashColor: Colors.white24,
+      highlightColor: Colors.white12,
+      child: Padding(
+        padding: const EdgeInsets.all(Spacing.sm),
+        child: Column(
+          children: [
+            Icon(icon, color: Colors.white70, size: 28),
+            const SizedBox(height: Spacing.xs),
+            Text(label, style: const TextStyle(color: Colors.white, fontSize: AppFontSize.small)),
+          ],
+        ),
       ),
     );
   }
@@ -179,23 +203,29 @@ class _SearchBarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.md),
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.xlarge)),
-        child: Row(
-          children: [
-            const Icon(Icons.search, color: AppColors.textSecondary, size: 20),
-            const SizedBox(width: Spacing.sm),
-            const Expanded(child: Text('搜索服务、政策、证件...', style: TextStyle(color: AppColors.textSecondary, fontSize: AppFontSize.body))),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.xs),
-              decoration: BoxDecoration(color: AppColors.standardPrimary, borderRadius: BorderRadius.circular(AppRadius.large)),
-              child: const Text('搜索', style: TextStyle(color: Colors.white, fontSize: AppFontSize.small)),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.md),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.xlarge),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.xlarge),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm),
+            child: Row(
+              children: [
+                const Icon(Icons.search, color: AppColors.textSecondary, size: 20),
+                const SizedBox(width: Spacing.sm),
+                const Expanded(child: Text('搜索服务、政策、证件...', style: TextStyle(color: AppColors.textSecondary, fontSize: AppFontSize.body))),
+                Ink(
+                  padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.xs),
+                  decoration: BoxDecoration(color: AppColors.standardPrimary, borderRadius: BorderRadius.circular(AppRadius.large)),
+                  child: const Text('搜索', style: TextStyle(color: Colors.white, fontSize: AppFontSize.small)),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -232,11 +262,15 @@ class _ServiceGridItem extends StatelessWidget {
   const _ServiceGridItem({required this.item});
   @override
   Widget build(BuildContext context) {
-    return Column(mainAxisSize: MainAxisSize.min, children: [
-      Container(width: 52, height: 52, decoration: BoxDecoration(color: item.color, shape: BoxShape.circle), child: Icon(item.icon, color: Colors.white, size: 26)),
-      const SizedBox(height: Spacing.xs),
-      Text(item.label, style: const TextStyle(fontSize: AppFontSize.tiny, color: AppColors.textPrimary), textAlign: TextAlign.center),
-    ]);
+    return InkWell(
+      onTap: () {},
+      borderRadius: BorderRadius.circular(8),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Ink(width: 52, height: 52, decoration: BoxDecoration(color: item.color, shape: BoxShape.circle), child: Icon(item.icon, color: Colors.white, size: 26)),
+        const SizedBox(height: Spacing.xs),
+        Text(item.label, style: const TextStyle(fontSize: AppFontSize.tiny, color: AppColors.textPrimary), textAlign: TextAlign.center),
+      ]),
+    );
   }
 }
 
@@ -247,14 +281,18 @@ class _NewsBarSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(color: AppColors.surface, margin: const EdgeInsets.only(top: Spacing.xs), padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.sm),
-      child: Container(padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm), decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(AppRadius.large)),
-        child: Row(children: [
-          Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: AppColors.standardPrimary, borderRadius: BorderRadius.circular(AppRadius.small)),
-            child: const Text('最新消息', style: TextStyle(color: Colors.white, fontSize: AppFontSize.tiny, fontWeight: FontWeight.w600))),
-          const SizedBox(width: Spacing.sm),
-          const Expanded(child: Text('请您登录后查看最新消息', style: TextStyle(fontSize: AppFontSize.small, color: AppColors.textSecondary), overflow: TextOverflow.ellipsis)),
-          const Icon(Icons.chevron_right, size: 16, color: AppColors.textSecondary),
-        ]),
+      child: Material(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(AppRadius.large),
+        child: InkWell(onTap: () {}, borderRadius: BorderRadius.circular(AppRadius.large),
+          child: Padding(padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm),
+            child: Row(children: [
+              Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: AppColors.standardPrimary, borderRadius: BorderRadius.circular(AppRadius.small)),
+                child: const Text('最新消息', style: TextStyle(color: Colors.white, fontSize: AppFontSize.tiny, fontWeight: FontWeight.w600))),
+              const SizedBox(width: Spacing.sm),
+              const Expanded(child: Text('请您登录后查看最新消息', style: TextStyle(fontSize: AppFontSize.small, color: AppColors.textSecondary), overflow: TextOverflow.ellipsis)),
+              const Icon(Icons.chevron_right, size: 16, color: AppColors.textSecondary),
+            ]),
+          ),
+        ),
       ),
     );
   }

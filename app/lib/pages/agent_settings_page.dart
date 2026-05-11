@@ -125,17 +125,22 @@ class _SpeedBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sel = mode == current;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: sel ? AppColors.elderPrimary : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: sel ? AppColors.elderPrimary : const Color(0xFFDDDDDD)),
+    return Material(
+      color: sel ? AppColors.elderPrimary : Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        splashColor: sel ? Colors.white24 : null,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: sel ? AppColors.elderPrimary : const Color(0xFFDDDDDD)),
+          ),
+          child: Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500,
+              color: sel ? Colors.white : AppColors.textPrimary)),
         ),
-        child: Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500,
-            color: sel ? Colors.white : AppColors.textPrimary)),
       ),
     );
   }

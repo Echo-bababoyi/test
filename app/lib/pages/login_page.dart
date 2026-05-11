@@ -132,13 +132,21 @@ class _LoginPageState extends State<LoginPage> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 18,
-                          height: 18,
-                          margin: const EdgeInsets.only(top: 1),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.grey.shade400),
+                        Material(
+                          color: Colors.transparent,
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            onTap: () {},
+                            customBorder: const CircleBorder(),
+                            child: Container(
+                              width: 18,
+                              height: 18,
+                              margin: const EdgeInsets.only(top: 1),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.grey.shade400),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: Spacing.sm),
@@ -185,16 +193,28 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: Spacing.md),
                     // 辅助链接行
-                    const Row(
+                    Row(
                       children: [
-                        Text('新用户注册',
-                            style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-                        SizedBox(width: Spacing.md),
-                        Text('忘记密码',
-                            style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-                        Spacer(),
-                        Text('登录遇到问题?',
-                            style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                        InkWell(
+                          onTap: () {},
+                          borderRadius: BorderRadius.circular(4),
+                          child: const Text('新用户注册',
+                              style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                        ),
+                        const SizedBox(width: Spacing.md),
+                        InkWell(
+                          onTap: () {},
+                          borderRadius: BorderRadius.circular(4),
+                          child: const Text('忘记密码',
+                              style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                        ),
+                        const Spacer(),
+                        InkWell(
+                          onTap: () {},
+                          borderRadius: BorderRadius.circular(4),
+                          child: const Text('登录遇到问题?',
+                              style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                        ),
                       ],
                     ),
                     const SizedBox(height: Spacing.lg),
@@ -254,24 +274,33 @@ class _LoginTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-            color: selected ? AppColors.standardPrimary : AppColors.textSecondary,
-          ),
+    return InkWell(
+      onTap: () {},
+      borderRadius: BorderRadius.circular(4),
+      splashColor: AppColors.standardPrimary.withValues(alpha: 0.15),
+      highlightColor: Colors.transparent,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                color: selected ? AppColors.standardPrimary : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              height: 2,
+              width: 52,
+              color: selected ? AppColors.standardPrimary : Colors.transparent,
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        Container(
-          height: 2,
-          width: 52,
-          color: selected ? AppColors.standardPrimary : Colors.transparent,
-        ),
-      ],
+      ),
     );
   }
 }

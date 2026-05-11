@@ -138,25 +138,22 @@ class _AssistantButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Transform.translate(
-        offset: const Offset(0, -12),
-        child: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: _kOrange,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: _kOrange.withValues(alpha: 0.45),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    return Transform.translate(
+      offset: const Offset(0, -12),
+      child: Material(
+        color: _kOrange,
+        shape: const CircleBorder(),
+        elevation: 4,
+        shadowColor: _kOrange.withValues(alpha: 0.45),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          splashColor: Colors.white24,
+          child: SizedBox(
+            width: 60,
+            height: 60,
+            child: const Icon(Icons.mic, color: Colors.white, size: 30),
           ),
-          child: const Icon(Icons.mic, color: Colors.white, size: 30),
         ),
       ),
     );

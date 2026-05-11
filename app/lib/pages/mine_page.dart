@@ -100,18 +100,27 @@ class _MyHeaderSection extends StatelessWidget {
       padding: const EdgeInsets.all(Spacing.lg),
       child: Row(
         children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF90CAF9), Color(0xFF42A5F5)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              onTap: () {},
+              customBorder: const CircleBorder(),
+              splashColor: Colors.black12,
+              child: Ink(
+                width: 64,
+                height: 64,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF90CAF9), Color(0xFF42A5F5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.person, color: Colors.white, size: 36),
               ),
-              shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.person, color: Colors.white, size: 36),
           ),
           const SizedBox(width: Spacing.md),
           Expanded(
@@ -128,40 +137,54 @@ class _MyHeaderSection extends StatelessWidget {
                 const SizedBox(height: Spacing.xs),
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF3E0),
+                    Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        onTap: () {},
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFFFB300)),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.verified,
-                              size: 12, color: Color(0xFFFFB300)),
-                          SizedBox(width: 2),
-                          Text('高级实名',
-                              style: TextStyle(
-                                  fontSize: 11, color: Color(0xFFFFB300))),
-                          Icon(Icons.chevron_right,
-                              size: 12, color: Color(0xFFFFB300)),
-                        ],
+                        child: Ink(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFFFB300)),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.verified,
+                                    size: 12, color: Color(0xFFFFB300)),
+                                SizedBox(width: 2),
+                                Text('高级实名',
+                                    style: TextStyle(
+                                        fontSize: 11, color: Color(0xFFFFB300))),
+                                Icon(Icons.chevron_right,
+                                    size: 12, color: Color(0xFFFFB300)),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: Spacing.md),
-                    const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.edit_outlined,
-                            size: 13, color: AppColors.textSecondary),
-                        SizedBox(width: 2),
-                        Text('编辑资料',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textSecondary)),
-                      ],
+                    InkWell(
+                      onTap: () {},
+                      borderRadius: BorderRadius.circular(4),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.edit_outlined,
+                              size: 13, color: AppColors.textSecondary),
+                          SizedBox(width: 2),
+                          Text('编辑资料',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary)),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -235,25 +258,29 @@ class _ActivityIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: route != null ? () => context.push(route!) : null,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: AppColors.elderPrimary.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
+    return InkWell(
+      onTap: route != null ? () => context.push(route!) : () {},
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(Spacing.sm),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.elderPrimary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: AppColors.elderPrimary, size: 26),
             ),
-            child: Icon(icon, color: AppColors.elderPrimary, size: 26),
-          ),
-          const SizedBox(height: Spacing.sm),
-          Text(label,
-              style: const TextStyle(fontSize: 13),
-              textAlign: TextAlign.center),
-        ],
+            const SizedBox(height: Spacing.sm),
+            Text(label,
+                style: const TextStyle(fontSize: 13),
+                textAlign: TextAlign.center),
+          ],
+        ),
       ),
     );
   }
@@ -276,18 +303,22 @@ class _MyCertSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text('我的证照',
+              children: [
+                const Text('我的证照',
                     style: TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w700)),
-                Row(
-                  children: [
-                    Text('全部',
-                        style: TextStyle(
-                            fontSize: 13, color: AppColors.textSecondary)),
-                    Icon(Icons.chevron_right,
-                        size: 16, color: AppColors.textSecondary),
-                  ],
+                InkWell(
+                  onTap: () {},
+                  borderRadius: BorderRadius.circular(4),
+                  child: const Row(
+                    children: [
+                      Text('全部',
+                          style: TextStyle(
+                              fontSize: 13, color: AppColors.textSecondary)),
+                      Icon(Icons.chevron_right,
+                          size: 16, color: AppColors.textSecondary),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -299,22 +330,22 @@ class _MyCertSection extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               padding:
                   const EdgeInsets.symmetric(horizontal: Spacing.lg),
-              children: const [
-                _CertCard(
+              children: [
+                const _CertCard(
                   label: '老年人优待证',
                   color1: Color(0xFFA5D6A7),
                   color2: Color(0xFF66BB6A),
                   icon: Icons.elderly,
                 ),
-                SizedBox(width: Spacing.md),
-                _CertCard(
+                const SizedBox(width: Spacing.md),
+                const _CertCard(
                   label: '医保电子凭证',
                   color1: Color(0xFF64B5F6),
                   color2: Color(0xFF2196F3),
                   icon: Icons.health_and_safety_outlined,
                 ),
-                SizedBox(width: Spacing.md),
-                _CertCard(
+                const SizedBox(width: Spacing.md),
+                const _CertCard(
                   label: '住房公积金',
                   color1: Color(0xFF80CBC4),
                   color2: Color(0xFF26A69A),
@@ -344,32 +375,42 @@ class _CertCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 160,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color1, color2],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppRadius.large),
+      child: InkWell(
+        onTap: () {},
         borderRadius: BorderRadius.circular(AppRadius.large),
-      ),
-      padding: const EdgeInsets.symmetric(
-          horizontal: Spacing.md, vertical: Spacing.sm),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 28),
-          const SizedBox(width: Spacing.sm),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                  fontSize: 13,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500),
+        child: Ink(
+          width: 160,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [color1, color2],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(AppRadius.large),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.md, vertical: Spacing.sm),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.white, size: 28),
+                const SizedBox(width: Spacing.sm),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -389,18 +430,22 @@ class _MyInfoSection extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text('我的信息',
+            children: [
+              const Text('我的信息',
                   style: TextStyle(
                       fontSize: 16, fontWeight: FontWeight.w700)),
-              Row(
-                children: [
-                  Text('全部',
-                      style: TextStyle(
-                          fontSize: 13, color: AppColors.textSecondary)),
-                  Icon(Icons.chevron_right,
-                      size: 16, color: AppColors.textSecondary),
-                ],
+              InkWell(
+                onTap: () {},
+                borderRadius: BorderRadius.circular(4),
+                child: const Row(
+                  children: [
+                    Text('全部',
+                        style: TextStyle(
+                            fontSize: 13, color: AppColors.textSecondary)),
+                    Icon(Icons.chevron_right,
+                        size: 16, color: AppColors.textSecondary),
+                  ],
+                ),
               ),
             ],
           ),
@@ -444,18 +489,25 @@ class _InfoIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          child: Icon(icon, color: Colors.white, size: 24),
+    return InkWell(
+      onTap: () {},
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Ink(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              child: Icon(icon, color: Colors.white, size: 24),
+            ),
+            const SizedBox(height: Spacing.sm),
+            Text(label, style: const TextStyle(fontSize: 13)),
+          ],
         ),
-        const SizedBox(height: Spacing.sm),
-        Text(label, style: const TextStyle(fontSize: 13)),
-      ],
+      ),
     );
   }
 }
@@ -512,21 +564,28 @@ class _ManageIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            color: AppColors.elderPrimary.withValues(alpha: 0.12),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: AppColors.elderPrimary, size: 26),
+    return InkWell(
+      onTap: () {},
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.elderPrimary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: AppColors.elderPrimary, size: 26),
+            ),
+            const SizedBox(height: Spacing.sm),
+            Text(label, style: const TextStyle(fontSize: 13)),
+          ],
         ),
-        const SizedBox(height: Spacing.sm),
-        Text(label, style: const TextStyle(fontSize: 13)),
-      ],
+      ),
     );
   }
 }
@@ -554,18 +613,22 @@ class _MyRecommendSection extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text('服务推荐',
+            children: [
+              const Text('服务推荐',
                   style: TextStyle(
                       fontSize: 16, fontWeight: FontWeight.w700)),
-              Row(
-                children: [
-                  Text('全部',
-                      style: TextStyle(
-                          fontSize: 13, color: AppColors.textSecondary)),
-                  Icon(Icons.chevron_right,
-                      size: 16, color: AppColors.textSecondary),
-                ],
+              InkWell(
+                onTap: () {},
+                borderRadius: BorderRadius.circular(4),
+                child: const Row(
+                  children: [
+                    Text('全部',
+                        style: TextStyle(
+                            fontSize: 13, color: AppColors.textSecondary)),
+                    Icon(Icons.chevron_right,
+                        size: 16, color: AppColors.textSecondary),
+                  ],
+                ),
               ),
             ],
           ),
@@ -602,23 +665,30 @@ class _RecommendIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            color: AppColors.standardPrimary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: AppColors.standardPrimary, size: 26),
+    return InkWell(
+      onTap: () {},
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.standardPrimary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: AppColors.standardPrimary, size: 26),
+            ),
+            const SizedBox(height: Spacing.sm),
+            Text(label,
+                style: const TextStyle(fontSize: 13),
+                textAlign: TextAlign.center),
+          ],
         ),
-        const SizedBox(height: Spacing.sm),
-        Text(label,
-            style: const TextStyle(fontSize: 13),
-            textAlign: TextAlign.center),
-      ],
+      ),
     );
   }
 }
@@ -663,7 +733,7 @@ class _MySettingsSection extends StatelessWidget {
             title: const Text('设置', style: TextStyle(fontSize: 15)),
             trailing: const Icon(Icons.chevron_right,
                 color: AppColors.textSecondary),
-            onTap: null,
+            onTap: () {},
           ),
           const Divider(height: 1, indent: 16),
           ListTile(
@@ -681,7 +751,7 @@ class _MySettingsSection extends StatelessWidget {
                 const Text('关于浙里办', style: TextStyle(fontSize: 15)),
             trailing: const Icon(Icons.chevron_right,
                 color: AppColors.textSecondary),
-            onTap: null,
+            onTap: () {},
           ),
           const SizedBox(height: Spacing.lg),
         ],

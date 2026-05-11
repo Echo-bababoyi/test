@@ -85,20 +85,17 @@ class _DraftsPageState extends State<DraftsPage> {
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
+                      child: Material(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        elevation: 1,
+                        shadowColor: const Color(0x0D000000),
+                        child: InkWell(
+                          onTap: route.isEmpty ? null : () => context.push(route),
                           borderRadius: BorderRadius.circular(12),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x0D000000),
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                        child: Row(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                            child: Row(
                           children: [
                             Container(
                               width: 48,
@@ -140,6 +137,8 @@ class _DraftsPageState extends State<DraftsPage> {
                               child: const Text('继续填写', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
                             ),
                           ],
+                        ),
+                          ),
                         ),
                       ),
                     );

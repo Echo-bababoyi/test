@@ -230,7 +230,7 @@ class _ServiceIcon extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
+            Ink(
               width: 56,
               height: 56,
               decoration: BoxDecoration(
@@ -271,44 +271,51 @@ class _SelfPaySubPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // 用户信息头（蓝色底）
-        Container(
+        Material(
           color: const Color(0xFF2D74DC),
-          padding: const EdgeInsets.all(Spacing.lg),
-          child: const Row(
-            children: [
-              SizedBox(
-                width: 48,
-                height: 48,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.person, color: Colors.white, size: 28),
-                ),
-              ),
-              SizedBox(width: Spacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '*宇澄',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+          child: InkWell(
+            onTap: () {},
+            splashColor: Colors.white24,
+            highlightColor: Colors.white12,
+            child: Padding(
+              padding: const EdgeInsets.all(Spacing.lg),
+              child: const Row(
+                children: [
+                  SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        shape: BoxShape.circle,
                       ),
+                      child: Icon(Icons.person, color: Colors.white, size: 28),
                     ),
-                    Text(
-                      '3****************3',
-                      style: TextStyle(fontSize: 13, color: Colors.white70),
+                  ),
+                  SizedBox(width: Spacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '*宇澄',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          '3****************3',
+                          style: TextStyle(fontSize: 13, color: Colors.white70),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  Icon(Icons.chevron_right, color: Colors.white),
+                ],
               ),
-              Icon(Icons.chevron_right, color: Colors.white),
-            ],
+            ),
           ),
         ),
         // 温馨提示
@@ -318,18 +325,23 @@ class _SelfPaySubPage extends StatelessWidget {
             horizontal: Spacing.md,
             vertical: Spacing.sm,
           ),
-          child: const Row(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.volume_up_outlined, color: AppColors.elderPrimary, size: 18),
-              SizedBox(width: Spacing.sm),
-              Expanded(
+              const Icon(Icons.volume_up_outlined, color: AppColors.elderPrimary, size: 18),
+              const SizedBox(width: Spacing.sm),
+              const Expanded(
                 child: Text(
                   '温馨提示：注意：缴费有延迟，支付成功后请在《缴费记录》里查询最终缴费结果。当日 16:30-次日 08:00 为银行批量扣款时间。',
                   style: TextStyle(fontSize: 12, color: AppColors.elderPrimary),
                 ),
               ),
-              Icon(Icons.close, color: AppColors.elderPrimary, size: 16),
+              IconButton(
+                icon: const Icon(Icons.close, color: AppColors.elderPrimary, size: 16),
+                onPressed: () {},
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
             ],
           ),
         ),
@@ -363,26 +375,31 @@ class _StaticTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-              color: selected ? AppColors.standardPrimary : AppColors.textSecondary,
+    return InkWell(
+      onTap: () {},
+      borderRadius: BorderRadius.circular(4),
+      highlightColor: Colors.transparent,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                color: selected ? AppColors.standardPrimary : AppColors.textSecondary,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Container(
-            height: 2,
-            width: 24,
-            color: selected ? AppColors.standardPrimary : Colors.transparent,
-          ),
-        ],
+            const SizedBox(height: 4),
+            Container(
+              height: 2,
+              width: 24,
+              color: selected ? AppColors.standardPrimary : Colors.transparent,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -430,12 +447,20 @@ class _DropdownChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 15)),
-        const Icon(Icons.arrow_drop_down, size: 20),
-      ],
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(4),
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 15)),
+            const Icon(Icons.arrow_drop_down, size: 20),
+          ],
+        ),
+      ),
     );
   }
 }

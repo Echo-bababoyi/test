@@ -132,12 +132,16 @@ class _ResultTopBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('西湖区', style: TextStyle(fontSize: 14, color: AppColors.textPrimary)),
-              Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textPrimary),
-            ],
+          InkWell(
+            onTap: () {},
+            borderRadius: BorderRadius.circular(4),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('西湖区', style: TextStyle(fontSize: 14, color: AppColors.textPrimary)),
+                Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textPrimary),
+              ],
+            ),
           ),
           const SizedBox(width: Spacing.sm),
           Expanded(
@@ -163,9 +167,11 @@ class _ResultTopBar extends StatelessWidget {
                       vertical: 9,
                     ),
                     suffixIcon: hasText
-                        ? GestureDetector(
-                            onTap: onClearTap,
-                            child: const Icon(Icons.cancel, size: 18, color: Colors.grey),
+                        ? IconButton(
+                            icon: const Icon(Icons.cancel, size: 18, color: Colors.grey),
+                            onPressed: onClearTap,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                           )
                         : null,
                   ),
@@ -177,9 +183,8 @@ class _ResultTopBar extends StatelessWidget {
           TextButton(
             onPressed: onCancel,
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
+              minimumSize: const Size(48, 44),
             ),
             child: const Text(
               '取消',
@@ -202,14 +207,14 @@ class _ResultTabRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
       child: Row(
-        children: const [
-          _TabLabel('综合', selected: true),
-          SizedBox(width: Spacing.xl),
-          _TabLabel('服务'),
-          SizedBox(width: Spacing.xl),
-          _TabLabel('办事'),
-          SizedBox(width: Spacing.xl),
-          _TabLabel('政策'),
+        children: [
+          const _TabLabel('综合', selected: true),
+          const SizedBox(width: Spacing.xl),
+          const _TabLabel('服务'),
+          const SizedBox(width: Spacing.xl),
+          const _TabLabel('办事'),
+          const SizedBox(width: Spacing.xl),
+          const _TabLabel('政策'),
         ],
       ),
     );
@@ -223,26 +228,31 @@ class _TabLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-              color: selected ? AppColors.standardPrimary : AppColors.textSecondary,
+    return InkWell(
+      onTap: () {},
+      borderRadius: BorderRadius.circular(4),
+      highlightColor: Colors.transparent,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                color: selected ? AppColors.standardPrimary : AppColors.textSecondary,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Container(
-            height: 2,
-            width: 24,
-            color: selected ? AppColors.standardPrimary : Colors.transparent,
-          ),
-        ],
+            const SizedBox(height: 4),
+            Container(
+              height: 2,
+              width: 24,
+              color: selected ? AppColors.standardPrimary : Colors.transparent,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -457,9 +467,17 @@ class _AffairItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.md),
-      child: Text(title, style: const TextStyle(fontSize: 15)),
+    return InkWell(
+      onTap: () {},
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.md),
+        child: Row(
+          children: [
+            Expanded(child: Text(title, style: const TextStyle(fontSize: 15))),
+            const Icon(Icons.chevron_right, size: 18, color: AppColors.textSecondary),
+          ],
+        ),
+      ),
     );
   }
 }

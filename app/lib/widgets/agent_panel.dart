@@ -539,22 +539,27 @@ class _ConfirmButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: isPrimary ? const Color(0xFFFF6D00) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isPrimary ? const Color(0xFFFF6D00) : const Color(0xFFE5E5E5)),
-          boxShadow: const [BoxShadow(color: Color(0x0D000000), blurRadius: 4, offset: Offset(0, 1))],
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: isPrimary ? Colors.white : const Color(0xFF666666),
+    return Material(
+      color: isPrimary ? const Color(0xFFFF6D00) : Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      elevation: 1,
+      shadowColor: const Color(0x0D000000),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: isPrimary ? const Color(0xFFFF6D00) : const Color(0xFFE5E5E5)),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: isPrimary ? Colors.white : const Color(0xFF666666),
+            ),
           ),
         ),
       ),

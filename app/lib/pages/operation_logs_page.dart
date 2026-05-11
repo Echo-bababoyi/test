@@ -165,20 +165,14 @@ class _TimelineItem extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: GestureDetector(
-                onTap: steps.isEmpty ? null : onToggle,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x0D000000),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
+              child: Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                elevation: 1,
+                shadowColor: const Color(0x0D000000),
+                child: InkWell(
+                  onTap: steps.isEmpty ? null : onToggle,
+                  borderRadius: BorderRadius.circular(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
