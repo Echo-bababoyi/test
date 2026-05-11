@@ -4,6 +4,62 @@
 
 ---
 
+## 2026-05-11（会话 7）
+
+**主要工作**：
+- 全页面交互反馈优化：三轮 architect 审查（代码正推→用户视角倒推），48 个问题、约 100 个可交互元素补齐 ripple/InkWell
+- PM 出交互样式设计规范 v1.0→v1.1（8 类元素：ripple + 按下缩放 + 背景变色 + SnackBar 提示）
+- 新建 PressScaleWrapper 通用按下态组件（Listener+AnimatedScale+AnimatedOpacity+InkWell）
+- 闪屏页还原浙里办原版（"伴你一生大小事" + logo）
+- 标准版首页全面交互优化：按下缩放/变色、热门服务横向滚动渐变卡片、底部导航弹性回弹、占位功能 SnackBar
+- 长辈版首页全面交互优化：35 个元素按 v1.1 规范统一
+- 修复 Tab 标签切换文字位移 bug（选中/未选中态 padding 不一致）
+- 修复 Tab 选中态消失 bug（Ink 无 Material 祖先→改 Container）
+- ThemeData 集中配置 splashColor/highlightColor/hoverColor（标准版蓝/长辈版橙）
+- PersistentBanner 加宽 + 按钮改标准版蓝色
+- 路由转场统一 180ms FadeTransition
+
+**团队参与**：PM / architect / frontend（主力）/ backend（待命）
+
+**关键决策**：
+- 交互规范 v1.0 只有 ripple 不够明显 → v1.1 加入按下缩放+变色+SnackBar 三层反馈
+- 搜索栏/消息条等大面积区域不适合缩放动画 → 搜索栏直接跳转，消息条只变色
+- Tab 标签不适合缩放（横向排列互相影响布局）→ 只保留 ripple
+- Ink 在无 Material 祖先时渲染不可靠 → 改用 Container 做普通背景色切换
+
+**当前状态**：
+- 标准版首页 + 长辈版首页交互优化完成
+- 其余页面（登录/搜索/服务页/我的等）尚未按 v1.1 规范优化
+- 下一步：继续优化其余页面交互 → N1 麦克风接入 → N2 云部署 → N4 真机测试
+- 下次会话恢复点：继续其余页面的交互优化（登录页、搜索页、各服务页、我的页）
+
+---
+
+## 2026-05-09（会话 6）
+
+**主要工作**：
+- 产出 docs/AGENT_DESIGN_REPORT.md v1.3（智能代理"小浙"设计分析报告，8 节：定位/能力/流程/准则/多模态/UI/专属页面分析/实现差距）
+- PM 与 architect 对齐方案：不做独立主页 Tab，在"我的"页面加"小浙助手"设置入口
+- 新增 AgentSettingsService + 小浙助手设置页（语音开关/语速/操作记录/草稿箱/使用说明）
+- _speakHint 接入设置服务（语音开关 + 动态语速）
+- AudioPlayer onEnded 回调修复 + 30s 超时兜底，面板关闭等 TTS 播完
+- 产出 docs/USER_JOURNEY_TESTING.md v1.0（7 场景操作级测试旅程图）
+- 7 场景 E2E 测试套件（app/test/e2e/，reviewer 编写，architect review + 修复 2 个 P0）
+
+**团队参与**：PM / architect / frontend / backend / reviewer（本次新增）全员参与
+
+**关键决策**：
+- 代理不做独立主页 Tab（上下文断裂 + 适老化导航负担），改为"我的"页面轻量设置入口
+- 不做历史对话记录（与 session 不持久化架构冲突）和批量预授权（与"权限一事一授"原则冲突）
+- AudioPlayer 缺 onEnded 回调从"待验证"升级为"N4 前必须修复"（已修复）
+- 报告中 3 处数字以代码为准修正（面板 55%、超时 20s、延迟 2s）
+
+**当前状态**：
+- 代理设计报告定稿，设置页已实现，E2E 测试套件就绪
+- 下一步：N1 麦克风 Web Speech API 接入 → N2 云部署 → N4 真机测试
+
+---
+
 ## 2026-05-09（会话 5）
 
 **主要工作**：

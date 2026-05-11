@@ -22,7 +22,7 @@
 
 **核心创新点**：**受控响应型智能代理"小浙"**（权限受控 + 行为受控 + 不主动挑事，只在用户有需求时介入）。围绕该代理设计展开适老化交互与多模态交互研究。
 
-**当前阶段**：前端 P0 Bug 修复完成（2026-05-09），主流程可在 localhost 跑通。草稿写入 / 语音引导 TTS 已实现待真机验证。下一步：N1 麦克风 Web Speech API 接入 → N2 云服务器部署 → N4 真机测试 → N5 Prompt 调优 → N6 答辩准备。技术栈：FastAPI + Agno Agent + DeepSeek-V3 + Web Speech API（ASR）+ Edge TTS。
+**当前阶段**：前端交互体验优化中（2026-05-11），标准版首页 + 长辈版首页已按 v1.1 交互规范优化完成（PressScaleWrapper 按下缩放+变色+SnackBar），其余页面待优化。主流程可在 localhost 跑通。下一步：继续其余页面交互优化 → N1 麦克风 Web Speech API 接入 → N2 云服务器部署 → N4 真机测试 → N5 Prompt 调优 → N6 答辩准备。技术栈：FastAPI + Agno Agent + DeepSeek-V3 + Web Speech API（ASR）+ Edge TTS。
 
 ## 项目结构
 

@@ -23,6 +23,19 @@
 | 15 | WakeWordListener 单例竞争修复 | frontend | ✅ |
 | 16 | 后端 prompt 路由前缀同步 | backend | ✅ |
 | 17 | 用户旅程图文档（docs/USER_JOURNEY.md） | PM | ✅ |
+| 18 | 智能代理设计分析报告（docs/AGENT_DESIGN_REPORT.md v1.3） | PM / architect | ✅ |
+| 19 | 小浙助手设置页 + AgentSettingsService | frontend | ✅ |
+| 20 | AudioPlayer onEnded 回调修复 + 30s 超时兜底 | frontend | ✅ |
+| 21 | _speakHint 接入设置服务（语音开关 + 动态语速） | frontend | ✅ |
+| 22 | 测试用户旅程图（docs/USER_JOURNEY_TESTING.md） | PM | ✅ |
+| 23 | 7 场景 E2E 测试套件（app/test/e2e/） | reviewer | ✅ |
+| 24 | 全页面交互反馈优化（ripple + 路由转场统一淡入） | frontend | ✅ |
+| 25 | 交互样式规范 v1.1（PM 出规范，8 类元素按下态定义） | PM | ✅ |
+| 26 | 闪屏页还原浙里办原版 | frontend | ✅ |
+| 27 | 标准版首页交互体验全面优化（PressScaleWrapper + 热门服务卡片） | frontend | ✅ |
+| 28 | 长辈版首页交互体验全面优化 | frontend | ✅ |
+| 29 | Tab 标签切换文字位移 bug | frontend | ✅ |
+| 30 | Tab 选中态消失 bug（Ink→Container） | frontend | ✅ |
 
 ---
 
