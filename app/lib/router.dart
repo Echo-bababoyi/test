@@ -18,6 +18,7 @@ import 'pages/yibao_query_page.dart';
 import 'pages/operation_logs_page.dart';
 import 'pages/drafts_page.dart';
 import 'pages/agent_settings_page.dart';
+import 'pages/wireframe_page.dart';
 import 'widgets/phone_frame.dart';
 
 class AppRoutes {
@@ -38,6 +39,12 @@ class AppRoutes {
   static const operationLogs = '/elder/operation-logs';
   static const drafts = '/elder/drafts';
   static const agentSettings = '/elder/agent-settings';
+  static const wireframe0 = '/wireframe/0';
+  static const wireframe1 = '/wireframe/1';
+  static const wireframe2 = '/wireframe/2';
+  static const wireframe3 = '/wireframe/3';
+  static const wireframe4 = '/wireframe/4';
+  static const wireframe5 = '/wireframe/5';
 
   static const all = [
     ('闪屏页', splash),
@@ -141,6 +148,12 @@ final appRouter = GoRouter(
           path: AppRoutes.agentSettings,
           pageBuilder: (ctx, st) => _fadePage(const AgentSettingsPage()),
         ),
+        GoRoute(path: AppRoutes.wireframe0, pageBuilder: (ctx, st) => _fadePage(const WireframePage(index: 0))),
+        GoRoute(path: AppRoutes.wireframe1, pageBuilder: (ctx, st) => _fadePage(const WireframePage(index: 1))),
+        GoRoute(path: AppRoutes.wireframe2, pageBuilder: (ctx, st) => _fadePage(const WireframePage(index: 2))),
+        GoRoute(path: AppRoutes.wireframe3, pageBuilder: (ctx, st) => _fadePage(const WireframePage(index: 3))),
+        GoRoute(path: AppRoutes.wireframe4, pageBuilder: (ctx, st) => _fadePage(const WireframePage(index: 4))),
+        GoRoute(path: AppRoutes.wireframe5, pageBuilder: (ctx, st) => _fadePage(const WireframePage(index: 5))),
       ],
     ),
   ],

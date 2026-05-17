@@ -1,104 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
-import '../services/wake_word_listener.dart';
-import 'agent_panel.dart';
 import 'press_scale_wrapper.dart';
 
 const _kOrange = Color(0xFFFF6D00);
 
-class ElderBottomNav extends StatefulWidget {
+class ElderBottomNav extends StatelessWidget {
   final int currentIndex;
-
   const ElderBottomNav({super.key, required this.currentIndex});
 
   @override
-  State<ElderBottomNav> createState() => _ElderBottomNavState();
-}
-
-class _ElderBottomNavState extends State<ElderBottomNav> {
-  bool _panelOpen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WakeWordListener.instance.onWakeWord = _onWakeWord;
-    WakeWordListener.instance.start();
-  }
-
-  @override
-  void dispose() {
-    if (WakeWordListener.instance.onWakeWord == _onWakeWord) {
-      WakeWordListener.instance.onWakeWord = null;
-    }
-    super.dispose();
-  }
-
-  void _onWakeWord() {
-    if (_panelOpen || !mounted) return;
-    _openPanel();
-  }
-
-  void _openPanel() {
-    if (_panelOpen) return;
-    final path = GoRouterState.of(context).uri.path;
-    setState(() => _panelOpen = true);
-    showDialog<void>(
-      context: context,
-      barrierColor: Colors.transparent,
-      barrierDismissible: false,
-      builder: (_) => AgentPanel(currentPath: path),
-    ).then((_) {
-      if (mounted) setState(() => _panelOpen = false);
-      WakeWordListener.instance.resume();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 唤醒提示
-        Container(
-          color: Colors.white,
-          width: double.infinity,
-          padding: const EdgeInsets.only(bottom: 4),
-          child: const Center(
-            child: Text(
-              '说“小浙”即可唤醒助手',
-              style: TextStyle(fontSize: 12, color: Color(0xFFBBBBBB)),
+    return BottomAppBar(
+      color: Colors.white,
+      elevation: 8,
+      child: SizedBox(
+        height: 64,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _NavItem(
+              icon: currentIndex == 0 ? Icons.home : Icons.home_outlined,
+              label: '首页',
+              selected: currentIndex == 0,
+              onTap: () => context.go(AppRoutes.elderHome),
             ),
-          ),
-        ),
-        BottomAppBar(
-          shape: const CircularNotchedRectangle(),
-          notchMargin: 8,
-          color: Colors.white,
-          elevation: 8,
-          child: SizedBox(
-            height: 64,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavItem(
-                  icon: widget.currentIndex == 0 ? Icons.home : Icons.home_outlined,
-                  label: '首页',
-                  selected: widget.currentIndex == 0,
-                  onTap: () => context.go(AppRoutes.elderHome),
-                ),
-                _AssistantButton(onTap: _openPanel),
-                _NavItem(
-                  icon: widget.currentIndex == 2 ? Icons.person : Icons.person_outline,
-                  label: '我的',
-                  selected: widget.currentIndex == 2,
-                  onTap: () => context.go(AppRoutes.my),
-                ),
-              ],
+            _NavItem(
+              icon: currentIndex == 2 ? Icons.person : Icons.person_outline,
+              label: '我的',
+              selected: currentIndex == 2,
+              onTap: () => context.go(AppRoutes.my),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -119,7 +54,7 @@ class _NavItem extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       builder: (_) => SizedBox(
-        width: 80,
+        width: 100,
         height: 64,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -128,35 +63,6 @@ class _NavItem extends StatelessWidget {
             const SizedBox(height: 4),
             Text(label, style: TextStyle(fontSize: 14, color: color, fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AssistantButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _AssistantButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.translate(
-      offset: const Offset(0, -12),
-      child: Material(
-        color: _kOrange,
-        shape: const CircleBorder(),
-        elevation: 4,
-        shadowColor: _kOrange.withValues(alpha: 0.45),
-        child: PressScaleWrapper(
-          pressedScale: 0.92,
-          onTap: onTap,
-          customBorder: const CircleBorder(),
-          splashColor: Colors.white24,
-          builder: (_) => const SizedBox(
-            width: 60,
-            height: 60,
-            child: Icon(Icons.mic, color: Colors.white, size: 30),
-          ),
         ),
       ),
     );

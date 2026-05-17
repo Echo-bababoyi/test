@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 final appTheme = ThemeData(
   colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFFF6D00)),
   primaryColor: const Color(0xFFFF6D00),
+  fontFamily: 'NotoSansSC',
   textTheme: const TextTheme(
     displayLarge:  TextStyle(fontSize: 32),
     displayMedium: TextStyle(fontSize: 28),

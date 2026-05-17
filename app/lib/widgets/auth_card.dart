@@ -26,6 +26,10 @@ class _AuthCardState extends State<AuthCard> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) {
+        _timer?.cancel();
+        return;
+      }
       if (_remaining <= 1) {
         _timer?.cancel();
         widget.onReject();

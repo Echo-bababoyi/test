@@ -91,7 +91,8 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
       });
       _wsSub = _ws.messages.listen(_handleMessage);
       await _checkPageDraft();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[AgentPanel] _initSession error: $e');
       setState(() => _session.websocketConnected = false);
     }
   }
@@ -135,6 +136,16 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
       // 移除思考中占位（如果有）
       _items.removeWhere((item) => item['type'] == 'thinking');
       switch (type) {
+        case 'agent_ready':
+          final greeting = payload['greeting'] as String? ?? '您好，有什么可以帮您？';
+          _session.state = 'listening';
+          _session.addDialog('agent', greeting);
+          _items.add({'role': 'agent', 'text': greeting});
+
+        case 'asr_result':
+          // 文字输入模式下 asr_result 只是回显，不需要额外处理
+          break;
+
         case 'agent_thinking':
           _session.state = 'confirming';
           _items.add({'type': 'thinking'});
@@ -182,7 +193,9 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
 
         case 'agent_error':
           final errorCode = payload['error_code'] as String?;
-          final errText = errorCode == 'asr_unclear' ? '没听清，请再说一次' : (payload['text'] as String? ?? '出错了，请重试');
+          final errText = errorCode == 'asr_unclear'
+              ? '没听清，请再说一次'
+              : (payload['voice_hint'] as String? ?? payload['text'] as String? ?? '出错了，请重试');
           _session.state = errorCode == 'asr_unclear' ? 'listening' : 'idle';
           _session.addDialog('agent', errText);
           _items.add({'role': 'agent', 'text': errText});
@@ -211,9 +224,17 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
     });
   }
 
-  void _onAudioEnd() {
+  void _onAudioReady(List<String> base64Chunks) {
     setState(() => _session.state = 'confirming');
-    _ws.send('audio_end', {});
+    for (int i = 0; i < base64Chunks.length; i++) {
+      _ws.send('audio_chunk', {
+        'session_id': _session.sessionId,
+        'chunk_index': i,
+        'is_last': i == base64Chunks.length - 1,
+        'audio_base64': base64Chunks[i],
+      });
+    }
+    _ws.send('audio_end', {'session_id': _session.sessionId});
   }
 
   Future<void> _close() async {
@@ -516,7 +537,7 @@ class _AgentPanelState extends State<AgentPanel> with SingleTickerProviderStateM
           padding: const EdgeInsets.only(bottom: 12),
           child: Column(
             children: [
-              MicButton(onAudioEnd: _onAudioEnd),
+              MicButton(onAudioReady: _onAudioReady),
               const SizedBox(height: 4),
               Text(
                 _session.state == 'listening' ? '按住说话' : '',

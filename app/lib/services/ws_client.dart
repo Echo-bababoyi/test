@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WsClient {
@@ -18,27 +19,41 @@ class WsClient {
 
   Future<void> connect(String sessionId) async {
     final uri = Uri.parse('$_baseUrl$sessionId');
+    debugPrint('[WsClient] connecting to $uri');
     _channel = WebSocketChannel.connect(uri);
     await _channel!.ready;
     _connected = true;
+    debugPrint('[WsClient] connected session=$sessionId');
 
     _channel!.stream.listen(
       (raw) {
         final data = jsonDecode(raw as String) as Map<String, dynamic>;
+        debugPrint('[WsClient] recv type=${data['type']}');
         _controller.add(data);
       },
-      onDone: () => _connected = false,
-      onError: (_) => _connected = false,
+      onDone: () {
+        debugPrint('[WsClient] connection closed');
+        _connected = false;
+      },
+      onError: (err) {
+        debugPrint('[WsClient] connection error: $err');
+        _connected = false;
+      },
     );
   }
 
   void disconnect() {
     _channel?.sink.close();
+    _channel = null;
     _connected = false;
   }
 
   void send(String type, Map<String, dynamic> payload) {
-    if (!_connected) return;
+    if (!_connected || _channel == null) {
+      debugPrint('[WsClient] send skipped (not connected): type=$type');
+      return;
+    }
+    debugPrint('[WsClient] send type=$type');
     final msg = jsonEncode({
       'type': type,
       'payload': payload,

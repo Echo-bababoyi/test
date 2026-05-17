@@ -101,7 +101,7 @@ class AgentCore:
             session_id=f"{session_id}_cls",
             instructions=_INTENT_PROMPT,
             markdown=False,
-            add_history_to_messages=False,
+            add_history_to_context=False,
         )
 
         self._rephraser = Agent(
@@ -109,7 +109,7 @@ class AgentCore:
             session_id=f"{session_id}_rph",
             instructions=_CONFIRM_PROMPT,
             markdown=False,
-            add_history_to_messages=False,
+            add_history_to_context=False,
         )
 
         self._executor: Agent | None = None
@@ -147,7 +147,7 @@ class AgentCore:
             session_id=f"{self.session_id}_oos",
             instructions=_OUT_OF_SCOPE_PROMPT,
             markdown=False,
-            add_history_to_messages=False,
+            add_history_to_context=False,
         )
         response = await agent.arun(user_input)
         return (response.content or "抱歉，这个功能暂时帮不到您").strip()
@@ -170,7 +170,7 @@ class AgentCore:
             tools=tools,
             instructions=instructions,
             markdown=False,
-            add_history_to_messages=True,
+            add_history_to_context=True,
             num_history_runs=10,
         )
 
@@ -186,11 +186,15 @@ class AgentCore:
             stopped_tool = self._get_stopped_tool(response)
             if stopped_tool in _SENSITIVE_TOOLS:
                 permission_id = str(uuid.uuid4())
-                self._permission_event.clear()  # clear before send so resolve_permission cannot race
-                await self._send_fn(
-                    "permission_request",
-                    self._build_permission_payload(stopped_tool, permission_id),
-                )
+                self._permission_event.clear()
+                try:
+                    await self._send_fn(
+                        "permission_request",
+                        self._build_permission_payload(stopped_tool, permission_id),
+                    )
+                except Exception as exc:
+                    logger.error("session=%s permission_request send error: %s", self.session_id, exc)
+                    return ""
                 granted = await self.wait_for_permission()
                 if not granted:
                     logger.info("session=%s permission denied for %s", self.session_id, stopped_tool)
@@ -224,7 +228,7 @@ class AgentCore:
             model=DeepSeek(id="deepseek-chat"),
             session_id=f"{self.session_id}_broadcast",
             markdown=False,
-            add_history_to_messages=False,
+            add_history_to_context=False,
         )
         response = await agent.arun(prompt)
         return (response.content or result_text).strip()
@@ -252,7 +256,10 @@ class AgentCore:
             else:
                 payload = {}
             logger.info("session=%s push tool result: %s %s", self.session_id, msg_type, payload)
-            await self._send_fn(msg_type, payload)
+            try:
+                await self._send_fn(msg_type, payload)
+            except Exception as exc:
+                logger.error("session=%s push tool result send error: %s", self.session_id, exc)
 
     def _get_stopped_tool(self, response) -> str | None:
         """Return the tool_name of the message that caused stop_after_tool_call, or None.

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../core/state/app_state.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/in_app_overlay.dart';
 import '../widgets/permission_flow_helper.dart';
 import '../services/agent_element_registry.dart';
@@ -16,7 +17,8 @@ class FaceAuthPage extends ConsumerStatefulWidget {
 }
 
 class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
-  bool _isAuthenticating = false;
+  static const _kDemoMode = bool.fromEnvironment('DEMO_MODE');
+  bool _isAuthenticating = _kDemoMode;
 
   final _faceBtnKey = AgentElementRegistry.register('btn_face_login');
   final _otherBtnKey = AgentElementRegistry.register('btn_other_auth');
@@ -24,8 +26,7 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          _isAuthenticating ? Colors.white : const Color(0xFFDEEAF8),
+      backgroundColor: Colors.transparent,
       appBar: _isAuthenticating
           ? AppBar(
               backgroundColor: Colors.white,
@@ -37,24 +38,73 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
               ),
             )
           : AppBar(
-              backgroundColor: const Color(0xFFDEEAF8),
+              backgroundColor: Colors.transparent,
               elevation: 0,
               foregroundColor: AppColors.textPrimary,
               title: const Text('身份验证'),
             ),
-      body: _isAuthenticating
-          ? _AuthenticatingView(
-              onComplete: () {
-                ref.read(loginProvider.notifier).login('用户');
-                context.go(AppRoutes.elderHome);
-              },
-            )
-          : _DefaultView(
-              startAuthKey: _faceBtnKey,
-              otherMethodKey: _otherBtnKey,
-              onStartAuth: () => _showFaceAuthOverlay(context),
-              onOtherMethod: () => _showOtherAuthOverlay(context),
+      extendBodyBehindAppBar: !_isAuthenticating,
+      body: Container(
+        decoration: _isAuthenticating
+            ? const BoxDecoration(color: Colors.white)
+            : const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFFFF3E0), Color(0xFFFFF8F2), Color(0xFFFFFBF8)],
+                ),
+              ),
+        child: Stack(
+          children: [
+            if (!_isAuthenticating) ...[
+              Positioned(
+                top: -40,
+                right: -30,
+                child: Container(
+                  width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [const Color(0x15FF6D00), const Color(0x00FFFFFF)],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 100,
+                left: -40,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [const Color(0x10FF6D00), const Color(0x00FFFFFF)],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            _isAuthenticating
+                ? _AuthenticatingView(
+                    onComplete: () {
+                      ref.read(loginProvider.notifier).login('用户');
+                      context.go(AppRoutes.elderHome);
+                    },
+                  )
+                : _DefaultView(
+                    startAuthKey: _faceBtnKey,
+                    otherMethodKey: _otherBtnKey,
+                    onStartAuth: () => _showFaceAuthOverlay(context),
+                    onOtherMethod: () => _showOtherAuthOverlay(context),
+                  ),
+            Positioned.fill(
+              child: AgentFab(currentPath: AppRoutes.faceAuth),
             ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -109,53 +159,83 @@ class _DefaultView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: Spacing.sm),
+          const SizedBox(height: 72),
           // 白色圆角卡片（姓名 + 扫描框 + 说明）
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.large),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                BoxShadow(color: Color(0x0FFF6D00), blurRadius: 24, offset: Offset(0, 8)),
+                BoxShadow(color: Color(0x05000000), blurRadius: 4, offset: Offset(0, 1)),
+              ],
             ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                Spacing.xl, Spacing.xl, Spacing.xl, Spacing.lg,
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    '**澄',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            child: Column(
+              children: [
+                Container(
+                  height: 4,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: [Color(0xFFFF8A3C), Color(0xFFFF6D00)]),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                   ),
-                  const SizedBox(height: Spacing.lg),
-                  const _FaceScanFrame(),
-                  const SizedBox(height: Spacing.lg),
-                  const Text(
-                    '请进行刷脸认证',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                  child: Column(
+                    children: [
+                      const Text(
+                        '**澄',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: Spacing.lg),
+                      const _FaceScanFrame(),
+                      const SizedBox(height: Spacing.lg),
+                      const Text(
+                        '请进行刷脸认证',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      const Text(
+                        '为保障您的账号隐私与信息安全，\n"浙里办"将获取您的人脸信息进行实人验证',
+                        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: Spacing.sm),
-                  const Text(
-                    '为保障您的账号隐私与信息安全，\n"浙里办"将获取您的人脸信息进行实人验证',
-                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: Spacing.lg),
-          // 开始认证（主按钮）
-          FilledButton(
-            key: startAuthKey,
-            onPressed: onStartAuth,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.standardPrimary,
-              minimumSize: const Size.fromHeight(52),
-              shape: RoundedRectangleBorder(
+          // 开始认证（主按钮 — 渐变 + 阴影 + 图标）
+          Container(
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFFFF8A3C), Color(0xFFFF6D00)]),
+              borderRadius: BorderRadius.circular(AppRadius.xlarge),
+              boxShadow: const [
+                BoxShadow(color: Color(0x33FF6D00), blurRadius: 12, offset: Offset(0, 4)),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(AppRadius.xlarge),
+              child: InkWell(
+                key: startAuthKey,
+                onTap: onStartAuth,
                 borderRadius: BorderRadius.circular(AppRadius.xlarge),
+                child: const Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.verified_user_outlined, color: Colors.white, size: 20),
+                      SizedBox(width: 8),
+                      Text('开始认证', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
               ),
             ),
-            child: const Text('开始认证', style: TextStyle(fontSize: 16)),
           ),
           const SizedBox(height: Spacing.md),
           // 其他方式认证（次要按钮）
@@ -245,10 +325,17 @@ class _FaceAvatar extends StatelessWidget {
       height: 150,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFFD6E8F8),
-        border: Border.all(color: const Color(0xFFCCCCCC)),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFF0E6), Color(0xFFFFF8F2)],
+        ),
+        border: Border.all(
+          color: const Color(0xFFFF8A3C).withValues(alpha: 0.4),
+          width: 2.5,
+        ),
       ),
-      child: const Icon(Icons.person, size: 80, color: Color(0xFF90AECB)),
+      child: const Icon(Icons.face_retouching_natural, size: 64, color: Color(0xFFFF8A3C)),
     );
   }
 }
@@ -270,7 +357,7 @@ class _CornerBracket extends StatelessWidget {
             top: 0,
             left: 0,
             child: ColoredBox(
-              color: AppColors.standardPrimary,
+              color: const Color(0xFFFF6D00),
               child: SizedBox(width: _len, height: _thick),
             ),
           ),
@@ -278,7 +365,7 @@ class _CornerBracket extends StatelessWidget {
             top: 0,
             left: 0,
             child: ColoredBox(
-              color: AppColors.standardPrimary,
+              color: const Color(0xFFFF6D00),
               child: SizedBox(width: _thick, height: _len),
             ),
           ),
@@ -302,68 +389,54 @@ class _AuthenticatingView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: Spacing.xl),
-          const Text(
-            '拿起手机，眨眨眼',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: Spacing.xxl),
+          const SizedBox(height: 60),
           Center(
             child: Stack(
               alignment: Alignment.center,
               children: [
                 Container(
-                  width: 220,
-                  height: 220,
+                  width: 240,
+                  height: 240,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0x4D2D74DC),
+                      color: const Color(0x4DFF6D00),
                       width: 6,
                     ),
                   ),
                 ),
                 Container(
-                  width: 180,
-                  height: 180,
+                  width: 190,
+                  height: 190,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0xFFD6E8F8),
+                    color: Color(0xFFFFF0E6),
                   ),
-                  child: const Icon(Icons.face, size: 90, color: Color(0xFF90AECB)),
-                ),
-                const Positioned(
-                  top: 30,
-                  child: Text(
-                    '眨眨眼',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: const Icon(Icons.face, size: 100, color: Color(0xFFFF8A3C)),
                 ),
               ],
             ),
           ),
-          const Spacer(),
-          FilledButton(
-            onPressed: onComplete,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.standardPrimary,
-              padding: const EdgeInsets.symmetric(vertical: Spacing.md),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.xlarge),
-              ),
+          const SizedBox(height: 32),
+          const Text(
+            '请缓慢左右摇头',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
-            child: const Text('进入下一步'),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: Spacing.lg),
+          const SizedBox(height: 12),
+          Text(
+            '正在进行人脸识别，请保持面部在框内',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const Spacer(),
         ],
       ),
     );

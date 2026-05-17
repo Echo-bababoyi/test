@@ -24,7 +24,7 @@ class WakeWordListener {
       if (results == null) return;
       final startIdx = event.resultIndex ?? 0;
       for (int i = startIdx; i < results.length; i++) {
-        final transcript = results[i].item(0)?.transcript ?? '';
+        final transcript = results[i].item(0).transcript ?? '';
         if (transcript.contains('小浙')) {
           pause();
           onWakeWord?.call();
