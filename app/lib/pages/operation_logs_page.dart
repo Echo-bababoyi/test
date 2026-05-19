@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../router.dart';
 import '../services/operation_log_store.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 
 class OperationLogsPage extends StatefulWidget {
@@ -65,38 +67,45 @@ class _OperationLogsPageState extends State<OperationLogsPage> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF6D00)))
-          : _logs.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.history_outlined, size: 72, color: Color(0xFFCCCCCC)),
-                      SizedBox(height: 16),
-                      Text('暂无操作记录', style: TextStyle(fontSize: 18, color: Color(0xFF999999))),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                  itemCount: _logs.length,
-                  itemBuilder: (_, i) => _TimelineItem(
-                    log: _logs[i],
-                    isLast: i == _logs.length - 1,
-                    isExpanded: _expanded.contains(i),
-                    onToggle: () => setState(() {
-                      if (_expanded.contains(i)) {
-                        _expanded.remove(i);
-                      } else {
-                        _expanded.add(i);
-                      }
-                    }),
-                    formatTime: _formatTime,
-                    sceneIcons: _sceneIcons,
-                    sceneNames: _sceneNames,
-                  ),
-                ),
+      body: Stack(
+        children: [
+          _loading
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF6D00)))
+              : _logs.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.history_outlined, size: 72, color: Color(0xFFCCCCCC)),
+                          SizedBox(height: 16),
+                          Text('暂无操作记录', style: TextStyle(fontSize: 18, color: Color(0xFF999999))),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                      itemCount: _logs.length,
+                      itemBuilder: (_, i) => _TimelineItem(
+                        log: _logs[i],
+                        isLast: i == _logs.length - 1,
+                        isExpanded: _expanded.contains(i),
+                        onToggle: () => setState(() {
+                          if (_expanded.contains(i)) {
+                            _expanded.remove(i);
+                          } else {
+                            _expanded.add(i);
+                          }
+                        }),
+                        formatTime: _formatTime,
+                        sceneIcons: _sceneIcons,
+                        sceneNames: _sceneNames,
+                      ),
+                    ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.operationLogs),
+          ),
+        ],
+      ),
       bottomNavigationBar: const ElderBottomNav(currentIndex: 2),
     );
   }

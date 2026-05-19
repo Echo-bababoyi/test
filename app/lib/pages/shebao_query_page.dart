@@ -3,6 +3,7 @@ import '../router.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/design_tokens.dart';
 import '../services/agent_element_registry.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 
 class ShebaoQueryPage extends StatelessWidget {
@@ -29,7 +30,9 @@ class ShebaoQueryPage extends StatelessWidget {
           IconButton(icon: const Icon(Icons.more_horiz), onPressed: null),
         ],
       ),
-      body: SingleChildScrollView(
+      body: Stack(
+        children: [
+          SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -143,6 +146,11 @@ class ShebaoQueryPage extends StatelessWidget {
             const SizedBox(height: Spacing.xl),
           ],
         ),
+      ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.shebaoQuery),
+          ),
+        ],
       ),
       bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
     );

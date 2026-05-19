@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../services/agent_settings_service.dart';
 import '../theme/design_tokens.dart';
+import '../widgets/agent_fab.dart';
 
 class AgentSettingsPage extends StatefulWidget {
   const AgentSettingsPage({super.key});
@@ -23,7 +24,9 @@ class _AgentSettingsPageState extends State<AgentSettingsPage> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: ListView(
+      body: Stack(
+        children: [
+          ListView(
         children: [
           const _SectionHeader(title: '语音设置'),
           Container(
@@ -101,6 +104,11 @@ class _AgentSettingsPageState extends State<AgentSettingsPage> {
                     desc: '说"查我的养老金"，小浙一键导航到结果页并语音播报'),
               ],
             ),
+          ),
+        ],
+      ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.agentSettings),
           ),
         ],
       ),

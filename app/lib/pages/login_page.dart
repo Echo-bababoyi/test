@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/in_app_overlay.dart';
 import '../services/agent_element_registry.dart';
 
@@ -31,7 +32,9 @@ class _LoginPageState extends State<LoginPage> {
         elevation: 0,
         foregroundColor: AppColors.textPrimary,
       ),
-      body: Column(
+      body: Stack(
+        children: [
+          Column(
         children: [
           // 顶部：图标 + 欢迎语
           Padding(
@@ -244,6 +247,11 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.login),
           ),
         ],
       ),

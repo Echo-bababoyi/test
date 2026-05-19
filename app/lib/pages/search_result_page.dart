@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/search_suggestion_list.dart';
 import '../widgets/elder_bottom_nav.dart';
 
@@ -72,7 +73,9 @@ class _SearchResultPageState extends State<SearchResultPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
+      body: Stack(
+        children: [
+          SafeArea(
         child: Column(
           children: [
             _ResultTopBar(
@@ -96,6 +99,11 @@ class _SearchResultPageState extends State<SearchResultPage> {
             ],
           ],
         ),
+      ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.searchResult),
+          ),
+        ],
       ),
       bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
     );

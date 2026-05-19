@@ -4,6 +4,44 @@
 
 ---
 
+## 2026-05-17（会话 8 — 从 GitHub 同步）
+
+**主要工作**（commit `e07f0d8`，用户在外部完成，本会话仅做文档登记）：
+
+- **AgentFab 悬浮助手组件**：新增 `app/lib/widgets/agent_fab.dart`（935 行），右下角可拖动气泡形态聊天窗，内置 WS 连接 + 文本输入 + 语音 + 授权卡片，提供独立于底部 Tab 的常驻入口
+- **低保真线框图页面**：新增 `app/lib/pages/wireframe_page.dart`（814 行），含 6 个界面线框（长辈首页 / 人脸认证 / 医保缴费 / 代理面板 / 授权卡片 / 操作记录），路由 +6 条，用作论文插图源
+- **多页面交互重构**：
+  - `drafts_page.dart` 草稿箱（+310 行）
+  - `face_auth_page.dart` 人脸认证（±269 行）
+  - `pension_query_page.dart` 养老金查询（+364 行）
+  - `elder_bottom_nav.dart` 长辈底部导航（-缩减约一半，138→精简版）
+  - `mic_button.dart` 麦克风按钮重构
+  - `agent_bubble.dart` 气泡样式调整、`agent_panel.dart` 同步更新
+- **Noto Sans SC 中文字体集成**：`app/fonts/NotoSansSC-Regular.ttf` + `Bold.ttf`，`pubspec.yaml` 注册字体族
+- **后端健壮性加固**：
+  - `agent_core.py`：Agno API 字段适配（`add_history_to_messages` → `add_history_to_context`），`send` 异常捕获
+  - `ws_handler.py`：消息处理重构 — `_dispatch` 全包 try/except、`text_input` 改 `asyncio.create_task` 异步、ASR 三种错误细分、TTS 按需生成
+  - `deepseek_client.py`：错误处理加固
+  - `main.py`：新增 `dotenv` 加载
+- **论文草稿大幅更新**：`docs/论文草稿.md` ±871 行（v1.0 → v2.0）
+- **论文图表素材**：截图（`docs/diagrams/screenshots/` + `brochure_shots/`）、线框图（`docs/diagrams/wireframes/`）、用户旅程图（`user_journey-1~4.png` + `user_journey_full.png` + `user_journey.md`）、信息架构图 `ia_diagram.png`，配套渲染脚本 5 个
+
+**团队参与**：用户外部独立完成，团队成员未参与该次提交
+
+**关键决策**（推测自 diff，未在会话中讨论）：
+- 引入 AgentFab 提供"全局浮动"的代理入口，与底部 Tab 中央"小浙"按钮形成两条入口并存
+- 用线框图页面作为论文插图源（直接 Flutter 渲染截图，避免另起 Figma/Sketch 工作流）
+- 后端 ws_handler 全面 try/except 化，向真机部署前的健壮性靠拢
+- 论文草稿 v2.0 大幅扩写，进入答辩材料准备阶段
+
+**当前状态**：
+- 代码已从 GitHub 拉取并同步本地
+- 部分图表素材已被用户手动删除（与 commit 相比）
+- 下一步：继续其余页面交互优化收尾 → N1 麦克风 Web Speech API 接入 → N2 云部署 → N4 真机测试 → N5 Prompt 调优 → N6 答辩准备
+- 下次会话恢复点：盘点其余待优化页面 / N1 麦克风接入可立即开始
+
+---
+
 ## 2026-05-11（会话 7）
 
 **主要工作**：

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../services/wake_word_listener.dart';
 import '../theme/design_tokens.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/in_app_overlay.dart';
 import '../widgets/permission_flow_helper.dart';
 import '../widgets/search_suggestion_list.dart';
@@ -79,7 +80,9 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
+      body: Stack(
+        children: [
+          SafeArea(
         child: Column(
           children: [
             _SearchBar(
@@ -101,6 +104,11 @@ class _SearchPageState extends State<SearchPage> {
             ),
           ],
         ),
+      ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.search),
+          ),
+        ],
       ),
       bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
     );

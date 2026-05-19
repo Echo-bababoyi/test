@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../router.dart';
 import '../services/agent_element_registry.dart';
 import '../services/ws_client.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/connection_indicator.dart';
 import '../widgets/elder_bottom_nav.dart';
 
@@ -51,7 +53,9 @@ class _YibaoQueryPageState extends State<YibaoQueryPage> {
         centerTitle: true,
         actions: const [ConnectionIndicator()],
       ),
-      body: Padding(
+      body: Stack(
+        children: [
+          Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -162,6 +166,11 @@ class _YibaoQueryPageState extends State<YibaoQueryPage> {
             ],
           ],
         ),
+      ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.yibaoQuery),
+          ),
+        ],
       ),
       bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
     );

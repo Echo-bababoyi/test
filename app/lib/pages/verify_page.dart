@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../core/state/app_state.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/system_dialog.dart';
 import '../services/agent_element_registry.dart';
 
@@ -119,7 +120,9 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
         foregroundColor: AppColors.textPrimary,
         title: const Text('短信验证登录'),
       ),
-      body: Padding(
+      body: Stack(
+        children: [
+          Padding(
         padding: const EdgeInsets.fromLTRB(Spacing.lg, Spacing.lg, Spacing.lg, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -241,6 +244,11 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
             ),
           ],
         ),
+      ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.verify),
+          ),
+        ],
       ),
     );
   }

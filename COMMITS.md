@@ -4,6 +4,40 @@
 
 ---
 
+### 2026-05-17（会话 8）— AgentFab 悬浮助手 + 多页面重构 + 后端加固 + 论文素材
+
+**`e07f0d8` feat: session-8 interactive polish, thesis draft, wireframes, user journey diagrams**
+
+前端 · 新增组件
+- 新增 AgentFab 悬浮助手组件（935 行）— 取代旧版底部代理面板入口，全局可拖拽 FAB + 长按唤起 + 状态指示
+- 新增 wireframe_page.dart 低保真线框图页面（814 行），用于论文素材生成
+- router.dart 新增 6 条 wireframe 路由（首页/刷脸/医保缴费/代理面板/授权卡/操作日志），总路由数 12 → 24
+
+前端 · 多页面交互重构（v1.1 规范延伸到首页之外）
+- drafts_page（310 行改动）— 草稿箱页面交互优化
+- face_auth_page（269 行改动）— 刷脸授权页面
+- pension_query_page（364 行改动）— 养老金查询页面
+- elder_bottom_nav（138 行改动）— 长辈版底部导航重构
+- mic_button（63 行改动）+ agent_bubble（81 行改动）+ agent_panel（31 行改动）— 代理 UI 元件统一打磨
+- auth_card / theme / ws_client / wake_word_listener 小幅调整
+
+前端 · 字体
+- 集成 Noto Sans SC（Regular + Bold），pubspec.yaml 注册字体族
+
+后端加固
+- agent_core.py — Agno API 字段适配 + 异常捕获加固
+- ws_handler.py（142 行改动）— ASR 三种错误细分（识别失败/超时/服务异常）+ text_input 异步化
+- deepseek_client.py — 调用层异常捕获
+- tts_adapter — TTS 按需生成（避免无意义占用）
+- main.py — dotenv 加载，配置外部化
+
+论文 + 素材
+- 毕业设计论文草稿.md 大幅更新（871 行改动）
+- docs/diagrams/ 新增图表素材：IA 图、4 张用户旅程图（+ 合成图）、6 张 wireframe（+ 合成图）、4 张实机截图（+ 合成图）
+- 配套 Python 脚本：render_ia / render_user_journey / screenshot_pages / screenshot_wireframes / combine_*
+
+---
+
 ### 2026-05-11（会话 7）— 前端交互体验全面优化
 
 **`07d9e25` fix: 全页面交互反馈优化 — 48 处可交互元素补齐 ripple + 路由转场统一淡入**

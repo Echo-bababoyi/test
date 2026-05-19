@@ -36,6 +36,12 @@
 | 28 | 长辈版首页交互体验全面优化 | frontend | ✅ |
 | 29 | Tab 标签切换文字位移 bug | frontend | ✅ |
 | 30 | Tab 选中态消失 bug（Ink→Container） | frontend | ✅ |
+| 31 | AgentFab 悬浮助手组件（935 行，可拖动气泡聊天窗） | frontend | ✅ |
+| 32 | 低保真线框图页面（wireframe_page.dart，6 界面，论文插图源） | frontend / PM | ✅ |
+| 33 | 多页面交互重构（草稿箱 / 人脸认证 / 养老金查询 / 长辈底部导航 / 麦克风 / 气泡 / 面板） | frontend | ✅ |
+| 34 | 后端健壮性加固（Agno API 适配 + 全 try/except + ASR 错误细分 + dotenv） | backend | ✅ |
+| 35 | Noto Sans SC 中文字体集成（Regular + Bold） | frontend | ✅ |
+| 36 | 论文草稿 v2.0 + 图表素材（截图 / 线框图 / 用户旅程图 / 信息架构图） | PM | ✅ |
 
 ---
 
@@ -139,3 +145,58 @@
 2. T9 显式补充"场景 4b（医保查询）"
 3. Phase 4 验收表补充医保查询行 + 草稿箱恢复补注演示前置步骤
 4. Phase 4 验收表新增 ASR 识别率底线测试验收项（≥ 80%）
+
+---
+
+### #31–#36 本次会话（2026-05-17，会话 8 — 从 GitHub 同步）
+
+> 用户在外部独立完成 commit `e07f0d8`（4345 行新增 / 872 行删除，63 个文件），本会话仅做事后文档登记。团队成员未参与该次提交。
+
+**#31 AgentFab 悬浮助手组件**
+
+新增 `app/lib/widgets/agent_fab.dart`（935 行），实现右下角可拖动气泡形态聊天窗，内置 WS 连接 + 文本输入 + 语音输入 + 授权卡片渲染。提供独立于底部 Tab 的常驻代理入口，与中央"小浙"按钮形成两条入口并存。完成时间：2026-05-17
+
+**#32 低保真线框图页面（论文插图源）**
+
+新增 `app/lib/pages/wireframe_page.dart`（814 行），覆盖 6 个核心界面线框：长辈首页 / 人脸认证 / 医保缴费 / 代理面板 / 授权卡片 / 操作记录。`router.dart` +6 条线框路由。`docs/diagrams/wireframes/` 下产出 6 张 PNG + `wireframes_combined.png` 合图。作为论文插图直接渲染源（避免另起 Figma/Sketch 工作流）。完成时间：2026-05-17
+
+**#33 多页面交互重构**
+
+涉及多个页面与组件的大幅改写：
+- `drafts_page.dart` 草稿箱（+310 行）
+- `face_auth_page.dart` 人脸认证（±269 行）
+- `pension_query_page.dart` 养老金查询（+364 行）
+- `elder_bottom_nav.dart` 长辈底部导航（-缩减约一半，更适老化）
+- `mic_button.dart` 麦克风按钮重构
+- `agent_bubble.dart` 气泡样式调整 + `agent_panel.dart` 同步更新
+
+完成时间：2026-05-17
+
+**#34 后端健壮性加固**
+
+向真机部署前的稳定性靠拢：
+- `agent_core.py`：Agno API 字段适配（`add_history_to_messages` → `add_history_to_context`），`send` 异常捕获
+- `ws_handler.py`：消息处理重构 — `_dispatch` 全包 try/except、`text_input` 改 `asyncio.create_task` 异步、ASR 三种错误细分、TTS 按需生成
+- `deepseek_client.py`：错误处理加固
+- `main.py`：新增 `dotenv` 加载
+
+完成时间：2026-05-17
+
+**#35 Noto Sans SC 中文字体集成**
+
+新增 `app/fonts/NotoSansSC-Regular.ttf` + `Bold.ttf`，`pubspec.yaml` 注册字体族，统一中文显示效果。完成时间：2026-05-17
+
+**#36 论文草稿 v2.0 + 图表素材**
+
+- `docs/论文草稿.md` ±871 行（v1.0 → v2.0），大幅扩写答辩材料
+- 图表素材：
+  - `docs/diagrams/screenshots/` 4 张页面截图 + `screenshots_combined.png`
+  - `docs/diagrams/brochure_shots/` 4 张组合大图 + `combined.png`
+  - `docs/diagrams/wireframes/` 6 张线框图 + 合图
+  - `docs/diagrams/user_journey-1~4.png` + `user_journey_full.png` + `user_journey.md`
+  - `docs/diagrams/ia_diagram.png` 信息架构图
+- 配套渲染脚本 5 个（`render_ia.py` / `render_user_journey.py` / `screenshot_pages.py` / `screenshot_wireframes.py` / `combine_*.py`）
+
+**注**：部分图表素材已被用户手动删除（与原 commit 相比），不阻塞登记。
+
+完成时间：2026-05-17

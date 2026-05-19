@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../services/auth_state.dart';
 import '../theme/design_tokens.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 import '../widgets/persistent_banner.dart';
 
@@ -79,6 +80,9 @@ class MinePage extends StatelessWidget {
           const Align(
             alignment: Alignment.bottomCenter,
             child: PersistentBanner(),
+          ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.my),
           ),
         ],
       ),

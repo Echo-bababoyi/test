@@ -2,7 +2,11 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/state/app_state.dart';
+import '../core/theme/app_theme.dart';
+import '../theme/design_tokens.dart';
 import '../services/agent_command_executor.dart';
 import '../services/audio_player.dart';
 import '../services/draft_service.dart';
@@ -13,7 +17,6 @@ import '../services/session_state.dart';
 import 'agent_bubble.dart';
 import 'auth_card.dart';
 
-const _kOrange = Color(0xFFFF6D00);
 const _kFabSize = 52.0;
 
 String _generateSessionId() {
@@ -32,15 +35,15 @@ String _generateSessionId() {
 const _kDemoMode = bool.fromEnvironment('DEMO_MODE');
 
 /// 悬浮助手：右下角小图标 + 悬浮气泡聊天窗
-class AgentFab extends StatefulWidget {
+class AgentFab extends ConsumerStatefulWidget {
   final String? currentPath;
   const AgentFab({super.key, this.currentPath});
 
   @override
-  State<AgentFab> createState() => _AgentFabState();
+  ConsumerState<AgentFab> createState() => _AgentFabState();
 }
 
-class _AgentFabState extends State<AgentFab> {
+class _AgentFabState extends ConsumerState<AgentFab> {
   bool _panelOpen = _kDemoMode;
   bool _hasUnread = false;
 
@@ -81,6 +84,10 @@ class _AgentFabState extends State<AgentFab> {
 
   @override
   Widget build(BuildContext context) {
+    final mode = ref.watch(modeProvider);
+    final primary = mode == AppMode.elder
+        ? AppColors.elderPrimary
+        : AppColors.standardPrimary;
     return LayoutBuilder(builder: (context, constraints) {
       final maxW = constraints.maxWidth;
       final maxH = constraints.maxHeight;
@@ -125,6 +132,7 @@ class _AgentFabState extends State<AgentFab> {
                 width: _bubbleW,
                 height: _bubbleH,
                 currentPath: widget.currentPath,
+                primary: primary,
                 onClose: _closePanel,
                 onNewMessage: _onNewMessage,
                 onDragUpdate: (dx, dy) {
@@ -156,7 +164,11 @@ class _AgentFabState extends State<AgentFab> {
                     setState(() => _fabDragging = false);
                     _snapFabToEdge(maxW);
                   },
-                  child: _FabIcon(hasUnread: _hasUnread, hovering: _fabHovering || _fabDragging),
+                  child: _FabIcon(
+                    hasUnread: _hasUnread,
+                    hovering: _fabHovering || _fabDragging,
+                    primary: primary,
+                  ),
                 ),
               ),
             ),
@@ -171,7 +183,12 @@ class _AgentFabState extends State<AgentFab> {
 class _FabIcon extends StatefulWidget {
   final bool hasUnread;
   final bool hovering;
-  const _FabIcon({required this.hasUnread, required this.hovering});
+  final Color primary;
+  const _FabIcon({
+    required this.hasUnread,
+    required this.hovering,
+    required this.primary,
+  });
 
   @override
   State<_FabIcon> createState() => _FabIconState();
@@ -199,11 +216,11 @@ class _FabIconState extends State<_FabIcon> with SingleTickerProviderStateMixin 
         width: _kFabSize,
         height: _kFabSize,
         decoration: BoxDecoration(
-          color: _kOrange,
+          color: widget.primary,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: _kOrange.withValues(alpha: widget.hovering ? 0.5 : 0.3),
+              color: widget.primary.withValues(alpha: widget.hovering ? 0.5 : 0.3),
               blurRadius: widget.hovering ? 16 : 8,
               offset: const Offset(0, 3),
             ),
@@ -215,7 +232,7 @@ class _FabIconState extends State<_FabIcon> with SingleTickerProviderStateMixin 
             // 艺术图标：渐变 + 高光 + 立体"浙"字
             CustomPaint(
               size: const Size(_kFabSize, _kFabSize),
-              painter: _ZhePainter(),
+              painter: _ZhePainter(primary: widget.primary),
             ),
             if (widget.hasUnread)
               Positioned(
@@ -240,7 +257,8 @@ class _FabIconState extends State<_FabIcon> with SingleTickerProviderStateMixin 
 
 /// 绘制渐变背景圆 + 光泽高光 + 白色"浙"字，取代纯色平面文字
 class _ZhePainter extends CustomPainter {
-  const _ZhePainter();
+  final Color primary;
+  const _ZhePainter({required this.primary});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -248,12 +266,16 @@ class _ZhePainter extends CustomPainter {
     final cy = size.height / 2;
     final r = size.width / 2;
 
-    // ── 径向渐变背景（深橙→亮橙，营造立体球感）──────────────────────────────
+    // ── 径向渐变背景（亮→主→深，营造立体球感；颜色随当前模式自适配）─────────
     final bgPaint = Paint()
       ..shader = RadialGradient(
         center: const Alignment(-0.3, -0.4),
         radius: 1.1,
-        colors: const [Color(0xFFFFAA55), Color(0xFFFF6D00), Color(0xFFE55A00)],
+        colors: [
+          Color.lerp(primary, Colors.white, 0.3)!,
+          primary,
+          Color.lerp(primary, Colors.black, 0.1)!,
+        ],
         stops: const [0.0, 0.55, 1.0],
       ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: r));
     canvas.drawCircle(Offset(cx, cy), r, bgPaint);
@@ -312,7 +334,8 @@ class _ZhePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _ZhePainter oldDelegate) =>
+      oldDelegate.primary != primary;
 }
 
 // ─── 气泡聊天窗 ───────────────────────────────────────────────────────────────
@@ -321,6 +344,7 @@ class _BubbleWindow extends StatefulWidget {
   final double width;
   final double height;
   final String? currentPath;
+  final Color primary;
   final VoidCallback onClose;
   final VoidCallback onNewMessage;
   final void Function(double dx, double dy) onDragUpdate;
@@ -329,6 +353,7 @@ class _BubbleWindow extends StatefulWidget {
     required this.width,
     required this.height,
     required this.currentPath,
+    required this.primary,
     required this.onClose,
     required this.onNewMessage,
     required this.onDragUpdate,
@@ -615,7 +640,7 @@ class _BubbleWindowState extends State<_BubbleWindow>
                     offset: const Offset(0, 8),
                   ),
                   BoxShadow(
-                    color: _kOrange.withValues(alpha: 0.08),
+                    color: widget.primary.withValues(alpha: 0.08),
                     blurRadius: 20,
                     offset: const Offset(0, 4),
                   ),
@@ -628,11 +653,14 @@ class _BubbleWindowState extends State<_BubbleWindow>
                     onPanUpdate: (d) => widget.onDragUpdate(d.delta.dx, d.delta.dy),
                     child: Container(
                       height: 52,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Color(0xFFFF8A3C), Color(0xFFFF6D00)],
+                          colors: [
+                            Color.lerp(widget.primary, Colors.white, 0.2)!,
+                            widget.primary,
+                          ],
                         ),
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       child: Row(
@@ -716,7 +744,7 @@ class _BubbleWindowState extends State<_BubbleWindow>
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(20),
-                                borderSide: const BorderSide(color: _kOrange, width: 1.5),
+                                borderSide: BorderSide(color: widget.primary, width: 1.5),
                               ),
                               filled: true,
                               fillColor: Colors.grey.shade50,
@@ -728,7 +756,7 @@ class _BubbleWindowState extends State<_BubbleWindow>
                           onTap: _sendText,
                           child: Container(
                             width: 36, height: 36,
-                            decoration: const BoxDecoration(color: _kOrange, shape: BoxShape.circle),
+                            decoration: BoxDecoration(color: widget.primary, shape: BoxShape.circle),
                             child: const Icon(Icons.send, color: Colors.white, size: 18),
                           ),
                         ),
@@ -791,6 +819,7 @@ class _BubbleWindowState extends State<_BubbleWindow>
       final draft = item['draft'] as Map<String, dynamic>;
       return _DraftCard(
         pageTitle: pageTitle,
+        primary: widget.primary,
         onContinue: () {
           setState(() => _items.removeAt(i));
           final routeMap = {
@@ -819,7 +848,7 @@ class _BubbleWindowState extends State<_BubbleWindow>
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 2, 12, 6),
             child: Row(children: [
-              _ConfirmBtn(label: '对的', primary: true, onTap: () {
+              _ConfirmBtn(label: '对的', isPrimary: true, primary: widget.primary, onTap: () {
                 setState(() { item.remove('showConfirm'); _items.add({'role': 'user', 'text': '对的'}); });
                 _ws.send('user_confirm', {
                   'session_id': _session.sessionId, 'answer': 'yes',
@@ -828,7 +857,7 @@ class _BubbleWindowState extends State<_BubbleWindow>
                 _scrollToBottom();
               }),
               const SizedBox(width: 8),
-              _ConfirmBtn(label: '不是', primary: false, onTap: () {
+              _ConfirmBtn(label: '不是', isPrimary: false, primary: widget.primary, onTap: () {
                 setState(() { item.remove('showConfirm'); _items.add({'role': 'user', 'text': '不是'}); });
                 _ws.send('user_confirm', {
                   'session_id': _session.sessionId, 'answer': 'no',
@@ -847,9 +876,15 @@ class _BubbleWindowState extends State<_BubbleWindow>
 
 class _ConfirmBtn extends StatelessWidget {
   final String label;
-  final bool primary;
+  final bool isPrimary;
+  final Color primary;
   final VoidCallback onTap;
-  const _ConfirmBtn({required this.label, required this.primary, required this.onTap});
+  const _ConfirmBtn({
+    required this.label,
+    required this.isPrimary,
+    required this.primary,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -858,14 +893,14 @@ class _ConfirmBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
         decoration: BoxDecoration(
-          color: primary ? _kOrange : Colors.white,
+          color: isPrimary ? primary : Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: primary ? _kOrange : Colors.grey.shade300),
+          border: Border.all(color: isPrimary ? primary : Colors.grey.shade300),
         ),
         child: Text(label,
             style: TextStyle(
               fontSize: 14, fontWeight: FontWeight.w500,
-              color: primary ? Colors.white : Colors.grey.shade700,
+              color: isPrimary ? Colors.white : Colors.grey.shade700,
             )),
       ),
     );
@@ -876,26 +911,34 @@ class _ConfirmBtn extends StatelessWidget {
 
 class _DraftCard extends StatelessWidget {
   final String pageTitle;
+  final Color primary;
   final VoidCallback onContinue;
   final VoidCallback onDismiss;
-  const _DraftCard({required this.pageTitle, required this.onContinue, required this.onDismiss});
+  const _DraftCard({
+    required this.pageTitle,
+    required this.primary,
+    required this.onContinue,
+    required this.onDismiss,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final tint = Color.lerp(primary, Colors.white, 0.88)!;
+    final border = Color.lerp(primary, Colors.white, 0.55)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF3E0),
+          color: tint,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFFFCC80)),
+          border: Border.all(color: border),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: const [
-            Icon(Icons.edit_note, color: _kOrange, size: 16),
-            SizedBox(width: 4),
-            Text('草稿提醒', style: TextStyle(fontSize: 13, color: _kOrange, fontWeight: FontWeight.w600)),
+          Row(children: [
+            Icon(Icons.edit_note, color: primary, size: 16),
+            const SizedBox(width: 4),
+            Text('草稿提醒', style: TextStyle(fontSize: 13, color: primary, fontWeight: FontWeight.w600)),
           ]),
           const SizedBox(height: 6),
           Text('上次有个未完成的$pageTitle，要继续吗？',
@@ -920,7 +963,7 @@ class _DraftCard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 7),
                 decoration: BoxDecoration(
-                  color: _kOrange,
+                  color: primary,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 alignment: Alignment.center,

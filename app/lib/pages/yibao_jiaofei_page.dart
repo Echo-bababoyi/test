@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../router.dart';
 import '../services/agent_element_registry.dart';
 import '../services/draft_service.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 
 const _kOrange = Color(0xFFFF6D00);
@@ -88,7 +90,9 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
         title: const Text('医保缴费', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
-      body: ListView(
+      body: Stack(
+        children: [
+          ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Container(
@@ -176,6 +180,11 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
             ),
+          ),
+        ],
+      ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.yibaoJiaofei),
           ),
         ],
       ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../router.dart';
 import '../theme/design_tokens.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 import '../services/agent_element_registry.dart';
 
@@ -43,15 +45,22 @@ class _ShebaoJiaonaPageState extends State<ShebaoJiaonaPage> {
           IconButton(icon: const Icon(Icons.more_horiz), onPressed: null),
         ],
       ),
-      body: IndexedStack(
-        index: _sub.index,
+      body: Stack(
         children: [
-          _HomeSubPage(
-            onSelfPay: () => setState(() => _sub = _SubPage.selfPay),
-            onPayRecords: () => setState(() => _sub = _SubPage.payRecords),
+          IndexedStack(
+            index: _sub.index,
+            children: [
+              _HomeSubPage(
+                onSelfPay: () => setState(() => _sub = _SubPage.selfPay),
+                onPayRecords: () => setState(() => _sub = _SubPage.payRecords),
+              ),
+              const _SelfPaySubPage(),
+              const _PayRecordsSubPage(),
+            ],
           ),
-          const _SelfPaySubPage(),
-          const _PayRecordsSubPage(),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.shebaoJiaona),
+          ),
         ],
       ),
       bottomNavigationBar: const ElderBottomNav(currentIndex: 0),

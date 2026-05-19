@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/state/app_state.dart';
 import '../theme/design_tokens.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/persistent_banner.dart';
 import '../widgets/press_scale_wrapper.dart';
 import '../router.dart';
@@ -49,6 +50,9 @@ class StandardHome extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 20),
               child: PersistentBanner(),
             ),
+          ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.home),
           ),
         ],
       ),
