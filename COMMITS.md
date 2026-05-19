@@ -4,6 +4,70 @@
 
 ---
 
+### 2026-05-19（会话 9）— 前端交互全面收尾 + 人脸验证 MediaPipe 真检测
+
+#### 人脸验证真检测（核心）
+
+**`903005b` feat: 人脸验证真检测 — MediaPipe 本地化 + 摄像头 + 状态机 S3-S9**
+- 接入 MediaPipe Tasks Vision FaceLandmarker，**本地化部署零 CDN 依赖**：`app/web/mediapipe/` 含 face_landmarker.task 模型 + wasm + vision_bundle ESM（共 ~7MB）
+- 新增 `app/web/face_detector.js`（IIFE 自启动 JS wrapper，暴露 `window.faceDetector`，返回 hasFace/ear/yaw/cx/cy/w/h/brightness）
+- 新增 `app/lib/services/camera_service.dart`（getUserMedia + VideoElement + platformView 注册）
+- 新增 `app/lib/widgets/camera_view.dart`（HtmlElementView 套壳）
+- 新增 `app/lib/services/face_detector_service.dart`（dart:js poll wait + FaceFrame 数据类）
+- 新增 `app/lib/services/login_page_snackbar.dart`（跨页 SnackBar 队列）
+- 改造 `app/lib/pages/face_auth_page.dart` `_AuthFlow` 完整状态机：
+  - S3 摄像头初始化（8s 超时）+ S4 面部对位（9 种实时纠正：偏左右上下/太近远/光线/已对准）+ S5 眨眼检测（EAR <0.20→>0.25 先睁后闭防误判，3 级文案升级）+ S6 眨眼成功（1s 停顿 + 中央 ✓ 80dp）+ S7 转头检测（yaw ±15° 左右各一次，L0 简洁版"请左右转头"）+ S8 转头成功（1s 停顿）+ S9 全部成功（1.5s 停顿 + 大对勾 160dp 弹性 400ms）
+  - E1 摄像头权限拒绝独立页 + E2 检测超时（20s）退回登录页 + E3 × 主动退出 + E4 模型加载失败
+  - 资源释放（teardown = cancel timers + det.dispose + cam.dispose）覆盖所有出口
+  - `_CornerBracket` 改 StatefulWidget 实现 PM 规范的脉冲呼吸（Tween 0.6→1.0 / 1200ms / easeInOut）
+  - AgentFab 在 authenticating / permissionDenied 全程隐藏
+- index.html 引入 `<script type="module" src="face_detector.js">`
+- LoginPage initState 接入 `LoginPageSnackbar.showIfPending`，显示跨页提示（橙底白字 18sp + 4s + bottom 80）
+- 配套设计文档 `docs/FACE_AUTH_DESIGN.md` v1.0（710 行，PM 出品）
+
+#### 登录页适老化
+
+**`00339cd` fix(login): 恢复登录页适老化改动 — checkbox 交互 + 字号 + 删除装饰区**
+- 从 1da32c0 恢复 login_page.dart：条款勾选交互（_agreed 状态 + 18→44dp 触控扩展 + 勾选后跳过 Terms overlay 直接进 faceAuth）、字号统一 ≥18sp、删除"其他登录方式"+"其他证件"装饰区
+
+**`cfa2e47` revert: 回退全页面适老化整改** + **`1da32c0` feat: 全页面适老化整改 — 字号≥18sp + 触控≥44dp + 登录页交互优化**
+- 1da32c0 整改 14 页 ~110 处字号 + ~20 处 padding，含登录页交互重做
+- cfa2e47 回退主体（其余页面保持原样），只保留 00339cd 中的登录页改动
+
+#### 标准版/长辈版边界收紧
+
+**`001caef` fix(home): 修复标准版底部"我的"Tab 误跳长辈版**
+- standard_home 底部"我的"Tab 原直跳 `/my`（长辈版 MinePage，带 ElderBottomNav），误把标准版用户带入长辈版生态。改为 SnackBar"该功能正在建设中"占位
+- 唯一合法跨版本跳转：Hero 区"长辈版"按钮
+
+**`7294a78` feat: 关闭标准版登录/搜索入口 + 长辈版全页面橙色统一**
+- standard_home 删除"立即登录"横幅 + 搜索条改 SnackBar 占位（标准版仅保留品牌门面）
+- 10 文件清除蓝色残留：login / verify / face_auth / search / search_result / mine / shebao_jiaona / shebao_query / persistent_banner / system_dialog 全部 standardPrimary → elderPrimary（或 lerp 派生）
+- splash + standard_home 保留浙里办原版蓝色作为品牌还原标识
+
+**`6d419ea` feat(mine): 未登录态展示长辈版橙色登录引导**
+- MinePage 改 ConsumerWidget，watch loginProvider 替代 AuthState 单例
+- 未登录时仅显示 `_LoginPrompt`（96 圆形头像 + 引导文字 + 橙色"去登录"胶囊按钮）
+- PersistentBanner 同步用 `if (isLoggedIn)` 条件渲染，避免双登录入口重复
+- _LogoutSection 走 loginProvider.notifier.logout()，保证响应式刷新
+- _MyHeaderSection ConsumerWidget 化，移除死代码"游客"分支
+
+#### AgentFab 全覆盖 + 模式色自适配
+
+**`f8f7b20` feat: AgentFab 全页面覆盖 + 模式色自适配 + AgentPanel 死代码清理**
+- AgentFab 改 ConsumerStatefulWidget，watch modeProvider 自动派生 primary 色（标准版 `#2D74DC` / 长辈版 `#FF6D00`），_FabIcon/_BubbleWindow/_ZhePainter/_ConfirmBtn/_DraftCard 全链路透传 primary
+- 12 个新页面接入 AgentFab（Stack + Positioned.fill 统一模板）：standard_home / login / verify / search / search_result / mine / agent_settings / operation_logs / shebao_jiaona / shebao_query / yibao_jiaofei / yibao_query
+- 删除 664 行 AgentPanel 死代码（无业务挂载，唯一引用为 wireframe 本地草图）
+
+#### 杂项
+
+**`a3a17b1` fix(ws): 客户端地址端口对齐后端 8080**
+- 后端服务端口由 8000 调整为 8080，前端 WsClient._baseUrl 同步更新
+
+**`59e088c` chore: 清理论文图表生成脚本及临时截图素材**
+
+---
+
 ### 2026-05-17（会话 8）— AgentFab 悬浮助手 + 多页面重构 + 后端加固 + 论文素材
 
 **`e07f0d8` feat: session-8 interactive polish, thesis draft, wireframes, user journey diagrams**

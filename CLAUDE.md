@@ -22,7 +22,7 @@
 
 **核心创新点**：**受控响应型智能代理"小浙"**（权限受控 + 行为受控 + 不主动挑事，只在用户有需求时介入）。围绕该代理设计展开适老化交互与多模态交互研究。
 
-**当前阶段**：前端交互体验优化阶段性收尾（2026-05-19）。AgentFab 悬浮助手组件已落地（取代旧版底部代理面板入口）；多页面交互重构完成（drafts / face_auth / pension_query / elder_bottom_nav / mic_button / agent_bubble 已按 v1.1 规范统一）；6 条低保真线框图 wireframe 路由就位，配合论文素材生成；后端 Agno API 字段适配 + 异常捕获 + ASR 三类错误细分 + text_input 异步化 + TTS 按需生成 + dotenv 配置已完成加固。Noto Sans SC 字体集成。主流程可在 localhost 跑通。下一步：N1 麦克风 Web Speech API 接入 → N2 云服务器部署 → N4 真机测试 → N5 Prompt 调优 → N6 答辩准备。技术栈：FastAPI + Agno Agent + DeepSeek-V3 + Web Speech API（ASR）+ Edge TTS。
+**当前阶段**：前端交互体验全面收尾 + 人脸验证真检测落地（2026-05-19，会话 9）。AgentFab 悬浮助手已全页面覆盖（12 页接入 + ConsumerStatefulWidget 监听 modeProvider 自动派生标准蓝 / 长辈橙）+ AgentPanel 664 行死代码清理；标准版定位收紧（关闭"立即登录"横幅 + 搜索条改 SnackBar 占位，仅保留品牌门面）+ 长辈版橙色全 10 文件统一（标准蓝残留全部清除，splash/standard_home 保留浙里办原版蓝色作为品牌还原）；"我的"页面未登录态橙色登录引导（_LoginPrompt + loginProvider 响应式登出）；标准版底部"我的"Tab 误跳长辈版 bug 修复，唯一合法跨版本入口仅 Hero 区"长辈版"按钮；登录页适老化（条款勾选交互 + 字号 ≥18sp + 删除装饰区）；**人脸验证 MediaPipe 真检测全实现**（FaceLandmarker 本地化部署零 CDN 依赖 + 摄像头预览 + EAR 眨眼 + yaw ±15° 转头 + S3-S9 状态机 + E1-E4 异常分支 + 跨页 SnackBar，待真机测试）；后端 Agno API 字段适配 + 异常捕获 + ASR 三类错误细分 + text_input 异步化 + TTS 按需生成 + dotenv 配置加固；WS 客户端端口对齐后端 8080。Noto Sans SC 字体集成。主流程可在 localhost 跑通。下一步：**人脸验证真机测试**（Chrome/Safari/Firefox 摄像头 + EAR/yaw 阈值实测调优）→ 验证码登录流程 → N1 麦克风 Web Speech API → N2 云服务器部署（TLS 反代）→ N4 真机测试 → N5 Prompt 调优 → N6 答辩准备。技术栈：FastAPI + Agno Agent + DeepSeek-V3 + Web Speech API（ASR）+ Edge TTS + MediaPipe Tasks Vision（人脸检测）。
 
 ## 项目结构
 
@@ -50,13 +50,17 @@
 │   └── tests/                 # E2E + HITL 测试
 ├── app/                       # Flutter Web 前端
 │   ├── fonts/                 # Noto Sans SC（Regular + Bold）
+│   ├── web/
+│   │   ├── index.html         # 引入 face_detector.js（MediaPipe ESM 启动）
+│   │   ├── face_detector.js   # MediaPipe FaceLandmarker JS 包装（EAR + yaw + 亮度采样）
+│   │   └── mediapipe/         # 本地化 MediaPipe 资源（face_landmarker.task + wasm + vision_bundle）
 │   ├── lib/
 │   │   ├── main.dart
 │   │   ├── router.dart        # GoRouter 24 条路由（含 6 条 wireframe）
 │   │   ├── theme.dart         # 适老化主题
 │   │   ├── pages/             # 18 个页面（含 wireframe_page）
-│   │   ├── widgets/           # AgentFab 悬浮助手、代理面板/气泡、麦克风、PressScaleWrapper 等
-│   │   └── services/          # WS 客户端、会话状态、草稿箱等
+│   │   ├── widgets/           # AgentFab 悬浮助手、CameraView、代理气泡、麦克风、PressScaleWrapper 等
+│   │   └── services/          # WS 客户端、会话状态、草稿箱、CameraService、FaceDetectorService、LoginPageSnackbar 等
 │   └── pubspec.yaml
 ├── docs/
 │   ├── PRD.md                 # 【权威】产品需求文档（v1.0）
@@ -72,6 +76,7 @@
 │   ├── UI_UX_AUDIT.md         # 适老化审查（工信部规范 + 国际最佳实践）
 │   ├── UI_RESTORE_REQUIREMENTS.md  # UI 还原需求
 │   ├── UI_RESTORE_TECH_PLAN.md     # UI 还原技术方案
+│   ├── FACE_AUTH_DESIGN.md         # 人脸验证流程详细设计（v1.0，S0-S10 + E1-E4 状态机）
 │   ├── 毕业设计论文草稿.md       # 论文初稿（持续更新）
 │   ├── 信息服务APP的适老化设计与多模态交互_开题报告初稿.txt  # 【北极星】开题报告
 │   ├── diagrams/              # 论文图表素材（IA 图、用户旅程图、wireframe、截图脚本）
@@ -95,6 +100,7 @@
 - `docs/USER_JOURNEY_TESTING.md` — 7 场景操作级测试旅程图，E2E 测试输入来源。
 - `docs/UI_UX_AUDIT.md` — 适老化审查报告（工信部规范 + 国际最佳实践）。
 - `docs/UI_RESTORE_REQUIREMENTS.md` / `docs/UI_RESTORE_TECH_PLAN.md` — UI 还原需求与技术方案。
+- `docs/FACE_AUTH_DESIGN.md` — **人脸验证流程详细设计**（v1.0，710 行）。S0-S10 状态机 + E1-E4 异常分支 + 文案规范 + 视觉规范 + 时长汇总。MediaPipe 真检测实施依据。
 - `docs/毕业设计论文草稿.md` — **论文初稿**（持续更新，配 `docs/diagrams/` 图表素材）。
 - `docs/diagrams/` — 论文图表素材（IA 图、用户旅程图、wireframe、截图脚本）。
 - `docs/信息服务APP的适老化设计与多模态交互_开题报告初稿.txt` — **论文北极星**。

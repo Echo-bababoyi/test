@@ -42,6 +42,13 @@
 | 34 | 后端健壮性加固（Agno API 适配 + 全 try/except + ASR 错误细分 + dotenv） | backend | ✅ |
 | 35 | Noto Sans SC 中文字体集成（Regular + Bold） | frontend | ✅ |
 | 36 | 论文草稿 v2.0 + 图表素材（截图 / 线框图 / 用户旅程图 / 信息架构图） | PM | ✅ |
+| 37 | 人脸验证真机测试（MediaPipe 眨眼+转头检测可靠性验证） | reviewer | 🧪 |
+| 38 | AgentFab 全页面覆盖（12 页）+ 颜色自适配 modeProvider + AgentPanel 退役（删 664 行死代码） | frontend | ✅ |
+| 39 | 关闭标准版登录/搜索入口 + 长辈版全页面橙色统一（10 文件 ~50 处） | frontend | ✅ |
+| 40 | "我的"页面未登录态展示长辈版橙色登录引导（loginProvider watch + _LoginPrompt） | frontend | ✅ |
+| 41 | 标准版底部"我的"Tab 误跳长辈版修复（1 行） | frontend | ✅ |
+| 42 | 登录页交互优化（条款 checkbox 勾选 + 跳过条款浮层 + 字号适老化 + 删装饰区） | frontend / PM | ✅ |
+| 43 | 人脸验证 MediaPipe 真检测实现（本地化资源 + 摄像头接入 + 状态机 S0-S9 + 异常 E1-E4 + FACE_AUTH_DESIGN.md v1.0） | frontend / PM | ✅ |
 
 ---
 
@@ -200,3 +207,23 @@
 **注**：部分图表素材已被用户手动删除（与原 commit 相比），不阻塞登记。
 
 完成时间：2026-05-17
+
+### #37 人脸验证真机测试（MediaPipe 眨眼+转头检测可靠性验证）
+
+**背景**：commit `903005b` 实现了基于 MediaPipe FaceLandmarker 的人脸姿态检测（本地化部署，零 CDN 依赖）。代码层 review 已通过，但未经真机摄像头测试。
+
+**测试项**：
+1. 摄像头能正常打开并显示实时画面（S3→S4 转场正常）
+2. 面部对位 9 种实时纠正提示方向是否正确（镜像后左右是否符合直觉）
+3. 眨眼检测灵敏度：正常眨眼能触发、持续闭眼不误触（EAR 阈值 0.20/0.25）
+4. 转头检测灵敏度：左右转头各 ±15° 能触发，老年人幅度小是否够用
+5. 超时 20 秒退回登录页 + SnackBar 正常显示
+6. 成功停顿（S6 1秒 / S8 1秒 / S9 1.5秒）节奏感是否合适
+7. × 退出在所有状态都可用
+8. 摄像头资源释放：退出/成功后浏览器 tab 摄像头指示灯是否关闭
+9. Chrome / Safari / Firefox 跨浏览器兼容性
+10. 阈值调优记录（如需调整 EAR / yaw 阈值，记录最终值）
+
+**设计文档**：`docs/FACE_AUTH_DESIGN.md` v1.0
+
+**依赖**：需要有摄像头的设备 + HTTPS 或 localhost 环境
