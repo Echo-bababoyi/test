@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/state/app_state.dart';
 import '../router.dart';
-import '../services/auth_state.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 import '../widgets/persistent_banner.dart';
+import '../widgets/press_scale_wrapper.dart';
 
-class MinePage extends StatelessWidget {
+class MinePage extends ConsumerWidget {
   const MinePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final authState = AuthState.instance;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isLoggedIn = ref.watch(loginProvider).isLoggedIn;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -58,29 +60,32 @@ class MinePage extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 80),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _MyHeaderSection(authState: authState),
-                const _MyActivitySection(),
-                const SizedBox(height: Spacing.sm),
-                const _MyCertSection(),
-                _MyInfoSection(),
-                const SizedBox(height: Spacing.sm),
-                const _MyManagementSection(),
-                const SizedBox(height: Spacing.sm),
-                const _MyRecommendSection(),
-                const _MySettingsSection(),
-                if (authState.isLoggedIn) _LogoutSection(),
-              ],
+          isLoggedIn
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.only(bottom: 80),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const _MyHeaderSection(),
+                      const _MyActivitySection(),
+                      const SizedBox(height: Spacing.sm),
+                      const _MyCertSection(),
+                      _MyInfoSection(),
+                      const SizedBox(height: Spacing.sm),
+                      const _MyManagementSection(),
+                      const SizedBox(height: Spacing.sm),
+                      const _MyRecommendSection(),
+                      const _MySettingsSection(),
+                      _LogoutSection(),
+                    ],
+                  ),
+                )
+              : const _LoginPrompt(),
+          if (isLoggedIn)
+            const Align(
+              alignment: Alignment.bottomCenter,
+              child: PersistentBanner(),
             ),
-          ),
-          const Align(
-            alignment: Alignment.bottomCenter,
-            child: PersistentBanner(),
-          ),
           const Positioned.fill(
             child: AgentFab(currentPath: AppRoutes.my),
           ),
@@ -91,14 +96,82 @@ class MinePage extends StatelessWidget {
   }
 }
 
-// ─── 头部用户卡 ───────────────────────────────────────────────────────────────
+// ─── 未登录引导（长辈版橙色风格）──────────────────────────────────────────────
 
-class _MyHeaderSection extends StatelessWidget {
-  final AuthState authState;
-  const _MyHeaderSection({required this.authState});
+class _LoginPrompt extends StatelessWidget {
+  const _LoginPrompt();
 
   @override
   Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 96,
+            height: 96,
+            decoration: BoxDecoration(
+              color: AppColors.elderPrimary.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.person_outline,
+                size: 56, color: AppColors.elderPrimary),
+          ),
+          const SizedBox(height: Spacing.lg),
+          const Text(
+            '您还未登录',
+            style: TextStyle(
+              fontSize: AppFontSize.elderTitle,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: Spacing.sm),
+          const Text(
+            '登录后查看您的个人信息和服务',
+            style: TextStyle(
+              fontSize: AppFontSize.elderBody,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: Spacing.xl),
+          PressScaleWrapper(
+            pressedScale: 0.96,
+            onTap: () => context.go(AppRoutes.login),
+            borderRadius: BorderRadius.circular(28),
+            builder: (pressed) => Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 48, vertical: 14),
+              decoration: BoxDecoration(
+                color: pressed
+                    ? Color.lerp(AppColors.elderPrimary, Colors.black, 0.15)!
+                    : AppColors.elderPrimary,
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: const Text(
+                '去登录',
+                style: TextStyle(
+                  fontSize: AppFontSize.elderBody,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── 头部用户卡 ───────────────────────────────────────────────────────────────
+
+class _MyHeaderSection extends ConsumerWidget {
+  const _MyHeaderSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userName = ref.watch(loginProvider).userName ?? '*宇澄';
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.all(Spacing.lg),
@@ -132,9 +205,7 @@ class _MyHeaderSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  authState.isLoggedIn
-                      ? (authState.userName ?? '*宇澄')
-                      : '游客',
+                  userName,
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.w600),
                 ),
@@ -766,9 +837,9 @@ class _MySettingsSection extends StatelessWidget {
 
 // ─── 退出登录 ─────────────────────────────────────────────────────────────────
 
-class _LogoutSection extends StatelessWidget {
+class _LogoutSection extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(
           horizontal: Spacing.lg, vertical: Spacing.lg),
@@ -776,7 +847,7 @@ class _LogoutSection extends StatelessWidget {
         height: 52,
         child: OutlinedButton(
           onPressed: () {
-            AuthState.instance.logout();
+            ref.read(loginProvider.notifier).logout();
             context.go(AppRoutes.elderHome);
           },
           style: OutlinedButton.styleFrom(
