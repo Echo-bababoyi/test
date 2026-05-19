@@ -151,7 +151,7 @@ class _SearchBar extends StatelessWidget {
               children: [
                 Text(
                   '西湖区',
-                  style: TextStyle(fontSize: 18, color: AppColors.textPrimary),
+                  style: TextStyle(fontSize: AppFontSize.body, color: AppColors.textPrimary),
                 ),
                 Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textPrimary),
               ],
@@ -170,7 +170,7 @@ class _SearchBar extends StatelessWidget {
                 autofocus: true,
                 textInputAction: TextInputAction.search,
                 onSubmitted: onSubmit,
-                style: const TextStyle(fontSize: 20),
+                style: const TextStyle(fontSize: 15),
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
@@ -203,7 +203,7 @@ class _SearchBar extends StatelessWidget {
             ),
             child: const Text(
               '取消',
-              style: TextStyle(fontSize: 20, color: AppColors.elderPrimary),
+              style: TextStyle(fontSize: 15, color: AppColors.elderPrimary),
             ),
           ),
         ],
@@ -292,7 +292,7 @@ class _DefaultBody extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-                child: const Text('清空', style: TextStyle(fontSize: 18)),
+                child: const Text('清空', style: TextStyle(fontSize: AppFontSize.caption)),
               ),
             ],
           ),
@@ -367,7 +367,7 @@ class _QuickItem extends StatelessWidget {
             const SizedBox(width: Spacing.sm),
             Text(
               label,
-              style: const TextStyle(fontSize: 18, color: AppColors.textPrimary),
+              style: const TextStyle(fontSize: AppFontSize.body, color: AppColors.textPrimary),
             ),
           ],
         ),
@@ -389,8 +389,8 @@ class _RecentPill extends StatelessWidget {
         onTap: () {},
         borderRadius: BorderRadius.circular(20),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: 12),
-          child: Text(label, style: const TextStyle(fontSize: 18)),
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.sm),
+          child: Text(label, style: const TextStyle(fontSize: AppFontSize.body)),
         ),
       ),
     );
@@ -410,8 +410,8 @@ class _RecommendPill extends StatelessWidget {
         onTap: () {},
         borderRadius: BorderRadius.circular(20),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: 12),
-          child: Text(label, style: const TextStyle(fontSize: 16)),
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm),
+          child: Text(label, style: const TextStyle(fontSize: AppFontSize.caption)),
         ),
       ),
     );
@@ -440,7 +440,7 @@ class _MicPermissionContent extends StatelessWidget {
         const SizedBox(height: Spacing.md),
         const Text(
           '开启麦克风权限，浙里办可以为您提供通过麦克风实现语音搜索等功能',
-          style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: AppFontSize.body, color: AppColors.textSecondary),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: Spacing.xl),
@@ -530,14 +530,14 @@ class _VoiceInputContentState extends State<_VoiceInputContent> {
           const Text(
             '公积金查询、社保查询、预防接种',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: AppFontSize.bodyLarge,
               color: AppColors.textPrimary,
             ),
           ),
         const SizedBox(height: Spacing.xl),
         const Text(
           '按住话筒说话',
-          style: TextStyle(fontSize: 18, color: micColor),
+          style: TextStyle(fontSize: AppFontSize.body, color: micColor),
         ),
         const SizedBox(height: Spacing.md),
         Material(

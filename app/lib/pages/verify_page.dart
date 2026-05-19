@@ -138,7 +138,7 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
             const SizedBox(height: Spacing.sm),
             const Text(
               '输入手机号并获取验证码完成登录',
-              style: TextStyle(fontSize: AppFontSize.elderBody, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: AppFontSize.body, color: AppColors.textSecondary),
             ),
             const SizedBox(height: Spacing.xl),
             // 输入卡片
@@ -169,7 +169,7 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
                       padding: EdgeInsets.only(top: 6),
                       child: Text(
                         '请输入11位手机号（首位为1）',
-                        style: TextStyle(fontSize: 18, color: Color(0xFFFF3B30)),
+                        style: TextStyle(fontSize: AppFontSize.caption, color: Color(0xFFFF3B30)),
                       ),
                     ),
                   const SizedBox(height: Spacing.lg),
@@ -205,7 +205,7 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
                           ),
                           child: Text(
                             _countdown > 0 ? '${_countdown}s 后重发' : '发送',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                            style: const TextStyle(fontSize: AppFontSize.bodyLarge, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
@@ -220,7 +220,7 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
                       const SizedBox(width: 4),
                       Text(
                         _countdown > 0 ? '重新发送 $_countdown秒' : '点击"发送"获取验证码',
-                        style: const TextStyle(fontSize: 18, color: AppColors.textSecondary),
+                        style: const TextStyle(fontSize: AppFontSize.body, color: AppColors.textSecondary),
                       ),
                     ],
                   ),
@@ -235,12 +235,12 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.elderPrimary,
                 disabledBackgroundColor: Colors.grey.shade300,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.xlarge),
                 ),
               ),
-              child: const Text('确认', style: TextStyle(fontSize: 20)),
+              child: const Text('确认', style: TextStyle(fontSize: 18)),
             ),
           ],
         ),

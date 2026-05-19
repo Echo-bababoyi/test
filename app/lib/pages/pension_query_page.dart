@@ -73,7 +73,7 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
                   const Center(
                     child: Text(
                       '点击查询获取本月养老金发放详情',
-                      style: TextStyle(fontSize: 18, color: Color(0xFF999999)),
+                      style: TextStyle(fontSize: 14, color: Color(0xFF999999)),
                     ),
                   ),
                 ],
@@ -118,7 +118,7 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
         const SizedBox(height: 16),
         const Text(
           '查询您的养老金发放情况',
-          style: TextStyle(fontSize: 20, color: Color(0xFF666666), fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: 17, color: Color(0xFF666666), fontWeight: FontWeight.w500),
         ),
       ],
     );
@@ -126,7 +126,7 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
 
   Widget _buildMonthSelector() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
@@ -193,21 +193,21 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
-              Text('个人基本信息', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)),
+              Text('个人基本信息', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
               SizedBox(height: 14),
               Row(
                 children: [
-                  Text('姓名', style: TextStyle(fontSize: 18, color: Colors.white70)),
+                  Text('姓名', style: TextStyle(fontSize: 15, color: Colors.white70)),
                   Spacer(),
-                  Text('*宇澄', style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.w600)),
+                  Text('*宇澄', style: TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
                 ],
               ),
               SizedBox(height: 10),
               Row(
                 children: [
-                  Text('证件号码', style: TextStyle(fontSize: 18, color: Colors.white70)),
+                  Text('证件号码', style: TextStyle(fontSize: 15, color: Colors.white70)),
                   Spacer(),
-                  Text('3****************3', style: TextStyle(fontSize: 18, color: Colors.white)),
+                  Text('3****************3', style: TextStyle(fontSize: 14, color: Colors.white)),
                 ],
               ),
             ],
@@ -229,7 +229,7 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
                   bottomRight: Radius.circular(6),
                 ),
               ),
-              child: const Text('已认证', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+              child: const Text('已认证', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
             ),
           ),
         ],
@@ -253,7 +253,7 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
         children: [
           const Text('本月养老金', style: TextStyle(fontSize: 18, color: Color(0xFF999999))),
           const SizedBox(height: 4),
-          Text(_selectedMonth, style: const TextStyle(fontSize: 18, color: Color(0xFF999999))),
+          Text(_selectedMonth, style: const TextStyle(fontSize: 14, color: Color(0xFF999999))),
           const SizedBox(height: 16),
           const Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -275,7 +275,7 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
               color: const Color(0xFFE8F5E9),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: const Text('参保状态：正常', style: TextStyle(fontSize: 18, color: Color(0xFF4CAF50))),
+            child: const Text('参保状态：正常', style: TextStyle(fontSize: 14, color: Color(0xFF4CAF50))),
           ),
           const Divider(color: Color(0xFFEEEEEE), height: 32),
           _buildDetailRow('发放日期', '2026年5月15日'),
@@ -295,9 +295,9 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
           decoration: const BoxDecoration(color: _kOrange, shape: BoxShape.circle),
         ),
         const SizedBox(width: 10),
-        Text(label, style: const TextStyle(fontSize: 18, color: Color(0xFF999999))),
+        Text(label, style: const TextStyle(fontSize: 14, color: Color(0xFF999999))),
         const Spacer(),
-        Text(value, style: const TextStyle(fontSize: 18, color: Color(0xFF333333), fontWeight: FontWeight.w500)),
+        Text(value, style: const TextStyle(fontSize: 14, color: Color(0xFF333333), fontWeight: FontWeight.w500)),
       ],
     );
   }

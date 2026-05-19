@@ -20,7 +20,7 @@ class ShebaoQueryPage extends StatelessWidget {
         leading: BackButton(onPressed: () => context.pop()),
         title: const Text(
           '社保查询',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         actions: [
           IconButton(
@@ -56,7 +56,7 @@ class ShebaoQueryPage extends StatelessWidget {
                       Text(
                         '个人基本信息',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
                         ),
@@ -65,12 +65,12 @@ class ShebaoQueryPage extends StatelessWidget {
                       Row(
                         children: [
                           Text('姓名',
-                              style: TextStyle(fontSize: 18, color: Colors.white70)),
+                              style: TextStyle(fontSize: 14, color: Colors.white70)),
                           Spacer(),
                           Text(
                             '*宇澄',
                             style: TextStyle(
-                              fontSize: 20,
+                              fontSize: 14,
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
                             ),
@@ -81,11 +81,11 @@ class ShebaoQueryPage extends StatelessWidget {
                       Row(
                         children: [
                           Text('证件号码',
-                              style: TextStyle(fontSize: 18, color: Colors.white70)),
+                              style: TextStyle(fontSize: 14, color: Colors.white70)),
                           Spacer(),
                           Text(
                             '3****************3',
-                            style: TextStyle(fontSize: 18, color: Colors.white),
+                            style: TextStyle(fontSize: 13, color: Colors.white),
                           ),
                         ],
                       ),
@@ -123,7 +123,7 @@ class ShebaoQueryPage extends StatelessWidget {
                   const SizedBox(width: Spacing.sm),
                   const Text(
                     '险种信息',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
@@ -209,7 +209,7 @@ class _InsuranceCard extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
@@ -225,16 +225,16 @@ class _InsuranceCard extends StatelessWidget {
                 ),
                 const SizedBox(width: Spacing.sm),
                 const Icon(Icons.location_on_outlined, color: Colors.white70, size: 16),
-                const Text('-', style: TextStyle(color: Colors.white70, fontSize: 18)),
+                const Text('-', style: TextStyle(color: Colors.white70, fontSize: 13)),
               ],
             ),
           ),
           // 参保状态
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: Spacing.md, vertical: 14),
+            padding: EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm),
             child: Text(
               '参保状态：未在浙江省内参保',
-              style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
             ),
           ),
           const Divider(height: 1),
@@ -246,14 +246,14 @@ class _InsuranceCard extends StatelessWidget {
                   child: TextButton(
                     key: basicInfoKey,
                     onPressed: onBasicInfoTap,
-                    child: const Text('基本信息', style: TextStyle(fontSize: 20)),
+                    child: const Text('基本信息', style: TextStyle(fontSize: 14)),
                   ),
                 ),
                 const VerticalDivider(width: 1, indent: 8, endIndent: 8),
                 Expanded(
                   child: TextButton(
                     onPressed: null,
-                    child: const Text('缴费信息', style: TextStyle(fontSize: 20)),
+                    child: const Text('缴费信息', style: TextStyle(fontSize: 14)),
                   ),
                 ),
               ],

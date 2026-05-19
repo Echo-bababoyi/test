@@ -93,21 +93,21 @@ class _YibaoQueryPageState extends State<YibaoQueryPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
-                        Text('医保账户信息', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
+                        Text('医保账户信息', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
                         SizedBox(height: 12),
                         Row(
                           children: [
-                            Text('姓名', style: TextStyle(fontSize: 18, color: Colors.white70)),
+                            Text('姓名', style: TextStyle(fontSize: 15, color: Colors.white70)),
                             Spacer(),
-                            Text('*宇澄', style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.w600)),
+                            Text('*宇澄', style: TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
                           ],
                         ),
                         SizedBox(height: 8),
                         Row(
                           children: [
-                            Text('证件号码', style: TextStyle(fontSize: 18, color: Colors.white70)),
+                            Text('证件号码', style: TextStyle(fontSize: 15, color: Colors.white70)),
                             Spacer(),
-                            Text('3****************3', style: TextStyle(fontSize: 18, color: Colors.white)),
+                            Text('3****************3', style: TextStyle(fontSize: 14, color: Colors.white)),
                           ],
                         ),
                       ],
@@ -143,7 +143,7 @@ class _YibaoQueryPageState extends State<YibaoQueryPage> {
                       children: const [
                         Icon(Icons.check_circle, color: Color(0xFF4CAF50), size: 18),
                         SizedBox(width: 6),
-                        Text('状态：正常', style: TextStyle(fontSize: 20, color: Color(0xFF4CAF50))),
+                        Text('状态：正常', style: TextStyle(fontSize: 16, color: Color(0xFF4CAF50))),
                       ],
                     ),
                     const SizedBox(height: 16),

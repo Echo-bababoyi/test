@@ -16,7 +16,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _phoneController = TextEditingController();
   final _loginBtnKey = AgentElementRegistry.register('btn_login');
-  bool _agreed = false;
 
   @override
   void dispose() {
@@ -98,7 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                     const Text(
                       '手机号/用户名/身份证',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: AppFontSize.body,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
@@ -140,29 +139,15 @@ class _LoginPageState extends State<LoginPage> {
                           color: Colors.transparent,
                           shape: const CircleBorder(),
                           child: InkWell(
-                            onTap: () => setState(() => _agreed = !_agreed),
+                            onTap: () {},
                             customBorder: const CircleBorder(),
-                            child: SizedBox(
-                              width: 44,
-                              height: 44,
-                              child: Center(
-                                child: Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: _agreed ? AppColors.elderPrimary : null,
-                                    border: Border.all(
-                                      color: _agreed
-                                          ? AppColors.elderPrimary
-                                          : Colors.grey.shade400,
-                                    ),
-                                  ),
-                                  child: _agreed
-                                      ? const Icon(Icons.check,
-                                          size: 18, color: Colors.white)
-                                      : null,
-                                ),
+                            child: Container(
+                              width: 18,
+                              height: 18,
+                              margin: const EdgeInsets.only(top: 1),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.grey.shade400),
                               ),
                             ),
                           ),
@@ -172,7 +157,7 @@ class _LoginPageState extends State<LoginPage> {
                           child: RichText(
                             text: const TextSpan(
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: AppFontSize.small,
                                 color: AppColors.textSecondary,
                               ),
                               children: [
@@ -196,23 +181,17 @@ class _LoginPageState extends State<LoginPage> {
                     // 登录按钮（始终可点击，R7 处理）
                     FilledButton(
                       key: _loginBtnKey,
-                      onPressed: () {
-                        if (_agreed) {
-                          context.push(AppRoutes.faceAuth);
-                        } else {
-                          _showTermsOverlay(context);
-                        }
-                      },
+                      onPressed: () => _showTermsOverlay(context),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.elderPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.xlarge),
                         ),
                       ),
                       child: const Text(
                         '登录',
-                        style: TextStyle(fontSize: 20, color: Colors.white),
+                        style: TextStyle(fontSize: 18, color: Colors.white),
                       ),
                     ),
                     const SizedBox(height: Spacing.md),
@@ -222,33 +201,46 @@ class _LoginPageState extends State<LoginPage> {
                         InkWell(
                           onTap: () {},
                           borderRadius: BorderRadius.circular(4),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-                            child: Text('新用户注册',
-                                style: TextStyle(fontSize: 18, color: AppColors.textSecondary)),
-                          ),
+                          child: const Text('新用户注册',
+                              style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
                         ),
                         const SizedBox(width: Spacing.md),
                         InkWell(
                           onTap: () {},
                           borderRadius: BorderRadius.circular(4),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-                            child: Text('忘记密码',
-                                style: TextStyle(fontSize: 18, color: AppColors.textSecondary)),
-                          ),
+                          child: const Text('忘记密码',
+                              style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
                         ),
                         const Spacer(),
                         InkWell(
                           onTap: () {},
                           borderRadius: BorderRadius.circular(4),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-                            child: Text('登录遇到问题?',
-                                style: TextStyle(fontSize: 18, color: AppColors.textSecondary)),
-                          ),
+                          child: const Text('登录遇到问题?',
+                              style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: Spacing.lg),
+                    // 其他登录方式分割线
+                    const Row(
+                      children: [
+                        Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: Spacing.sm),
+                          child: Text(
+                            '其他登录方式',
+                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                        ),
+                        Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: Spacing.md),
+                    const Center(
+                      child: Text(
+                        '其他证件',
+                        style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                      ),
                     ),
                     const SizedBox(height: Spacing.lg),
                   ],
@@ -296,14 +288,14 @@ class _LoginTab extends StatelessWidget {
       splashColor: AppColors.elderPrimary.withValues(alpha: 0.15),
       highlightColor: Colors.transparent,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               label,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 15,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                 color: selected ? AppColors.elderPrimary : AppColors.textSecondary,
               ),
@@ -340,14 +332,14 @@ class _TermsOverlayContent extends StatelessWidget {
       children: [
         const Text(
           '请阅读并同意以下条款',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: Spacing.lg),
         RichText(
           text: const TextSpan(
             style: TextStyle(
-              fontSize: 18,
+              fontSize: AppFontSize.body,
               color: AppColors.textPrimary,
               height: 1.5,
             ),
@@ -375,12 +367,12 @@ class _TermsOverlayContent extends StatelessWidget {
                   backgroundColor: Colors.grey.shade200,
                   foregroundColor: AppColors.elderPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: Spacing.md),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.xlarge),
                   ),
                 ),
-                child: const Text('不同意', style: TextStyle(fontSize: 20)),
+                child: const Text('不同意'),
               ),
             ),
             const SizedBox(width: Spacing.md),
@@ -389,12 +381,12 @@ class _TermsOverlayContent extends StatelessWidget {
                 onPressed: onAgree,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.elderPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: Spacing.md),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.xlarge),
                   ),
                 ),
-                child: const Text('同意并继续', style: TextStyle(fontSize: 20)),
+                child: const Text('同意并继续'),
               ),
             ),
           ],

@@ -205,7 +205,7 @@ class _TimelineItem extends StatelessWidget {
                                 children: [
                                   Text(sceneName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF333333))),
                                   const SizedBox(height: 2),
-                                  Text(timeStr, style: const TextStyle(fontSize: 16, color: Color(0xFF999999))),
+                                  Text(timeStr, style: const TextStyle(fontSize: 13, color: Color(0xFF999999))),
                                 ],
                               ),
                             ),
@@ -223,7 +223,7 @@ class _TimelineItem extends StatelessWidget {
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
                           child: Text(
                             summary,
-                            style: const TextStyle(fontSize: 18, color: Color(0xFF666666)),
+                            style: const TextStyle(fontSize: 15, color: Color(0xFF666666)),
                             maxLines: isExpanded ? null : 2,
                             overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
                           ),
@@ -235,7 +235,7 @@ class _TimelineItem extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('操作明细', style: TextStyle(fontSize: 16, color: Color(0xFF999999), fontWeight: FontWeight.w500)),
+                              const Text('操作明细', style: TextStyle(fontSize: 13, color: Color(0xFF999999), fontWeight: FontWeight.w500)),
                               const SizedBox(height: 8),
                               ...steps.map((s) {
                                 final step = Map<String, dynamic>.from(s as Map);
@@ -258,9 +258,9 @@ class _TimelineItem extends StatelessWidget {
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text(action, style: const TextStyle(fontSize: 18, color: Color(0xFF333333))),
+                                            Text(action, style: const TextStyle(fontSize: 15, color: Color(0xFF333333))),
                                             if (details.isNotEmpty)
-                                              Text(details, style: const TextStyle(fontSize: 16, color: Color(0xFF999999))),
+                                              Text(details, style: const TextStyle(fontSize: 13, color: Color(0xFF999999))),
                                           ],
                                         ),
                                       ),
