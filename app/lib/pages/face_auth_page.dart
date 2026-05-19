@@ -196,7 +196,7 @@ class _DefaultView extends StatelessWidget {
                   child: Column(
                     children: [
                       const Text(
-                        '**澄',
+                        '**明',
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: Spacing.lg),

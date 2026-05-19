@@ -564,7 +564,7 @@ class _WF5FaceAuth extends StatelessWidget {
                         ),
                         child: Column(
                           children: [
-                            const _WFText('**澄', size: 14),
+                            const _WFText('**明', size: 14),
                             const SizedBox(height: 16),
                             // 人脸扫描框
                             Container(

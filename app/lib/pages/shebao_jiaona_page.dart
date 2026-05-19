@@ -307,7 +307,7 @@ class _SelfPaySubPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '*宇澄',
+                          '*小明',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

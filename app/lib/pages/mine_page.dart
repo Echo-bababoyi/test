@@ -171,7 +171,7 @@ class _MyHeaderSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userName = ref.watch(loginProvider).userName ?? '*宇澄';
+    final userName = ref.watch(loginProvider).userName ?? '*小明';
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.all(Spacing.lg),

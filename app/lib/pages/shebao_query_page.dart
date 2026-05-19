@@ -12,51 +12,50 @@ class ShebaoQueryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.elderPrimary,
+        foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         leading: BackButton(onPressed: () => context.pop()),
         title: const Text(
           '社保查询',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => context.pop(),
-          ),
-          IconButton(icon: const Icon(Icons.more_horiz), onPressed: null),
-        ],
       ),
       body: Stack(
         children: [
           SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 个人基本信息卡（蓝色渐变）
-            Container(
-              margin: const EdgeInsets.all(Spacing.lg),
-              padding: const EdgeInsets.all(Spacing.lg),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6EA8E8), Color(0xFF4A7FD4)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(AppRadius.large),
-              ),
-              child: Stack(
-                children: [
-                  Column(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 个人基本信息卡（橙色渐变）
+                Container(
+                  margin: const EdgeInsets.all(Spacing.lg),
+                  padding: const EdgeInsets.all(Spacing.lg),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFF9A3C), Color(0xFFFF6D00)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(AppRadius.large),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x33FF6D00),
+                        blurRadius: 16,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
                       Text(
                         '个人基本信息',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
                         ),
@@ -65,12 +64,12 @@ class ShebaoQueryPage extends StatelessWidget {
                       Row(
                         children: [
                           Text('姓名',
-                              style: TextStyle(fontSize: 14, color: Colors.white70)),
+                              style: TextStyle(fontSize: 16, color: Colors.white70)),
                           Spacer(),
                           Text(
-                            '*宇澄',
+                            '*小明',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 16,
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
                             ),
@@ -81,72 +80,69 @@ class ShebaoQueryPage extends StatelessWidget {
                       Row(
                         children: [
                           Text('证件号码',
-                              style: TextStyle(fontSize: 14, color: Colors.white70)),
+                              style: TextStyle(fontSize: 16, color: Colors.white70)),
                           Spacer(),
                           Text(
                             '3****************3',
-                            style: TextStyle(fontSize: 13, color: Colors.white),
+                            style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                         ],
                       ),
                     ],
                   ),
-                  // SI 水印字
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Text(
-                      'SI',
-                      style: TextStyle(
-                        fontSize: 56,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white.withValues(alpha: 0.15),
+                ),
+                // 险种信息白板块
+                Container(
+                  margin: const EdgeInsets.only(top: Spacing.md),
+                  padding: const EdgeInsets.all(Spacing.lg),
+                  color: AppColors.surface,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 24,
+                            color: AppColors.elderPrimary,
+                          ),
+                          const SizedBox(width: Spacing.sm),
+                          const Text(
+                            '险种信息',
+                            style: TextStyle(
+                              fontSize: AppFontSize.elderTitle,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                      const SizedBox(height: Spacing.md),
+                      _InsuranceCard(
+                        title: '企业职工基本养老保险',
+                        icon: Icons.person_outline,
+                        status: '正常参保',
+                        basicInfoKey: AgentElementRegistry.register(
+                            'btn_yanglao_jibenxinxi'),
+                        onBasicInfoTap: () =>
+                            context.push(AppRoutes.pensionQuery),
+                      ),
+                      const _InsuranceCard(
+                        title: '失业保险',
+                        icon: Icons.shield_outlined,
+                        status: '正常参保',
+                      ),
+                      const _InsuranceCard(
+                        title: '工伤保险',
+                        icon: Icons.personal_injury_outlined,
+                        status: '正常参保',
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: Spacing.xl),
+              ],
             ),
-            // 险种信息标题
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.lg,
-                vertical: Spacing.sm,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 18,
-                    color: AppColors.elderPrimary,
-                  ),
-                  const SizedBox(width: Spacing.sm),
-                  const Text(
-                    '险种信息',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-            ),
-            // 险种卡列表：养老保险卡传入「基本信息」key 和 onTap
-            _InsuranceCard(
-              title: '企业职工基本养老保险',
-              icon: Icons.person_outline,
-              basicInfoKey: AgentElementRegistry.register('btn_yanglao_jibenxinxi'),
-              onBasicInfoTap: () => context.push(AppRoutes.pensionQuery),
-            ),
-            const _InsuranceCard(
-              title: '失业保险',
-              icon: Icons.shield_outlined,
-            ),
-            const _InsuranceCard(
-              title: '工伤保险',
-              icon: Icons.personal_injury_outlined,
-            ),
-            const SizedBox(height: Spacing.xl),
-          ],
-        ),
-      ),
+          ),
           const Positioned.fill(
             child: AgentFab(currentPath: AppRoutes.shebaoQuery),
           ),
@@ -162,12 +158,14 @@ class ShebaoQueryPage extends StatelessWidget {
 class _InsuranceCard extends StatelessWidget {
   final String title;
   final IconData icon;
+  final String status;
   final Key? basicInfoKey;
   final VoidCallback? onBasicInfoTap;
 
   const _InsuranceCard({
     required this.title,
     required this.icon,
+    required this.status,
     this.basicInfoKey,
     this.onBasicInfoTap,
   });
@@ -175,10 +173,7 @@ class _InsuranceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: Spacing.lg,
-        vertical: Spacing.sm,
-      ),
+      margin: const EdgeInsets.symmetric(vertical: Spacing.sm),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(color: AppColors.divider),
@@ -186,7 +181,7 @@ class _InsuranceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 深蓝紫渐变头
+          // 深灰头部
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: Spacing.md,
@@ -194,7 +189,7 @@ class _InsuranceCard extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF5C4A9E), Color(0xFF3B2D8B)],
+                colors: [Color(0xFFFF9A3C), Color(0xFFFF6D00)],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
@@ -204,37 +199,43 @@ class _InsuranceCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, color: Colors.white, size: 20),
+                Icon(icon, color: Colors.white, size: 24),
                 const SizedBox(width: Spacing.sm),
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
                 ),
-                const Spacer(),
-                Container(
-                  width: 36,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(width: Spacing.sm),
-                const Icon(Icons.location_on_outlined, color: Colors.white70, size: 16),
-                const Text('-', style: TextStyle(color: Colors.white70, fontSize: 13)),
               ],
             ),
           ),
           // 参保状态
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm),
-            child: Text(
-              '参保状态：未在浙江省内参保',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.md, vertical: Spacing.sm),
+            child: Row(
+              children: [
+                const Text(
+                  '参保状态：',
+                  style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    status,
+                    style: const TextStyle(
+                        fontSize: 14, color: Color(0xFF4CAF50)),
+                  ),
+                ),
+              ],
             ),
           ),
           const Divider(height: 1),
@@ -246,14 +247,22 @@ class _InsuranceCard extends StatelessWidget {
                   child: TextButton(
                     key: basicInfoKey,
                     onPressed: onBasicInfoTap,
-                    child: const Text('基本信息', style: TextStyle(fontSize: 14)),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.elderPrimary,
+                    ),
+                    child: const Text('基本信息',
+                        style: TextStyle(fontSize: 18)),
                   ),
                 ),
                 const VerticalDivider(width: 1, indent: 8, endIndent: 8),
                 Expanded(
                   child: TextButton(
                     onPressed: null,
-                    child: const Text('缴费信息', style: TextStyle(fontSize: 14)),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey,
+                    ),
+                    child: const Text('缴费信息',
+                        style: TextStyle(fontSize: 18)),
                   ),
                 ),
               ],

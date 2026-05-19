@@ -81,44 +81,38 @@ class _YibaoQueryPageState extends State<YibaoQueryPage> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF26C6DA), Color(0xFF00838F)],
+                    colors: [Color(0xFFFF9A3C), Color(0xFFFF6D00)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [_kShadow],
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33FF6D00),
+                      blurRadius: 16,
+                      offset: Offset(0, 6),
+                    ),
+                  ],
                 ),
-                child: Stack(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('医保账户信息', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
-                        SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Text('姓名', style: TextStyle(fontSize: 15, color: Colors.white70)),
-                            Spacer(),
-                            Text('*宇澄', style: TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Text('证件号码', style: TextStyle(fontSize: 15, color: Colors.white70)),
-                            Spacer(),
-                            Text('3****************3', style: TextStyle(fontSize: 14, color: Colors.white)),
-                          ],
-                        ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text('医保账户信息', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Text('姓名', style: TextStyle(fontSize: 16, color: Colors.white70)),
+                        Spacer(),
+                        Text('*小明', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600)),
                       ],
                     ),
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Text(
-                        'YB',
-                        style: TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: Colors.white.withValues(alpha: 0.12)),
-                      ),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text('证件号码', style: TextStyle(fontSize: 16, color: Colors.white70)),
+                        Spacer(),
+                        Text('3****************3', style: TextStyle(fontSize: 16, color: Colors.white)),
+                      ],
                     ),
                   ],
                 ),

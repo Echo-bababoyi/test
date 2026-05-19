@@ -6,6 +6,7 @@ import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/in_app_overlay.dart';
 import '../widgets/permission_flow_helper.dart';
+import '../widgets/login_guard.dart';
 import '../widgets/search_suggestion_list.dart';
 import '../widgets/elder_bottom_nav.dart';
 
@@ -99,7 +100,7 @@ class _SearchPageState extends State<SearchPage> {
             const Divider(height: 1),
             Expanded(
               child: _text.isEmpty
-                  ? const _DefaultBody()
+                  ? _DefaultBody(onSearch: _submitSearch)
                   : SearchSuggestionList(query: _text, onSelect: _submitSearch),
             ),
           ],
@@ -143,21 +144,6 @@ class _SearchBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(4),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '西湖区',
-                  style: TextStyle(fontSize: AppFontSize.body, color: AppColors.textPrimary),
-                ),
-                Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textPrimary),
-              ],
-            ),
-          ),
-          const SizedBox(width: Spacing.sm),
           Expanded(
             child: Container(
               height: 36,
@@ -170,7 +156,7 @@ class _SearchBar extends StatelessWidget {
                 autofocus: true,
                 textInputAction: TextInputAction.search,
                 onSubmitted: onSubmit,
-                style: const TextStyle(fontSize: 15),
+                style: const TextStyle(fontSize: AppFontSize.elderBody),
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
@@ -203,7 +189,7 @@ class _SearchBar extends StatelessWidget {
             ),
             child: const Text(
               '取消',
-              style: TextStyle(fontSize: 15, color: AppColors.elderPrimary),
+              style: TextStyle(fontSize: AppFontSize.elderBody, color: AppColors.elderPrimary),
             ),
           ),
         ],
@@ -215,7 +201,8 @@ class _SearchBar extends StatelessWidget {
 // ─── 空输入时默认内容 ─────────────────────────────────────────────────────────
 
 class _DefaultBody extends StatelessWidget {
-  const _DefaultBody();
+  final ValueChanged<String> onSearch;
+  const _DefaultBody({required this.onSearch});
 
   @override
   Widget build(BuildContext context) {
@@ -232,76 +219,25 @@ class _DefaultBody extends StatelessWidget {
             style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: Spacing.md),
-          const Row(
+          Row(
             children: [
-              Expanded(
-                child: _QuickItem(
-                  icon: Icons.health_and_safety_outlined,
-                  iconColor: AppColors.elderPrimary,
-                  label: '浙里医保',
-                ),
-              ),
-              SizedBox(width: Spacing.lg),
               Expanded(
                 child: _QuickItem(
                   icon: Icons.manage_search,
                   iconColor: AppColors.elderPrimary,
                   label: '社保查询',
+                  onTap: () => LoginGuard.tryNavigate(context, AppRoutes.shebaoQuery),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: Spacing.lg),
-          const Row(
-            children: [
+              const SizedBox(width: Spacing.lg),
               Expanded(
                 child: _QuickItem(
-                  icon: Icons.home_work_outlined,
+                  icon: Icons.health_and_safety_outlined,
                   iconColor: AppColors.elderPrimary,
-                  label: '住房公积金',
+                  label: '医保查询',
+                  onTap: () => LoginGuard.tryNavigate(context, AppRoutes.shebaoJiaona),
                 ),
               ),
-              SizedBox(width: Spacing.lg),
-              Expanded(
-                child: _QuickItem(
-                  icon: Icons.print_outlined,
-                  iconColor: AppColors.elderPrimary,
-                  label: '社保证明...',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: Spacing.xl),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                '最近搜索',
-                style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w700),
-              ),
-              OutlinedButton(
-                onPressed: null,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: Spacing.md,
-                    vertical: 4,
-                  ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                child: const Text('清空', style: TextStyle(fontSize: AppFontSize.caption)),
-              ),
-            ],
-          ),
-          const SizedBox(height: Spacing.md),
-          const Row(
-            children: [
-              _RecentPill('医保'),
-              SizedBox(width: Spacing.md),
-              _RecentPill('养老金'),
             ],
           ),
           const SizedBox(height: Spacing.xl),
@@ -310,22 +246,22 @@ class _DefaultBody extends StatelessWidget {
             style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: Spacing.md),
-          const Wrap(
+          Wrap(
             spacing: Spacing.md,
             runSpacing: Spacing.md,
             children: [
-              _RecommendPill('办居住证'),
-              _RecommendPill('浙里医保'),
-              _RecommendPill('健康杭州'),
-              _RecommendPill('流动人口居住登记'),
-              _RecommendPill('小客车摇号'),
-              _RecommendPill('不动产智治'),
-              _RecommendPill('市场监管业务办理'),
-              _RecommendPill('e房通'),
-              _RecommendPill('校园建身'),
-              _RecommendPill('公积金'),
-              _RecommendPill('入学早知道'),
-              _RecommendPill('医保查询'),
+              _RecommendPill('办居住证', onTap: () => onSearch('办居住证')),
+              _RecommendPill('浙里医保', onTap: () => onSearch('浙里医保')),
+              _RecommendPill('健康杭州', onTap: () => onSearch('健康杭州')),
+              _RecommendPill('流动人口居住登记', onTap: () => onSearch('流动人口居住登记')),
+              _RecommendPill('小客车摇号', onTap: () => onSearch('小客车摇号')),
+              _RecommendPill('不动产智治', onTap: () => onSearch('不动产智治')),
+              _RecommendPill('市场监管业务办理', onTap: () => onSearch('市场监管业务办理')),
+              _RecommendPill('e房通', onTap: () => onSearch('e房通')),
+              _RecommendPill('校园建身', onTap: () => onSearch('校园建身')),
+              _RecommendPill('公积金', onTap: () => onSearch('公积金')),
+              _RecommendPill('入学早知道', onTap: () => onSearch('入学早知道')),
+              _RecommendPill('医保查询', onTap: () => onSearch('医保查询')),
             ],
           ),
           const SizedBox(height: Spacing.lg),
@@ -339,17 +275,19 @@ class _QuickItem extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final String label;
+  final VoidCallback? onTap;
 
   const _QuickItem({
     required this.icon,
     required this.iconColor,
     required this.label,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.all(Spacing.xs),
@@ -367,7 +305,7 @@ class _QuickItem extends StatelessWidget {
             const SizedBox(width: Spacing.sm),
             Text(
               label,
-              style: const TextStyle(fontSize: AppFontSize.body, color: AppColors.textPrimary),
+              style: const TextStyle(fontSize: AppFontSize.elderBody, color: AppColors.textPrimary),
             ),
           ],
         ),
@@ -376,30 +314,10 @@ class _QuickItem extends StatelessWidget {
   }
 }
 
-class _RecentPill extends StatelessWidget {
-  final String label;
-  const _RecentPill(this.label);
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.grey[100],
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.sm),
-          child: Text(label, style: const TextStyle(fontSize: AppFontSize.body)),
-        ),
-      ),
-    );
-  }
-}
-
 class _RecommendPill extends StatelessWidget {
   final String label;
-  const _RecommendPill(this.label);
+  final VoidCallback? onTap;
+  const _RecommendPill(this.label, {this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -407,11 +325,11 @@ class _RecommendPill extends StatelessWidget {
       color: Colors.grey[100],
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
-        onTap: () {},
+        onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm),
-          child: Text(label, style: const TextStyle(fontSize: AppFontSize.caption)),
+          child: Text(label, style: const TextStyle(fontSize: AppFontSize.bodyLarge)),
         ),
       ),
     );

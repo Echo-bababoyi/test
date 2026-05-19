@@ -66,40 +66,78 @@ class _SearchResultPageState extends State<SearchResultPage> {
     _focusNode.unfocus();
   }
 
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: AppColors.elderPrimary,
+      elevation: 0,
+      foregroundColor: Colors.white,
+      automaticallyImplyLeading: false,
+      title: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: TextField(
+          controller: _controller,
+          focusNode: _focusNode,
+          textInputAction: TextInputAction.search,
+          onSubmitted: _onSubmit,
+          onTap: _onFieldTap,
+          style: const TextStyle(
+              fontSize: AppFontSize.elderBody, color: AppColors.textPrimary),
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+            prefixIcon: const Icon(Icons.search,
+                color: AppColors.textSecondary, size: 22),
+            suffixIcon: _controller.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.cancel,
+                        size: 22, color: AppColors.textSecondary),
+                    onPressed: _onClearTap,
+                  )
+                : null,
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => context.pop(),
+          style: TextButton.styleFrom(foregroundColor: Colors.white),
+          child: const Text('取消',
+              style: TextStyle(
+                  fontSize: AppFontSize.elderBody, color: Colors.white)),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final q = GoRouterState.of(context).uri.queryParameters['q'] ?? '';
     final text = _controller.text;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
+      appBar: _buildAppBar(context),
       body: Stack(
         children: [
           SafeArea(
-        child: Column(
-          children: [
-            _ResultTopBar(
-              controller: _controller,
-              focusNode: _focusNode,
-              hasText: text.isNotEmpty,
-              onClearTap: _onClearTap,
-              onFieldTap: _onFieldTap,
-              onSubmit: _onSubmit,
-              onCancel: () => context.pop(),
+            top: false,
+            child: Column(
+              children: [
+                if (_isEditing)
+                  Expanded(
+                    child:
+                        SearchSuggestionList(query: text, onSelect: _onSubmit),
+                  )
+                else
+                  Expanded(child: _ResultBody(query: q)),
+              ],
             ),
-            const Divider(height: 1),
-            if (_isEditing)
-              Expanded(
-                child: SearchSuggestionList(query: text, onSelect: _onSubmit),
-              )
-            else ...[
-              const _ResultTabRow(),
-              const Divider(height: 1),
-              Expanded(child: _ResultBody(query: q)),
-            ],
-          ],
-        ),
-      ),
+          ),
           const Positioned.fill(
             child: AgentFab(currentPath: AppRoutes.searchResult),
           ),
@@ -110,167 +148,34 @@ class _SearchResultPageState extends State<SearchResultPage> {
   }
 }
 
-// ─── 顶部搜索栏 ───────────────────────────────────────────────────────────────
-
-class _ResultTopBar extends StatelessWidget {
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final bool hasText;
-  final VoidCallback onClearTap;
-  final VoidCallback onFieldTap;
-  final ValueChanged<String> onSubmit;
-  final VoidCallback onCancel;
-
-  const _ResultTopBar({
-    required this.controller,
-    required this.focusNode,
-    required this.hasText,
-    required this.onClearTap,
-    required this.onFieldTap,
-    required this.onSubmit,
-    required this.onCancel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: Spacing.md,
-        vertical: Spacing.sm,
-      ),
-      child: Row(
-        children: [
-          InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(4),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('西湖区', style: TextStyle(fontSize: 14, color: AppColors.textPrimary)),
-                Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textPrimary),
-              ],
-            ),
-          ),
-          const SizedBox(width: Spacing.sm),
-          Expanded(
-            child: GestureDetector(
-              onTap: onFieldTap,
-              child: Container(
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: onSubmit,
-                  onTap: onFieldTap,
-                  style: const TextStyle(fontSize: 15),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 9,
-                    ),
-                    suffixIcon: hasText
-                        ? IconButton(
-                            icon: const Icon(Icons.cancel, size: 18, color: Colors.grey),
-                            onPressed: onClearTap,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                          )
-                        : null,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: Spacing.sm),
-          TextButton(
-            onPressed: onCancel,
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
-              minimumSize: const Size(48, 44),
-            ),
-            child: const Text(
-              '取消',
-              style: TextStyle(fontSize: 15, color: AppColors.elderPrimary),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── 综合 / 服务 / 办事 / 政策 tab 行（静态）────────────────────────────────
-
-class _ResultTabRow extends StatelessWidget {
-  const _ResultTabRow();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
-      child: Row(
-        children: [
-          const _TabLabel('综合', selected: true),
-          const SizedBox(width: Spacing.xl),
-          const _TabLabel('服务'),
-          const SizedBox(width: Spacing.xl),
-          const _TabLabel('办事'),
-          const SizedBox(width: Spacing.xl),
-          const _TabLabel('政策'),
-        ],
-      ),
-    );
-  }
-}
-
-class _TabLabel extends StatelessWidget {
-  final String text;
-  final bool selected;
-  const _TabLabel(this.text, {this.selected = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {},
-      borderRadius: BorderRadius.circular(4),
-      highlightColor: Colors.transparent,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                color: selected ? AppColors.elderPrimary : AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Container(
-              height: 2,
-              width: 24,
-              color: selected ? AppColors.elderPrimary : Colors.transparent,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ─── 结果内容 ─────────────────────────────────────────────────────────────────
 
 class _ResultBody extends StatelessWidget {
   final String query;
   const _ResultBody({required this.query});
+
+  bool get _isMedicalPay {
+    const aliases = [
+      '医保缴费',
+      '少儿医保缴费',
+      '医保缴费记录',
+      '农村医保缴费',
+      '城乡居民医保缴费',
+      '社保费缴纳',
+    ];
+    return aliases.contains(query);
+  }
+
+  bool get _isPensionQuery {
+    const aliases = [
+      '养老金查询',
+      '本月养老金',
+      '养老金账单',
+      '退休待遇测算',
+      '养老金测算',
+    ];
+    return aliases.contains(query);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -278,33 +183,45 @@ class _ResultBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _SectionHeader('服务'),
-          if (query == '医保缴费') ..._medicalPayServices(context),
-          if (query == '养老金查询') ..._pensionServices(context),
-          if (query != '医保缴费' && query != '养老金查询')
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.lg,
-                vertical: Spacing.md,
-              ),
-              child: Text(
-                query.isEmpty ? '' : '暂无相关服务',
-                style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
-              ),
-            ),
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: Spacing.md),
-              child: Text(
-                '查看更多搜索结果',
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-              ),
+          Container(
+            margin: const EdgeInsets.only(top: Spacing.md),
+            padding: const EdgeInsets.all(Spacing.lg),
+            color: AppColors.surface,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('服务',
+                    style: TextStyle(
+                      fontSize: AppFontSize.elderTitle,
+                      fontWeight: FontWeight.w600,
+                    )),
+                const SizedBox(height: Spacing.md),
+                if (_isMedicalPay) ..._medicalPayServices(context),
+                if (_isPensionQuery) ..._pensionServices(context),
+                if (!_isMedicalPay && !_isPensionQuery) const _EmptyHint(),
+              ],
             ),
           ),
-          const Divider(height: 1),
-          const _SectionHeader('办事'),
-          if (query == '医保缴费') ..._medicalPayAffairs(),
-          if (query == '养老金查询') ..._pensionAffairs(),
+          if (_isMedicalPay || _isPensionQuery)
+            Container(
+              margin: const EdgeInsets.only(top: Spacing.md),
+              padding: const EdgeInsets.all(Spacing.lg),
+              color: AppColors.surface,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('办事',
+                      style: TextStyle(
+                        fontSize: AppFontSize.elderTitle,
+                        fontWeight: FontWeight.w600,
+                      )),
+                  const SizedBox(height: Spacing.md),
+                  if (_isMedicalPay) ..._medicalPayAffairs(),
+                  if (_isPensionQuery) ..._pensionAffairs(),
+                ],
+              ),
+            ),
+          const SizedBox(height: Spacing.xl),
         ],
       ),
     );
@@ -319,7 +236,6 @@ class _ResultBody extends StatelessWidget {
           department: '省医保局',
           onTap: null,
         ),
-        const Divider(height: 1, indent: Spacing.lg),
         _ServiceItem(
           iconColor: const Color(0xFFFF6D00),
           icon: Icons.manage_search,
@@ -328,7 +244,6 @@ class _ResultBody extends StatelessWidget {
           department: '省税务局',
           onTap: () => context.push(AppRoutes.shebaoJiaona),
         ),
-        const Divider(height: 1, indent: Spacing.lg),
         _ServiceItem(
           iconColor: AppColors.elderPrimary,
           icon: Icons.search,
@@ -337,7 +252,6 @@ class _ResultBody extends StatelessWidget {
           department: '省人力社保厅',
           onTap: null,
         ),
-        const Divider(height: 1, indent: Spacing.lg),
       ];
 
   List<Widget> _pensionServices(BuildContext context) => [
@@ -349,7 +263,6 @@ class _ResultBody extends StatelessWidget {
           department: '省人力社保厅',
           onTap: () => context.push(AppRoutes.shebaoQuery),
         ),
-        const Divider(height: 1, indent: Spacing.lg),
         _ServiceItem(
           iconColor: AppColors.elderPrimary,
           icon: Icons.calculate_outlined,
@@ -358,7 +271,6 @@ class _ResultBody extends StatelessWidget {
           department: '省人力社保厅',
           onTap: null,
         ),
-        const Divider(height: 1, indent: Spacing.lg),
         _ServiceItem(
           iconColor: const Color(0xFFFF6D00),
           icon: Icons.print_outlined,
@@ -367,33 +279,34 @@ class _ResultBody extends StatelessWidget {
           department: '省人力社保厅',
           onTap: null,
         ),
-        const Divider(height: 1, indent: Spacing.lg),
       ];
 
   List<Widget> _medicalPayAffairs() => [
         const _AffairItem('职工参保登记（医保）'),
-        const Divider(height: 1, indent: Spacing.lg),
         const _AffairItem('职工医保补缴'),
-        const Divider(height: 1, indent: Spacing.lg),
       ];
 
   List<Widget> _pensionAffairs() => [
         const _AffairItem('退休高级职称人员增加养老金待遇'),
-        const Divider(height: 1, indent: Spacing.lg),
       ];
 }
 
 // ─── 子组件 ───────────────────────────────────────────────────────────────────
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  const _SectionHeader(this.title);
+class _EmptyHint extends StatelessWidget {
+  const _EmptyHint();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(Spacing.lg, Spacing.lg, Spacing.lg, Spacing.sm),
-      child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: Spacing.lg),
+      child: Center(
+        child: Text('暂无相关服务',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppColors.textSecondary,
+            )),
+      ),
     );
   }
 }
@@ -417,52 +330,94 @@ class _ServiceItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.md),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: iconColor, size: 18),
+    final disabled = onTap == null;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Spacing.md),
+      child: Material(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        elevation: 0,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.large),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.large),
+              border: Border.all(color: AppColors.divider),
+              boxShadow: disabled
+                  ? null
+                  : const [
+                      BoxShadow(
+                        color: Color(0x08000000),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
             ),
-            const SizedBox(width: Spacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  if (chips.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 6,
-                      children: chips
-                          .map((c) => Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey[300]!),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(c, style: const TextStyle(fontSize: 12)),
-                              ))
-                          .toList(),
-                    ),
-                  ],
-                  const SizedBox(height: 4),
-                  Text(department,
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                ],
-              ),
+            padding: const EdgeInsets.all(Spacing.md),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: (disabled ? Colors.grey : iconColor)
+                        .withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon,
+                      color: disabled ? Colors.grey : iconColor, size: 26),
+                ),
+                const SizedBox(width: Spacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color:
+                                disabled ? Colors.grey : AppColors.textPrimary,
+                          )),
+                      if (chips.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: chips
+                              .map((c) => Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.background,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(c,
+                                        style: const TextStyle(
+                                            fontSize: 14,
+                                            color: AppColors.textSecondary)),
+                                  ))
+                              .toList(),
+                        ),
+                      ],
+                      const SizedBox(height: 4),
+                      Text(department,
+                          style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right,
+                    size: 24,
+                    color: disabled
+                        ? Colors.grey.shade300
+                        : AppColors.textSecondary),
+              ],
             ),
-            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-          ],
+          ),
         ),
       ),
     );
@@ -475,14 +430,26 @@ class _AffairItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {},
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.md),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Spacing.sm),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.divider),
+        ),
+        padding: const EdgeInsets.symmetric(
+            horizontal: Spacing.md, vertical: Spacing.md),
         child: Row(
           children: [
-            Expanded(child: Text(title, style: const TextStyle(fontSize: 15))),
-            const Icon(Icons.chevron_right, size: 18, color: AppColors.textSecondary),
+            Expanded(
+              child: Text(title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.grey.shade500,
+                  )),
+            ),
+            Icon(Icons.chevron_right, size: 24, color: Colors.grey.shade300),
           ],
         ),
       ),
