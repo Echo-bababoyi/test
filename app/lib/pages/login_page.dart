@@ -5,6 +5,7 @@ import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/in_app_overlay.dart';
 import '../services/agent_element_registry.dart';
+import '../services/login_page_snackbar.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,6 +18,12 @@ class _LoginPageState extends State<LoginPage> {
   final _phoneController = TextEditingController();
   final _loginBtnKey = AgentElementRegistry.register('btn_login');
   bool _agreed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    LoginPageSnackbar.showIfPending(context);
+  }
 
   @override
   void dispose() {
