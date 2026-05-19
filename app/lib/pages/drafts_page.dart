@@ -135,7 +135,7 @@ class _DraftsPageState extends State<DraftsPage> {
           const SizedBox(height: 8),
           const Text(
             '办事过程中的未完成表单\n会保存在这里',
-            style: TextStyle(fontSize: 14, color: Color(0xFF999999), height: 1.5),
+            style: TextStyle(fontSize: 18, color: Color(0xFF999999), height: 1.5),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 28),
@@ -145,10 +145,10 @@ class _DraftsPageState extends State<DraftsPage> {
               backgroundColor: _kOrange,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               elevation: 0,
             ),
-            child: const Text('去办事', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            child: const Text('去办事', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
           ),
         ],
       ),
@@ -159,7 +159,7 @@ class _DraftsPageState extends State<DraftsPage> {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           color: Colors.white,
           child: Row(
             children: [
@@ -171,7 +171,7 @@ class _DraftsPageState extends State<DraftsPage> {
               const SizedBox(width: 8),
               Text(
                 '共 ${_drafts.length} 份草稿待完成',
-                style: const TextStyle(fontSize: 14, color: Color(0xFF666666), fontWeight: FontWeight.w500),
+                style: const TextStyle(fontSize: 18, color: Color(0xFF666666), fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -251,7 +251,7 @@ class _DraftsPageState extends State<DraftsPage> {
                               children: [
                                 Text(
                                   pageTitle,
-                                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Color(0xFF333333)),
+                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF333333)),
                                 ),
                                 const SizedBox(height: 6),
                                 ClipRRect(
@@ -268,14 +268,14 @@ class _DraftsPageState extends State<DraftsPage> {
                                 const SizedBox(height: 4),
                                 Text(
                                   '已填写 ${counts.$1}/${counts.$2} 项 · $timeStr',
-                                  style: const TextStyle(fontSize: 12, color: Color(0xFF999999)),
+                                  style: const TextStyle(fontSize: 14, color: Color(0xFF999999)),
                                 ),
                               ],
                             ),
                           ),
                           const SizedBox(width: 12),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                             decoration: BoxDecoration(
                               color: _kOrange,
                               borderRadius: BorderRadius.circular(18),
@@ -283,7 +283,7 @@ class _DraftsPageState extends State<DraftsPage> {
                                 BoxShadow(color: Color(0x33FF6D00), blurRadius: 8, offset: Offset(0, 2)),
                               ],
                             ),
-                            child: const Text('继续', style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w500)),
+                            child: const Text('继续', style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.w500)),
                           ),
                         ],
                       ),

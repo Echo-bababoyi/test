@@ -146,7 +146,7 @@ class _ResultTopBar extends StatelessWidget {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('西湖区', style: TextStyle(fontSize: 14, color: AppColors.textPrimary)),
+                Text('西湖区', style: TextStyle(fontSize: 18, color: AppColors.textPrimary)),
                 Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textPrimary),
               ],
             ),
@@ -167,7 +167,7 @@ class _ResultTopBar extends StatelessWidget {
                   textInputAction: TextInputAction.search,
                   onSubmitted: onSubmit,
                   onTap: onFieldTap,
-                  style: const TextStyle(fontSize: 15),
+                  style: const TextStyle(fontSize: 20),
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
@@ -196,7 +196,7 @@ class _ResultTopBar extends StatelessWidget {
             ),
             child: const Text(
               '取消',
-              style: TextStyle(fontSize: 15, color: AppColors.elderPrimary),
+              style: TextStyle(fontSize: 20, color: AppColors.elderPrimary),
             ),
           ),
         ],
@@ -241,14 +241,14 @@ class _TabLabel extends StatelessWidget {
       borderRadius: BorderRadius.circular(4),
       highlightColor: Colors.transparent,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               text,
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 20,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                 color: selected ? AppColors.elderPrimary : AppColors.textSecondary,
               ),
@@ -289,15 +289,15 @@ class _ResultBody extends StatelessWidget {
               ),
               child: Text(
                 query.isEmpty ? '' : '暂无相关服务',
-                style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                style: const TextStyle(fontSize: 18, color: AppColors.textSecondary),
               ),
             ),
           const Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: Spacing.md),
+              padding: EdgeInsets.symmetric(vertical: 16),
               child: Text(
                 '查看更多搜索结果',
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
               ),
             ),
           ),
@@ -420,7 +420,7 @@ class _ServiceItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.md),
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: 16),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -438,7 +438,7 @@ class _ServiceItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
                   if (chips.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Wrap(
@@ -450,14 +450,14 @@ class _ServiceItem extends StatelessWidget {
                                   border: Border.all(color: Colors.grey[300]!),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: Text(c, style: const TextStyle(fontSize: 12)),
+                                child: Text(c, style: const TextStyle(fontSize: 14)),
                               ))
                           .toList(),
                     ),
                   ],
                   const SizedBox(height: 4),
                   Text(department,
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      style: const TextStyle(fontSize: 16, color: AppColors.textSecondary)),
                 ],
               ),
             ),
@@ -478,10 +478,10 @@ class _AffairItem extends StatelessWidget {
     return InkWell(
       onTap: () {},
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.md),
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: 16),
         child: Row(
           children: [
-            Expanded(child: Text(title, style: const TextStyle(fontSize: 15))),
+            Expanded(child: Text(title, style: const TextStyle(fontSize: 18))),
             const Icon(Icons.chevron_right, size: 18, color: AppColors.textSecondary),
           ],
         ),

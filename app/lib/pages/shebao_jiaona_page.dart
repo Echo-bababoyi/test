@@ -35,7 +35,7 @@ class _ShebaoJiaonaPageState extends State<ShebaoJiaonaPage> {
         ),
         title: Text(
           title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
         actions: [
           IconButton(
@@ -109,7 +109,7 @@ class _HomeSubPage extends StatelessWidget {
                 SizedBox(height: 4),
                 Text(
                   '浙江税务',
-                  style: TextStyle(fontSize: 16, color: Colors.white70),
+                  style: TextStyle(fontSize: 20, color: Colors.white70),
                 ),
               ],
             ),
@@ -204,7 +204,7 @@ class _HomeSubPage extends StatelessWidget {
             padding: const EdgeInsets.all(Spacing.lg),
             child: const Text(
               '本服务提供浙江省内（宁波除外）灵活就业人员社保、城乡居民医保费缴纳',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ),
@@ -258,7 +258,7 @@ class _ServiceIcon extends StatelessWidget {
             const SizedBox(height: Spacing.sm),
             Text(
               label,
-              style: const TextStyle(fontSize: 12),
+              style: const TextStyle(fontSize: 16),
               textAlign: TextAlign.center,
               maxLines: 2,
             ),
@@ -309,14 +309,14 @@ class _SelfPaySubPage extends StatelessWidget {
                         Text(
                           '*宇澄',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 20,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
                         ),
                         Text(
                           '3****************3',
-                          style: TextStyle(fontSize: 13, color: Colors.white70),
+                          style: TextStyle(fontSize: 18, color: Colors.white70),
                         ),
                       ],
                     ),
@@ -342,7 +342,7 @@ class _SelfPaySubPage extends StatelessWidget {
               const Expanded(
                 child: Text(
                   '温馨提示：注意：缴费有延迟，支付成功后请在《缴费记录》里查询最终缴费结果。当日 16:30-次日 08:00 为银行批量扣款时间。',
-                  style: TextStyle(fontSize: 12, color: AppColors.elderPrimary),
+                  style: TextStyle(fontSize: 18, color: AppColors.elderPrimary),
                 ),
               ),
               IconButton(
@@ -389,14 +389,14 @@ class _StaticTab extends StatelessWidget {
       borderRadius: BorderRadius.circular(4),
       highlightColor: Colors.transparent,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               label,
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 20,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                 color: selected ? AppColors.elderPrimary : AppColors.textSecondary,
               ),
@@ -465,7 +465,7 @@ class _DropdownChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(label, style: const TextStyle(fontSize: 15)),
+            Text(label, style: const TextStyle(fontSize: 18)),
             const Icon(Icons.arrow_drop_down, size: 20),
           ],
         ),
@@ -490,7 +490,7 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: Spacing.md),
           Text(
             message,
-            style: const TextStyle(fontSize: 15, color: AppColors.textSecondary),
+            style: const TextStyle(fontSize: 18, color: AppColors.textSecondary),
           ),
         ],
       ),

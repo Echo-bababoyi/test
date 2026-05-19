@@ -35,10 +35,10 @@ class _AgentSettingsPageState extends State<AgentSettingsPage> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.volume_up_outlined, color: AppColors.elderPrimary),
-                  title: const Text('语音引导', style: TextStyle(fontSize: 16)),
+                  title: const Text('语音引导', style: TextStyle(fontSize: 20)),
                   subtitle: Text(
                     _svc.voiceEnabled ? '已开启' : '已关闭',
-                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                    style: const TextStyle(fontSize: 16, color: AppColors.textSecondary),
                   ),
                   trailing: Switch(
                     value: _svc.voiceEnabled,
@@ -48,12 +48,12 @@ class _AgentSettingsPageState extends State<AgentSettingsPage> {
                 ),
                 const Divider(height: 1, indent: 16),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   child: Row(
                     children: [
                       const Icon(Icons.speed_outlined, color: AppColors.elderPrimary),
                       const SizedBox(width: 16),
-                      const Expanded(child: Text('语速', style: TextStyle(fontSize: 16))),
+                      const Expanded(child: Text('语速', style: TextStyle(fontSize: 20))),
                       _SpeedBtn(label: '慢速', mode: 'slow', current: _svc.speedMode,
                           onTap: () => setState(() => _svc.speedMode = 'slow')),
                       const SizedBox(width: 8),
@@ -73,14 +73,14 @@ class _AgentSettingsPageState extends State<AgentSettingsPage> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.work_outline, color: AppColors.elderPrimary),
-                  title: const Text('操作记录', style: TextStyle(fontSize: 16)),
+                  title: const Text('操作记录', style: TextStyle(fontSize: 20)),
                   trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
                   onTap: () => context.push(AppRoutes.operationLogs),
                 ),
                 const Divider(height: 1, indent: 16),
                 ListTile(
                   leading: const Icon(Icons.edit_note_outlined, color: AppColors.elderPrimary),
-                  title: const Text('草稿箱', style: TextStyle(fontSize: 16)),
+                  title: const Text('草稿箱', style: TextStyle(fontSize: 20)),
                   trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
                   onTap: () => context.push(AppRoutes.drafts),
                 ),
@@ -122,7 +122,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-    child: Text(title, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+    child: Text(title, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
   );
 }
 
@@ -141,12 +141,12 @@ class _SpeedBtn extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         splashColor: sel ? Colors.white24 : null,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: sel ? AppColors.elderPrimary : const Color(0xFFDDDDDD)),
           ),
-          child: Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500,
+          child: Text(label, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500,
               color: sel ? Colors.white : AppColors.textPrimary)),
         ),
       ),
@@ -172,9 +172,9 @@ class _HelpCard extends StatelessWidget {
         Expanded(child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
-            Text(desc, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.4)),
+            Text(desc, style: const TextStyle(fontSize: 16, color: AppColors.textSecondary, height: 1.4)),
           ],
         )),
       ],

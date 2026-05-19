@@ -156,7 +156,7 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
                 if (_idInvalid)
                   const Padding(
                     padding: EdgeInsets.only(top: 6),
-                    child: Text('请输入18位身份证号', style: TextStyle(fontSize: 15, color: Color(0xFFFF3B30))),
+                    child: Text('请输入18位身份证号', style: TextStyle(fontSize: 18, color: Color(0xFFFF3B30))),
                   ),
               ],
             ),

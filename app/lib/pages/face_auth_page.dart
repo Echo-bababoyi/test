@@ -185,7 +185,7 @@ class _DefaultView extends StatelessWidget {
                     children: [
                       const Text(
                         '**澄',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: Spacing.lg),
                       const _FaceScanFrame(),
@@ -197,7 +197,7 @@ class _DefaultView extends StatelessWidget {
                       const SizedBox(height: Spacing.sm),
                       const Text(
                         '为保障您的账号隐私与信息安全，\n"浙里办"将获取您的人脸信息进行实人验证',
-                        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                        style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -230,7 +230,7 @@ class _DefaultView extends StatelessWidget {
                     children: [
                       Icon(Icons.verified_user_outlined, color: Colors.white, size: 20),
                       SizedBox(width: 8),
-                      Text('开始认证', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600)),
+                      Text('开始认证', style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),
@@ -250,7 +250,7 @@ class _DefaultView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadius.xlarge),
               ),
             ),
-            child: const Text('其他方式认证', style: TextStyle(fontSize: 16)),
+            child: const Text('其他方式认证', style: TextStyle(fontSize: 18)),
           ),
           const Spacer(),
           // 页脚
@@ -262,7 +262,7 @@ class _DefaultView extends StatelessWidget {
               Text(
                 '浙里办  |  伴你一生大小事',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 16,
                   color: AppColors.elderPrimary,
                   fontStyle: FontStyle.italic,
                 ),
@@ -431,7 +431,7 @@ class _AuthenticatingView extends StatelessWidget {
           Text(
             '正在进行人脸识别，请保持面部在框内',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 18,
               color: Colors.grey.shade500,
             ),
             textAlign: TextAlign.center,
@@ -466,7 +466,7 @@ class _FaceAuthRequestContent extends StatelessWidget {
         RichText(
           text: const TextSpan(
             style: TextStyle(
-              fontSize: AppFontSize.body,
+              fontSize: 18,
               color: AppColors.textPrimary,
               height: 1.6,
             ),
@@ -491,12 +491,12 @@ class _FaceAuthRequestContent extends StatelessWidget {
                   backgroundColor: Colors.grey.shade200,
                   foregroundColor: AppColors.elderPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: Spacing.md),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.xlarge),
                   ),
                 ),
-                child: const Text('退出'),
+                child: const Text('退出', style: TextStyle(fontSize: 20)),
               ),
             ),
             const SizedBox(width: Spacing.md),
@@ -505,12 +505,12 @@ class _FaceAuthRequestContent extends StatelessWidget {
                 onPressed: onAgree,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.elderPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: Spacing.md),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.xlarge),
                   ),
                 ),
-                child: const Text('同意并继续'),
+                child: const Text('同意并继续', style: TextStyle(fontSize: 20)),
               ),
             ),
           ],
@@ -546,7 +546,7 @@ class _OtherAuthContent extends StatelessWidget {
             const Expanded(
               child: Text(
                 '其他认证方式',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                 textAlign: TextAlign.center,
               ),
             ),
