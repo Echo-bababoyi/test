@@ -496,7 +496,7 @@ class _BottomNavBar extends StatelessWidget {
           _NavTab(icon: Icons.assignment, label: '办事', onTap: () => _showTodo(context)),
           const _NavTab(icon: Icons.home, label: '首页', selected: true),
           _NavTab(icon: Icons.forum, label: '互动', onTap: () => _showTodo(context)),
-          _NavTab(icon: Icons.person, label: '我的', onTap: () => context.go(AppRoutes.my)),
+          _NavTab(icon: Icons.person, label: '我的', onTap: () => _showTodo(context)),
         ],
       ),
     );
