@@ -155,11 +155,11 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFDEEAF8),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.elderPrimary,
         elevation: 0,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: Colors.white,
         title: const Text('短信验证登录'),
       ),
       body: Stack(

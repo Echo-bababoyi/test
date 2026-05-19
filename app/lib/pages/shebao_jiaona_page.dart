@@ -239,7 +239,7 @@ class _ServiceIcon extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Ink(
+            Container(
               width: 56,
               height: 56,
               decoration: BoxDecoration(
@@ -258,7 +258,7 @@ class _ServiceIcon extends StatelessWidget {
             const SizedBox(height: Spacing.sm),
             Text(
               label,
-              style: const TextStyle(fontSize: 12),
+              style: const TextStyle(fontSize: 14),
               textAlign: TextAlign.center,
               maxLines: 2,
             ),
