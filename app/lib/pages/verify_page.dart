@@ -103,7 +103,7 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.medium),
-        borderSide: const BorderSide(color: AppColors.standardPrimary, width: 1.5),
+        borderSide: const BorderSide(color: AppColors.elderPrimary, width: 1.5),
       ),
       filled: true,
       fillColor: const Color(0xFFFAFAFA),
@@ -196,8 +196,8 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
                           key: _sendBtnKey,
                           onPressed: (_countdown == 0 && _phoneValid) ? _sendCode : null,
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.standardPrimary,
-                            side: const BorderSide(color: AppColors.standardPrimary),
+                            foregroundColor: AppColors.elderPrimary,
+                            side: const BorderSide(color: AppColors.elderPrimary),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppRadius.medium),
                             ),
@@ -233,7 +233,7 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
               key: _loginBtnKey,
               onPressed: _canLogin ? () => _confirmSmsCode(context) : null,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.standardPrimary,
+                backgroundColor: AppColors.elderPrimary,
                 disabledBackgroundColor: Colors.grey.shade300,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(

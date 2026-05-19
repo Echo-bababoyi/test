@@ -55,7 +55,9 @@ class PersistentBanner extends ConsumerWidget {
                 vertical: Spacing.xs,
               ),
               decoration: BoxDecoration(
-                color: pressed ? const Color(0xFF1A5CAF) : const Color(0xFF2D74DC),
+                color: pressed
+                    ? Color.lerp(AppColors.elderPrimary, Colors.black, 0.2)!
+                    : AppColors.elderPrimary,
                 borderRadius: BorderRadius.circular(AppRadius.xlarge),
               ),
               child: const Text(

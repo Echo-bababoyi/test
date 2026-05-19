@@ -90,7 +90,7 @@ class _HomeSubPage extends StatelessWidget {
             height: 130,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF5BA3E8), Color(0xFF2D74DC)],
+                colors: [Color(0xFFFFAA66), AppColors.elderPrimary],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -165,7 +165,7 @@ class _HomeSubPage extends StatelessWidget {
                     ),
                     const _ServiceIcon(
                       icon: Icons.verified_outlined,
-                      color: Color(0xFF2D74DC),
+                      color: AppColors.elderPrimary,
                       label: '缴费证明',
                       onTap: null,
                     ),
@@ -281,7 +281,7 @@ class _SelfPaySubPage extends StatelessWidget {
       children: [
         // 用户信息头（蓝色底）
         Material(
-          color: const Color(0xFF2D74DC),
+          color: AppColors.elderPrimary,
           child: InkWell(
             onTap: () {},
             splashColor: Colors.white24,
@@ -398,14 +398,14 @@ class _StaticTab extends StatelessWidget {
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                color: selected ? AppColors.standardPrimary : AppColors.textSecondary,
+                color: selected ? AppColors.elderPrimary : AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 4),
             Container(
               height: 2,
               width: 24,
-              color: selected ? AppColors.standardPrimary : Colors.transparent,
+              color: selected ? AppColors.elderPrimary : Colors.transparent,
             ),
           ],
         ),

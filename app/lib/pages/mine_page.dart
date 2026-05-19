@@ -681,10 +681,10 @@ class _RecommendIcon extends StatelessWidget {
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: AppColors.standardPrimary.withValues(alpha: 0.1),
+                color: AppColors.elderPrimary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: AppColors.standardPrimary, size: 26),
+              child: Icon(icon, color: AppColors.elderPrimary, size: 26),
             ),
             const SizedBox(height: Spacing.sm),
             Text(label,

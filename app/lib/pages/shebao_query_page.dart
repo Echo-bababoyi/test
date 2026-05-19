@@ -118,7 +118,7 @@ class ShebaoQueryPage extends StatelessWidget {
                   Container(
                     width: 4,
                     height: 18,
-                    color: AppColors.standardPrimary,
+                    color: AppColors.elderPrimary,
                   ),
                   const SizedBox(width: Spacing.sm),
                   const Text(

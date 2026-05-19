@@ -203,7 +203,7 @@ class _SearchBar extends StatelessWidget {
             ),
             child: const Text(
               '取消',
-              style: TextStyle(fontSize: 15, color: AppColors.standardPrimary),
+              style: TextStyle(fontSize: 15, color: AppColors.elderPrimary),
             ),
           ),
         ],
@@ -237,7 +237,7 @@ class _DefaultBody extends StatelessWidget {
               Expanded(
                 child: _QuickItem(
                   icon: Icons.health_and_safety_outlined,
-                  iconColor: AppColors.standardPrimary,
+                  iconColor: AppColors.elderPrimary,
                   label: '浙里医保',
                 ),
               ),
@@ -245,7 +245,7 @@ class _DefaultBody extends StatelessWidget {
               Expanded(
                 child: _QuickItem(
                   icon: Icons.manage_search,
-                  iconColor: AppColors.standardPrimary,
+                  iconColor: AppColors.elderPrimary,
                   label: '社保查询',
                 ),
               ),
@@ -257,7 +257,7 @@ class _DefaultBody extends StatelessWidget {
               Expanded(
                 child: _QuickItem(
                   icon: Icons.home_work_outlined,
-                  iconColor: AppColors.standardPrimary,
+                  iconColor: AppColors.elderPrimary,
                   label: '住房公积金',
                 ),
               ),
@@ -461,7 +461,7 @@ class _MicPermissionContent extends StatelessWidget {
             FilledButton(
               onPressed: onEnable,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.standardPrimary,
+                backgroundColor: AppColors.elderPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: Spacing.xl,
                   vertical: Spacing.md,

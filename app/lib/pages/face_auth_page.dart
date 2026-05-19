@@ -244,8 +244,8 @@ class _DefaultView extends StatelessWidget {
             onPressed: onOtherMethod,
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(52),
-              foregroundColor: AppColors.standardPrimary,
-              side: const BorderSide(color: AppColors.standardPrimary),
+              foregroundColor: AppColors.elderPrimary,
+              side: const BorderSide(color: AppColors.elderPrimary),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.xlarge),
               ),
@@ -257,13 +257,13 @@ class _DefaultView extends StatelessWidget {
           const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.sync, size: 16, color: AppColors.standardPrimary),
+              Icon(Icons.sync, size: 16, color: AppColors.elderPrimary),
               SizedBox(width: 4),
               Text(
                 '浙里办  |  伴你一生大小事',
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.standardPrimary,
+                  color: AppColors.elderPrimary,
                   fontStyle: FontStyle.italic,
                 ),
               ),
@@ -476,7 +476,7 @@ class _FaceAuthRequestContent extends StatelessWidget {
               ),
               TextSpan(
                 text: '《人脸识别功能协议》',
-                style: TextStyle(color: AppColors.standardPrimary),
+                style: TextStyle(color: AppColors.elderPrimary),
               ),
             ],
           ),
@@ -489,7 +489,7 @@ class _FaceAuthRequestContent extends StatelessWidget {
                 onPressed: onExit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey.shade200,
-                  foregroundColor: AppColors.standardPrimary,
+                  foregroundColor: AppColors.elderPrimary,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: Spacing.md),
                   shape: RoundedRectangleBorder(
@@ -504,7 +504,7 @@ class _FaceAuthRequestContent extends StatelessWidget {
               child: FilledButton(
                 onPressed: onAgree,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.standardPrimary,
+                  backgroundColor: AppColors.elderPrimary,
                   padding: const EdgeInsets.symmetric(vertical: Spacing.md),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.xlarge),

@@ -47,7 +47,7 @@ class SystemDialog extends StatelessWidget {
                     onDeny?.call();
                   },
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.standardPrimary,
+                    foregroundColor: AppColors.elderPrimary,
                   ),
                   child: Text(denyLabel),
                 ),
@@ -57,7 +57,7 @@ class SystemDialog extends StatelessWidget {
                     onConfirm?.call();
                   },
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.standardPrimary,
+                    foregroundColor: AppColors.elderPrimary,
                   ),
                   child: Text(confirmLabel),
                 ),

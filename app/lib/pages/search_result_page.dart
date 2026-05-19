@@ -196,7 +196,7 @@ class _ResultTopBar extends StatelessWidget {
             ),
             child: const Text(
               '取消',
-              style: TextStyle(fontSize: 15, color: AppColors.standardPrimary),
+              style: TextStyle(fontSize: 15, color: AppColors.elderPrimary),
             ),
           ),
         ],
@@ -250,14 +250,14 @@ class _TabLabel extends StatelessWidget {
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                color: selected ? AppColors.standardPrimary : AppColors.textSecondary,
+                color: selected ? AppColors.elderPrimary : AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 4),
             Container(
               height: 2,
               width: 24,
-              color: selected ? AppColors.standardPrimary : Colors.transparent,
+              color: selected ? AppColors.elderPrimary : Colors.transparent,
             ),
           ],
         ),
@@ -312,7 +312,7 @@ class _ResultBody extends StatelessWidget {
 
   List<Widget> _medicalPayServices(BuildContext context) => [
         _ServiceItem(
-          iconColor: const Color(0xFF2D74DC),
+          iconColor: AppColors.elderPrimary,
           icon: Icons.health_and_safety_outlined,
           title: '浙里医保',
           chips: const ['医保地图', '医保个人账户', '医保'],
@@ -330,7 +330,7 @@ class _ResultBody extends StatelessWidget {
         ),
         const Divider(height: 1, indent: Spacing.lg),
         _ServiceItem(
-          iconColor: const Color(0xFF2D74DC),
+          iconColor: AppColors.elderPrimary,
           icon: Icons.search,
           title: '社保查询',
           chips: const [],
@@ -342,7 +342,7 @@ class _ResultBody extends StatelessWidget {
 
   List<Widget> _pensionServices(BuildContext context) => [
         _ServiceItem(
-          iconColor: const Color(0xFF2D74DC),
+          iconColor: AppColors.elderPrimary,
           icon: Icons.manage_search,
           title: '社保查询',
           chips: const ['养老险查询', '养老金', '失业险查'],
@@ -351,7 +351,7 @@ class _ResultBody extends StatelessWidget {
         ),
         const Divider(height: 1, indent: Spacing.lg),
         _ServiceItem(
-          iconColor: const Color(0xFF2D74DC),
+          iconColor: AppColors.elderPrimary,
           icon: Icons.calculate_outlined,
           title: '退休待遇测算',
           chips: const ['养老金测算', '企业养老保险待遇'],

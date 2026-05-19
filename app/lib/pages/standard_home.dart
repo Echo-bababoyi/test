@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../core/state/app_state.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
-import '../widgets/persistent_banner.dart';
 import '../widgets/press_scale_wrapper.dart';
 import '../router.dart';
 
@@ -35,20 +34,17 @@ class StandardHome extends ConsumerWidget {
                     ref.read(modeProvider.notifier).toElder();
                     context.go(AppRoutes.elderHome);
                   },
-                  onSearchTap: () => context.push(AppRoutes.search),
+                  onSearchTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('该功能正在建设中'), duration: Duration(seconds: 2)),
+                    );
+                  },
                 ),
                 const _ServiceGridSection(),
                 const _NewsBarSection(),
                 const _HotServiceSection(),
                 const _DevNavSection(),
               ],
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: PersistentBanner(),
             ),
           ),
           const Positioned.fill(

@@ -45,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: AppColors.standardPrimary,
+                    color: AppColors.elderPrimary,
                     borderRadius: BorderRadius.circular(AppRadius.xlarge),
                   ),
                   child: const Icon(Icons.sync, color: Colors.white, size: 40),
@@ -120,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.medium),
                           borderSide: const BorderSide(
-                            color: AppColors.standardPrimary,
+                            color: AppColors.elderPrimary,
                             width: 1.5,
                           ),
                         ),
@@ -164,12 +164,12 @@ class _LoginPageState extends State<LoginPage> {
                                 TextSpan(text: '已阅读并同意'),
                                 TextSpan(
                                   text: '《用户服务协议》',
-                                  style: TextStyle(color: AppColors.standardPrimary),
+                                  style: TextStyle(color: AppColors.elderPrimary),
                                 ),
                                 TextSpan(text: '和'),
                                 TextSpan(
                                   text: '《隐私政策》',
-                                  style: TextStyle(color: AppColors.standardPrimary),
+                                  style: TextStyle(color: AppColors.elderPrimary),
                                 ),
                               ],
                             ),
@@ -183,7 +183,7 @@ class _LoginPageState extends State<LoginPage> {
                       key: _loginBtnKey,
                       onPressed: () => _showTermsOverlay(context),
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.standardPrimary,
+                        backgroundColor: AppColors.elderPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.xlarge),
@@ -285,7 +285,7 @@ class _LoginTab extends StatelessWidget {
     return InkWell(
       onTap: () {},
       borderRadius: BorderRadius.circular(4),
-      splashColor: AppColors.standardPrimary.withValues(alpha: 0.15),
+      splashColor: AppColors.elderPrimary.withValues(alpha: 0.15),
       highlightColor: Colors.transparent,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
@@ -297,14 +297,14 @@ class _LoginTab extends StatelessWidget {
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                color: selected ? AppColors.standardPrimary : AppColors.textSecondary,
+                color: selected ? AppColors.elderPrimary : AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 4),
             Container(
               height: 2,
               width: 52,
-              color: selected ? AppColors.standardPrimary : Colors.transparent,
+              color: selected ? AppColors.elderPrimary : Colors.transparent,
             ),
           ],
         ),
@@ -347,12 +347,12 @@ class _TermsOverlayContent extends StatelessWidget {
               TextSpan(text: '我已阅读并同意'),
               TextSpan(
                 text: '《用户服务协议》',
-                style: TextStyle(color: AppColors.standardPrimary),
+                style: TextStyle(color: AppColors.elderPrimary),
               ),
               TextSpan(text: '和'),
               TextSpan(
                 text: '《隐私政策》',
-                style: TextStyle(color: AppColors.standardPrimary),
+                style: TextStyle(color: AppColors.elderPrimary),
               ),
             ],
           ),
@@ -365,7 +365,7 @@ class _TermsOverlayContent extends StatelessWidget {
                 onPressed: onDisagree,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey.shade200,
-                  foregroundColor: AppColors.standardPrimary,
+                  foregroundColor: AppColors.elderPrimary,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: Spacing.md),
                   shape: RoundedRectangleBorder(
@@ -380,7 +380,7 @@ class _TermsOverlayContent extends StatelessWidget {
               child: FilledButton(
                 onPressed: onAgree,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.standardPrimary,
+                  backgroundColor: AppColors.elderPrimary,
                   padding: const EdgeInsets.symmetric(vertical: Spacing.md),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.xlarge),
