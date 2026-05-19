@@ -7,7 +7,7 @@ class WsClient {
   static final WsClient instance = WsClient._();
   WsClient._();
 
-  static const _baseUrl = 'ws://localhost:8000/ws/session/';
+  static const _baseUrl = 'ws://localhost:8080/ws/session/';
 
   WebSocketChannel? _channel;
   final _controller = StreamController<Map<String, dynamic>>.broadcast();
