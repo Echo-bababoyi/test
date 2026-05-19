@@ -1,13 +1,15 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/state/app_state.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
-import '../widgets/system_dialog.dart';
 import '../services/agent_element_registry.dart';
+import '../widgets/sms_notification.dart';
 
 class VerifyPage extends ConsumerStatefulWidget {
   const VerifyPage({super.key});
@@ -28,6 +30,11 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
 
   int _countdown = 0;
   Timer? _timer;
+  String _mockCode = '';
+  bool _showSms = false;
+  bool _loginSuccess = false;
+  Timer? _smsArriveTimer;
+  Timer? _smsAutoCloseTimer;
 
   bool get _phoneValid {
     final p = _phoneController.text;
@@ -36,7 +43,7 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
 
   bool get _phoneInvalid => _phoneController.text.isNotEmpty && !_phoneValid;
 
-  bool get _canLogin => _codeController.text == '123456';
+  bool get _canLogin => _mockCode.isNotEmpty && _codeController.text == _mockCode;
 
   @override
   void initState() {
@@ -50,6 +57,8 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
   @override
   void dispose() {
     _timer?.cancel();
+    _smsArriveTimer?.cancel();
+    _smsAutoCloseTimer?.cancel();
     AgentElementRegistry.unregister('input_phone');
     AgentElementRegistry.unregister('input_verify_code');
     _phoneController.dispose();
@@ -70,21 +79,54 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
         setState(() => _countdown--);
       }
     });
+    final code = (Random().nextInt(900000) + 100000).toString();
+    setState(() => _mockCode = code);
+
+    _smsArriveTimer?.cancel();
+    _smsAutoCloseTimer?.cancel();
+    setState(() => _showSms = false);
+    _smsArriveTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (!mounted) return;
+      setState(() => _showSms = true);
+      _smsAutoCloseTimer = Timer(const Duration(seconds: 6), () {
+        if (!mounted) return;
+        setState(() => _showSms = false);
+      });
+    });
     _codeFocusNode.requestFocus();
   }
 
-  void _confirmSmsCode(BuildContext context) {
-    SystemDialog.show(
-      context,
-      title: '验证码确认',
-      message: '验证码已验证，即将完成登录',
-      confirmLabel: '确认',
-      denyLabel: '取消',
-      onConfirm: () {
-        ref.read(loginProvider.notifier).login('用户');
-        context.go(AppRoutes.elderHome);
-      },
+  void _onSmsRead() {
+    _smsAutoCloseTimer?.cancel();
+    setState(() => _showSms = false);
+  }
+
+  void _onSmsCopy() {
+    _smsAutoCloseTimer?.cancel();
+    Clipboard.setData(ClipboardData(text: _mockCode));
+    setState(() => _showSms = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('验证码已复制', style: TextStyle(fontSize: 18, color: Colors.white)),
+        backgroundColor: AppColors.elderPrimary,
+        duration: Duration(milliseconds: 1500),
+      ),
     );
+  }
+
+  void _confirmSmsCode(BuildContext context) {
+    _smsArriveTimer?.cancel();
+    _smsAutoCloseTimer?.cancel();
+    setState(() {
+      _loginSuccess = true;
+      _showSms = false;
+    });
+    ref.read(loginProvider.notifier).login('用户');
+    final router = GoRouter.of(context);
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (!mounted) return;
+      router.go(AppRoutes.elderHome);
+    });
   }
 
   InputDecoration _inputDecoration({String? label, IconData? prefix}) {
@@ -247,6 +289,66 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
       ),
           const Positioned.fill(
             child: AgentFab(currentPath: AppRoutes.verify),
+          ),
+          Positioned(
+            top: 0, left: 0, right: 0,
+            child: SmsNotification(
+              visible: _showSms,
+              code: _mockCode,
+              onRead: _onSmsRead,
+              onCopy: _onSmsCopy,
+            ),
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: !_loginSuccess,
+              child: AnimatedOpacity(
+                opacity: _loginSuccess ? 1 : 0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                child: Container(
+                  color: Colors.white,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.5, end: 1.0),
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeOutBack,
+                        builder: (_, scale, child) =>
+                            Transform.scale(scale: scale, child: child),
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF4CAF50),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.check, size: 84, color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.xl),
+                      const Text(
+                        '验证成功',
+                        style: TextStyle(
+                          fontSize: AppFontSize.elderLarge,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF4CAF50),
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      const Text(
+                        '正在为您登录…',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),

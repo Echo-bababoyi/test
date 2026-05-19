@@ -1,6 +1,10 @@
-<!-- 本文件为项目记忆索引。每条记忆对应同目录下的一个 .md 文件，格式：`- [标题](文件.md) — 一句话概要` -->
+<!-- 项目记忆索引。每条对应同目录下一个 .md 文件 -->
 
-- [编码通用纪律](feedback_coding_disciplines.md) — Config 保护/编辑前查调用方/Search-first/Checkpoint/服务重启/反复 bug 升级等
-- [团队模式规则（休眠）](feedback_team_mode.md) — 默认 4 人（不含 reviewer）/6 铁律/派活纪律/成员约束模板/Bug 7 步/功能 6 步
-- [四文档机制](feedback_project_documentation.md) — ISSUES + COMMITS + SESSION-LOG + CLAUDE.md 四文档分工与会话恢复流程
-- [项目开发进展](project_progress.md) — 编码实施完成，下一步：Web Speech API 接入 + 云部署 + 真机测试（NEXT_PLAN v2.0）
+- [编码通用纪律](feedback_coding.md) — Config 保护 / 编辑前查调用方 / Search-first / Checkpoint / 服务重启
+- [四文档机制](feedback_docs.md) — ISSUES + COMMITS + SESSION-LOG + CLAUDE.md 分工与会话恢复
+- [团队启动配置](feedback_team_setup.md) — 默认 4 人 Sonnet / 成员结构 / persona 文件 / 生命周期
+- [团队运转规则](feedback_team_workflow.md) — team-lead 铁律 / 派活纪律 / 成员约束 / Bug 7 步 / 功能 6 步
+- [踩坑教训](feedback_lessons.md) — 成员越权 commit / 批量改动回退 / 粗略方案驳回 / CDN 国内不通 / team-lead 越权写代码
+- [用户工作偏好](feedback_user_style.md) — 一步一步确认 / 先看方案再实施 / 不批量改 / 方案要逐帧详细 / 外部依赖本地化
+- [项目开发进展](project_progress.md) — 会话 9：人脸验证 MediaPipe + AgentFab 全覆盖 + 标准版收紧，待真机测试
+- [前后端端口约定](reference_ports.md) — 后端 8080 / 前端 3080

@@ -7,6 +7,7 @@ import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/connection_indicator.dart';
 import '../widgets/elder_bottom_nav.dart';
+import '../widgets/login_guard.dart';
 import '../widgets/press_scale_wrapper.dart';
 
 void _showTodo(BuildContext context) {
@@ -445,7 +446,7 @@ class _EldFavoritesContent extends StatelessWidget {
                   icon: Icons.manage_search,
                   iconColor: Color(0xFF5B6BF5),
                   label: '社保查询',
-                  onTap: () => context.push(AppRoutes.shebaoQuery),
+                  onTap: () => LoginGuard.tryNavigate(context, AppRoutes.shebaoQuery),
                 ),
               ),
             ],
@@ -610,7 +611,7 @@ class _EldOnlineServiceSection extends StatelessWidget {
                 _EldOnlineGridItem(
                   item: item,
                   onTap: item.label == '健康医保'
-                      ? () => context.push(AppRoutes.shebaoJiaona)
+                      ? () => LoginGuard.tryNavigate(context, AppRoutes.shebaoJiaona)
                       : () => _showTodo(context),
                 ),
             ],
@@ -939,7 +940,7 @@ class _EldSearchBar extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.xlarge),
         child: InkWell(
-          onTap: () => context.push(AppRoutes.search),
+          onTap: () => LoginGuard.tryNavigate(context, AppRoutes.search),
           borderRadius: BorderRadius.circular(AppRadius.xlarge),
           child: Container(
             height: 52,
