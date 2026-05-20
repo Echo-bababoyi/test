@@ -6,7 +6,7 @@ import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 import '../services/agent_element_registry.dart';
 
-enum _SubPage { home, selfPay, payRecords }
+enum _SubPage { home, payRecords }
 
 class ShebaoJiaonaPage extends StatefulWidget {
   const ShebaoJiaonaPage({super.key});
@@ -51,10 +51,9 @@ class _ShebaoJiaonaPageState extends State<ShebaoJiaonaPage> {
             index: _sub.index,
             children: [
               _HomeSubPage(
-                onSelfPay: () => setState(() => _sub = _SubPage.selfPay),
+                onSelfPay: () => context.push(AppRoutes.yibaoJiaofei),
                 onPayRecords: () => setState(() => _sub = _SubPage.payRecords),
               ),
-              const _SelfPaySubPage(),
               const _PayRecordsSubPage(),
             ],
           ),
@@ -261,151 +260,6 @@ class _ServiceIcon extends StatelessWidget {
               style: const TextStyle(fontSize: 14),
               textAlign: TextAlign.center,
               maxLines: 2,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── "我为自己缴"子状态 ────────────────────────────────────────────────────────
-
-class _SelfPaySubPage extends StatelessWidget {
-  const _SelfPaySubPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // 用户信息头（蓝色底）
-        Material(
-          color: AppColors.elderPrimary,
-          child: InkWell(
-            onTap: () {},
-            splashColor: Colors.white24,
-            highlightColor: Colors.white12,
-            child: Padding(
-              padding: const EdgeInsets.all(Spacing.lg),
-              child: const Row(
-                children: [
-                  SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: Colors.white24,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.person, color: Colors.white, size: 28),
-                    ),
-                  ),
-                  SizedBox(width: Spacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '*小明',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          '3****************3',
-                          style: TextStyle(fontSize: 13, color: Colors.white70),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.chevron_right, color: Colors.white),
-                ],
-              ),
-            ),
-          ),
-        ),
-        // 温馨提示
-        Container(
-          color: const Color(0xFFFFF3E0),
-          padding: const EdgeInsets.symmetric(
-            horizontal: Spacing.md,
-            vertical: Spacing.sm,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(Icons.volume_up_outlined, color: AppColors.elderPrimary, size: 18),
-              const SizedBox(width: Spacing.sm),
-              const Expanded(
-                child: Text(
-                  '温馨提示：注意：缴费有延迟，支付成功后请在《缴费记录》里查询最终缴费结果。当日 16:30-次日 08:00 为银行批量扣款时间。',
-                  style: TextStyle(fontSize: 12, color: AppColors.elderPrimary),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close, color: AppColors.elderPrimary, size: 16),
-                onPressed: () {},
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ),
-        ),
-        // 静态 Tab 行
-        Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
-          child: const Row(
-            children: [
-              _StaticTab('全部', selected: true),
-              SizedBox(width: Spacing.xl),
-              _StaticTab('城乡居民'),
-              SizedBox(width: Spacing.xl),
-              _StaticTab('灵活就业'),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        // 空状态展示
-        const Expanded(child: _EmptyState(message: '您没有应缴纳的社保费记录')),
-      ],
-    );
-  }
-}
-
-class _StaticTab extends StatelessWidget {
-  final String label;
-  final bool selected;
-
-  const _StaticTab(this.label, {this.selected = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {},
-      borderRadius: BorderRadius.circular(4),
-      highlightColor: Colors.transparent,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                color: selected ? AppColors.elderPrimary : AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Container(
-              height: 2,
-              width: 24,
-              color: selected ? AppColors.elderPrimary : Colors.transparent,
             ),
           ],
         ),
