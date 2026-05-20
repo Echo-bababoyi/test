@@ -63,17 +63,17 @@ class _DraftsPageState extends State<DraftsPage> {
   Future<void> _confirmClearAll() async {
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('清空所有草稿', style: TextStyle(fontSize: 20)),
         content: const Text('清空后无法恢复，确定要清空全部草稿吗？',
             style: TextStyle(fontSize: 18)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('取消', style: TextStyle(fontSize: 18)),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('清空', style: TextStyle(fontSize: 18, color: _kOrange)),
           ),
         ],
@@ -89,17 +89,17 @@ class _DraftsPageState extends State<DraftsPage> {
     final title = d['page_title'] as String? ?? '该草稿';
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('删除草稿', style: TextStyle(fontSize: 20)),
         content: Text('确定要删除「$title」草稿吗？',
             style: const TextStyle(fontSize: 18)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('取消', style: TextStyle(fontSize: 18)),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('删除', style: TextStyle(fontSize: 18, color: _kOrange)),
           ),
         ],
