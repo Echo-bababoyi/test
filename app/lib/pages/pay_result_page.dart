@@ -1,12 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
+import '../services/pay_record_store.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 
-class PayResultPage extends StatelessWidget {
+class PayResultPage extends ConsumerStatefulWidget {
   const PayResultPage({super.key});
+
+  @override
+  ConsumerState<PayResultPage> createState() => _PayResultPageState();
+}
+
+class _PayResultPageState extends ConsumerState<PayResultPage> {
+  late final DateTime _createdAt;
+  late final String _flowId;
+  bool _recordWritten = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _createdAt = DateTime.now();
+    _flowId =
+        'ZLS${_z(_createdAt.year)}${_z(_createdAt.month)}${_z(_createdAt.day)}'
+        '${_z(_createdAt.hour)}${_z(_createdAt.minute)}${_z(_createdAt.second)}';
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_recordWritten) return;
+    final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
+    final success = extra?['success'] as bool? ?? true;
+    if (!success) return;
+    _recordWritten = true;
+    ref.read(payRecordsProvider.notifier).add(PayRecord(
+      xianzhong: extra?['xianzhong'] as String? ?? '城乡居民医保',
+      dangci: extra?['dangci_label'] as String? ?? '',
+      year: extra?['year'] as String? ?? '',
+      amount: extra?['amount'] as String? ?? '0.00',
+      target: extra?['target'] as String? ?? '本人',
+      dailiName: extra?['daili_name'] as String?,
+      status: '缴费成功',
+      createdAt: _createdAt,
+      flowId: _flowId,
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,11 +56,10 @@ class PayResultPage extends StatelessWidget {
     final xianzhong = extra?['xianzhong'] as String? ?? '城乡居民医保';
     final year = extra?['year'] as String? ?? '2026年度';
     final amount = extra?['amount'] as String? ?? '380.00';
-    final now = DateTime.now();
+
     final timeStr =
-        '${now.year}-${_z(now.month)}-${_z(now.day)} ${_z(now.hour)}:${_z(now.minute)}:${_z(now.second)}';
-    final flowId =
-        'ZLS${now.year}${_z(now.month)}${_z(now.day)}${_z(now.hour)}${_z(now.minute)}${_z(now.second)}';
+        '${_createdAt.year}-${_z(_createdAt.month)}-${_z(_createdAt.day)}'
+        ' ${_z(_createdAt.hour)}:${_z(_createdAt.minute)}:${_z(_createdAt.second)}';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -67,7 +107,7 @@ class PayResultPage extends StatelessWidget {
                     _Row('缴费年度', year),
                     _Row('金额', '¥ $amount'),
                     _Row('缴费时间', timeStr),
-                    _Row('流水号', flowId),
+                    _Row('流水号', _flowId),
                   ],
                 ),
               ),

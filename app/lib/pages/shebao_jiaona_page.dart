@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 import '../services/agent_element_registry.dart';
+import '../services/pay_record_store.dart';
 
 enum _SubPage { home, payRecords }
 
@@ -270,11 +272,12 @@ class _ServiceIcon extends StatelessWidget {
 
 // ─── "缴费记录"子状态 ──────────────────────────────────────────────────────────
 
-class _PayRecordsSubPage extends StatelessWidget {
+class _PayRecordsSubPage extends ConsumerWidget {
   const _PayRecordsSubPage();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final records = ref.watch(payRecordsProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -294,10 +297,17 @@ class _PayRecordsSubPage extends StatelessWidget {
         ),
         const Divider(height: 1),
         Expanded(
-          child: Container(
-            color: Colors.grey[100],
-            child: const _EmptyState(message: '您还没有缴费记录'),
-          ),
+          child: records.isEmpty
+              ? Container(
+                  color: Colors.grey[100],
+                  child: const _EmptyState(message: '您还没有缴费记录'),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(Spacing.md),
+                  itemCount: records.length,
+                  separatorBuilder: (context, i) => const SizedBox(height: Spacing.sm),
+                  itemBuilder: (_, i) => _PayRecordCard(record: records[i]),
+                ),
         ),
       ],
     );
@@ -323,6 +333,102 @@ class _DropdownChip extends StatelessWidget {
             const Icon(Icons.arrow_drop_down, size: 20),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─── 缴费记录卡片 ─────────────────────────────────────────────────────────────
+
+class _PayRecordCard extends StatelessWidget {
+  final PayRecord record;
+  const _PayRecordCard({required this.record});
+
+  static String _z(int n) => n.toString().padLeft(2, '0');
+
+  @override
+  Widget build(BuildContext context) {
+    final timeStr =
+        '${record.createdAt.year}-${_z(record.createdAt.month)}-${_z(record.createdAt.day)}'
+        ' ${_z(record.createdAt.hour)}:${_z(record.createdAt.minute)}';
+    return Container(
+      padding: const EdgeInsets.all(Spacing.md),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  record.dangci.isNotEmpty
+                      ? '${record.xianzhong} · ${record.dangci}'
+                      : record.xianzhong,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  record.status,
+                  style: const TextStyle(
+                      fontSize: 12, color: Color(0xFF52C41A)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Text('缴费年度：${record.year}',
+                  style: const TextStyle(
+                      fontSize: 14, color: AppColors.textSecondary)),
+              if (record.dailiName != null) ...[
+                const SizedBox(width: Spacing.md),
+                Text('代缴：${record.dailiName}',
+                    style: const TextStyle(
+                        fontSize: 14, color: AppColors.elderPrimary)),
+              ],
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '¥ ${record.amount}',
+                  style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.elderPrimary),
+                ),
+              ),
+              Text(timeStr,
+                  style: const TextStyle(
+                      fontSize: 12, color: AppColors.textSecondary)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text('流水号：${record.flowId}',
+              style: const TextStyle(
+                  fontSize: 12, color: AppColors.textSecondary)),
+        ],
       ),
     );
   }
