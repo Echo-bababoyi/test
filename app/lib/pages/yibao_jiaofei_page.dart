@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../services/agent_element_registry.dart';
 import '../services/draft_service.dart';
+import '../services/draft_store.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 
@@ -22,7 +24,10 @@ class YibaoJiaofeiPage extends StatefulWidget {
   State<YibaoJiaofeiPage> createState() => _YibaoJiaofeiPageState();
 }
 
-class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
+class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBindingObserver {
+  static const _pageId = 'yibao_jiaofei';
+  static const _pageTitle = '医保缴费';
+  Timer? _saveTimer;
   String? _targetPerson;
   String? _xianzhong;
   String? _year;
@@ -89,19 +94,43 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    DraftService.clearCompleted(_pageId);
     AgentElementRegistry.registerController('input_id_card', _idController);
     AgentElementRegistry.registerController('input_daili_idcard', _dailiIdController);
-    _idController.addListener(() => setState(() {}));
-    _dailiIdController.addListener(() => setState(() {}));
-    _dailiNameController.addListener(() => setState(() {}));
+    _idController.addListener(() {
+      setState(() {});
+      _scheduleAutoSave();
+    });
+    _dailiIdController.addListener(() {
+      setState(() {});
+      _scheduleAutoSave();
+    });
+    _dailiNameController.addListener(() {
+      setState(() {});
+      _scheduleAutoSave();
+    });
     _idFocus.addListener(() => setState(() => _idFocused = _idFocus.hasFocus));
     _dailiIdFocus.addListener(
         () => setState(() => _dailiIdFocused = _dailiIdFocus.hasFocus));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _restoreDraft());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden) {
+      _saveTimer?.cancel();
+      if (!DraftService.isCompleted(_pageId)) _flushAutoSave();
+    }
   }
 
   @override
   void dispose() {
-    _autoSave();
+    _saveTimer?.cancel();
+    if (!DraftService.isCompleted(_pageId)) _flushAutoSave();
+    WidgetsBinding.instance.removeObserver(this);
     AgentElementRegistry.unregister('input_id_card');
     AgentElementRegistry.unregister('input_daili_idcard');
     _idController.dispose();
@@ -112,20 +141,58 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
     super.dispose();
   }
 
-  void _autoSave() {
-    final fields = {
+  Future<void> _restoreDraft() async {
+    final draft = await DraftStore.getDraft(_pageId);
+    if (!mounted || draft == null) return;
+    final fields = (draft['fields'] as Map?)?.cast<String, dynamic>() ?? {};
+    final sensitive = draft['sensitive_filled'] as bool? ?? false;
+    setState(() {
+      _targetPerson = fields['target_person'] as String?;
+      _xianzhong = fields['xianzhong'] as String?;
+      _year = fields['year'] as String?;
+      final dangciLabel = fields['dangci'] as String?;
+      if (_xianzhong != null && dangciLabel != null) {
+        final opts = _dangciOptions[_xianzhong];
+        if (opts != null) {
+          for (final d in opts) {
+            if (d.label == dangciLabel) { _dangci = d; break; }
+          }
+        }
+      }
+      final dailiName = fields['daili_name'] as String?;
+      if (dailiName != null && dailiName.isNotEmpty) {
+        _dailiNameController.text = dailiName;
+      }
+    });
+    if (sensitive && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('为安全起见，身份证号需要您重新输入',
+              style: TextStyle(fontSize: 18)),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  void _scheduleAutoSave() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 500), _flushAutoSave);
+  }
+
+  void _flushAutoSave() {
+    final fields = <String, dynamic>{
       'target_person': _targetPerson,
       'xianzhong': _xianzhong,
       'year': _year,
       'dangci': _dangci?.label,
-      'amount': _dangci?.amount.toStringAsFixed(2),
       'daili_name': _dailiNameController.text,
     };
-    final hasContent = fields.values.any((v) => v != null && v.toString().isNotEmpty);
-    if (!hasContent) return;
+    fields.removeWhere((k, v) => v == null || v.toString().isEmpty);
+    if (fields.isEmpty) return;
     DraftService.autoSave(
-      'yibao_jiaofei',
-      '医保缴费',
+      _pageId,
+      _pageTitle,
       fields,
       _idController.text.isNotEmpty || _dailiIdController.text.isNotEmpty,
     );
@@ -136,6 +203,7 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
       _xianzhong = v;
       _dangci = null;
     });
+    _scheduleAutoSave();
   }
 
   String _maskId(String id) =>
@@ -176,7 +244,10 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
                         value: p,
                         child: Text(p, style: const TextStyle(fontSize: 18)),
                       )).toList(),
-                      onChanged: (v) => setState(() => _targetPerson = v),
+                      onChanged: (v) {
+                        setState(() => _targetPerson = v);
+                        _scheduleAutoSave();
+                      },
                       decoration: _inputDecoration(),
                       style: const TextStyle(fontSize: 18, color: Color(0xFF333333)),
                     ),
@@ -212,7 +283,10 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
                         value: y,
                         child: Text(y, style: const TextStyle(fontSize: 18)),
                       )).toList(),
-                      onChanged: (v) => setState(() => _year = v),
+                      onChanged: (v) {
+                        setState(() => _year = v);
+                        _scheduleAutoSave();
+                      },
                       decoration: _inputDecoration(),
                       style: const TextStyle(fontSize: 18, color: Color(0xFF333333)),
                     ),
@@ -237,7 +311,10 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
                                 ),
                               ))
                           .toList(),
-                      onChanged: (v) => setState(() => _dangci = v),
+                      onChanged: (v) {
+                        setState(() => _dangci = v);
+                        _scheduleAutoSave();
+                      },
                       decoration: _inputDecoration(),
                       style: const TextStyle(fontSize: 18, color: Color(0xFF333333)),
                     ),

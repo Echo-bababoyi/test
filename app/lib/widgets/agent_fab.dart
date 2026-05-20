@@ -12,6 +12,7 @@ import '../services/audio_player.dart';
 import '../services/draft_service.dart';
 import '../services/draft_store.dart';
 import '../services/log_service.dart';
+import '../services/page_meta.dart';
 import '../services/ws_client.dart';
 import '../services/session_state.dart';
 import 'agent_bubble.dart';
@@ -381,23 +382,17 @@ class _BubbleWindowState extends State<_BubbleWindow>
   StreamSubscription<Map<String, dynamic>>? _wsSub;
   final List<Map<String, dynamic>> _items = [];
 
-  static const _pageIdMap = {
-    '/service/yibao-jiaofei': ('yibao_jiaofei', '医保缴费'),
-    '/service/yibao-query':   ('yibao_query',   '医保查询'),
-    '/service/pension-query': ('pension_query',  '养老金查询'),
-  };
-
   @override
   void initState() {
     super.initState();
     _animCtrl.forward();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final entry = _pageIdMap[widget.currentPath ?? ''];
+      final meta = metaForRoute(widget.currentPath ?? '');
       _executor = AgentCommandExecutor(
         router: GoRouter.of(context),
         overlayContext: context,
-        pageId: entry?.$1,
-        pageTitle: entry?.$2,
+        pageId: meta?.pageId,
+        pageTitle: meta?.pageTitle,
       );
     });
     if (_kDemoMode) {
@@ -492,15 +487,13 @@ class _BubbleWindowState extends State<_BubbleWindow>
 
   Future<void> _checkPageDraft() async {
     if (!mounted) return;
-    final loc = widget.currentPath ?? '';
-    final entry = _pageIdMap[loc];
-    if (entry == null) return;
-    final (pageId, pageTitle) = entry;
-    final draft = await DraftService.checkDraft(pageId);
+    final meta = metaForRoute(widget.currentPath ?? '');
+    if (meta == null) return;
+    final draft = await DraftService.checkDraft(meta.pageId);
     if (!mounted || draft == null) return;
     setState(() => _items.add({
       'type': 'draft_prompt', 'draft': draft,
-      'pageId': pageId, 'pageTitle': pageTitle,
+      'pageId': meta.pageId, 'pageTitle': meta.pageTitle,
     }));
     _scrollToBottom();
   }
@@ -822,12 +815,7 @@ class _BubbleWindowState extends State<_BubbleWindow>
         primary: widget.primary,
         onContinue: () {
           setState(() => _items.removeAt(i));
-          final routeMap = {
-            'yibao_jiaofei': '/service/yibao-jiaofei',
-            'yibao_query': '/service/yibao-query',
-            'pension_query': '/service/pension-query',
-          };
-          final route = routeMap[item['pageId'] as String];
+          final route = metaForPageId(item['pageId'] as String)?.route;
           if (route != null) {
             _close().then((_) { if (mounted) GoRouter.of(context).go(route); });
           }

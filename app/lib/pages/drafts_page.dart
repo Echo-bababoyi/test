@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../services/draft_store.dart';
+import '../services/page_meta.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 
@@ -33,6 +34,7 @@ class _DraftsPageState extends State<DraftsPage> {
       final tb = b['updated_at'] as String? ?? '';
       return tb.compareTo(ta);
     });
+    if (!mounted) return;
     setState(() {
       _drafts = drafts;
       _loading = false;
@@ -49,17 +51,65 @@ class _DraftsPageState extends State<DraftsPage> {
     }
   }
 
-  static const _pageIcons = {
-    'yibao_jiaofei': Icons.medical_services_outlined,
-    'yibao_query': Icons.search_outlined,
-    'pension_query': Icons.account_balance_outlined,
-  };
+  int _filledCount(Map<String, dynamic> fields, List<String> keys) {
+    var n = 0;
+    for (final k in keys) {
+      final v = fields[k];
+      if (v != null && v.toString().isNotEmpty) n++;
+    }
+    return n;
+  }
 
-  static const _fieldCounts = {
-    'yibao_jiaofei': (3, 5),
-    'yibao_query': (1, 3),
-    'pension_query': (1, 2),
-  };
+  Future<void> _confirmClearAll() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('清空所有草稿', style: TextStyle(fontSize: 20)),
+        content: const Text('清空后无法恢复，确定要清空全部草稿吗？',
+            style: TextStyle(fontSize: 18)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消', style: TextStyle(fontSize: 18)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('清空', style: TextStyle(fontSize: 18, color: _kOrange)),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await DraftStore.clearAll();
+      await _load();
+    }
+  }
+
+  Future<void> _confirmDeleteOne(Map<String, dynamic> d) async {
+    final title = d['page_title'] as String? ?? '该草稿';
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('删除草稿', style: TextStyle(fontSize: 20)),
+        content: Text('确定要删除「$title」草稿吗？',
+            style: const TextStyle(fontSize: 18)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消', style: TextStyle(fontSize: 18)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('删除', style: TextStyle(fontSize: 18, color: _kOrange)),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await DraftStore.deleteByPageId(d['page_id'] as String);
+      await _load();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +120,18 @@ class _DraftsPageState extends State<DraftsPage> {
         backgroundColor: _kOrange,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          if (!_loading && _drafts.isNotEmpty)
+            TextButton(
+              onPressed: _confirmClearAll,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                minimumSize: const Size(60, 44),
+              ),
+              child: const Text('清空',
+                  style: TextStyle(fontSize: 18, color: Colors.white)),
+            ),
+        ],
       ),
       body: Stack(
         children: [
@@ -131,11 +193,11 @@ class _DraftsPageState extends State<DraftsPage> {
             ],
           ),
           const SizedBox(height: 24),
-          const Text('还没有草稿', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF333333))),
+          const Text('还没有草稿', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Color(0xFF333333))),
           const SizedBox(height: 8),
           const Text(
             '办事过程中的未完成表单\n会保存在这里',
-            style: TextStyle(fontSize: 14, color: Color(0xFF999999), height: 1.5),
+            style: TextStyle(fontSize: 18, color: Color(0xFF999999), height: 1.5),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 28),
@@ -144,11 +206,11 @@ class _DraftsPageState extends State<DraftsPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: _kOrange,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
               elevation: 0,
             ),
-            child: const Text('去办事', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            child: const Text('去办事', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
           ),
         ],
       ),
@@ -171,7 +233,7 @@ class _DraftsPageState extends State<DraftsPage> {
               const SizedBox(width: 8),
               Text(
                 '共 ${_drafts.length} 份草稿待完成',
-                style: const TextStyle(fontSize: 14, color: Color(0xFF666666), fontWeight: FontWeight.w500),
+                style: const TextStyle(fontSize: 18, color: Color(0xFF666666), fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -191,10 +253,13 @@ class _DraftsPageState extends State<DraftsPage> {
     final pageId = d['page_id'] as String? ?? '';
     final pageTitle = d['page_title'] as String? ?? '';
     final timeStr = _formatTime(d['updated_at'] as String?);
-    final icon = _pageIcons[pageId] ?? Icons.edit_outlined;
-    final route = _routeForPageId(pageId);
-    final counts = _fieldCounts[pageId] ?? (1, 3);
-    final progress = counts.$1 / counts.$2;
+    final meta = metaForPageId(pageId);
+    final icon = meta?.icon ?? Icons.edit_outlined;
+    final route = meta?.route ?? '';
+    final required = meta?.requiredFields ?? 1;
+    final fields = (d['fields'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final filled = meta == null ? 0 : _filledCount(fields, meta.fieldKeys);
+    final progress = (filled / required).clamp(0.0, 1.0);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -228,7 +293,7 @@ class _DraftsPageState extends State<DraftsPage> {
                   ),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 16, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(14, 16, 8, 16),
                       child: Row(
                         children: [
                           Container(
@@ -249,9 +314,28 @@ class _DraftsPageState extends State<DraftsPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  pageTitle,
-                                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Color(0xFF333333)),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        pageTitle,
+                                        style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w600, color: Color(0xFF333333)),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 48,
+                                      height: 48,
+                                      child: IconButton(
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        iconSize: 22,
+                                        onPressed: () => _confirmDeleteOne(d),
+                                        icon: const Icon(Icons.close,
+                                            color: Color(0xFF999999)),
+                                        tooltip: '删除草稿',
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 6),
                                 ClipRRect(
@@ -267,23 +351,26 @@ class _DraftsPageState extends State<DraftsPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '已填写 ${counts.$1}/${counts.$2} 项 · $timeStr',
-                                  style: const TextStyle(fontSize: 12, color: Color(0xFF999999)),
+                                  '已填写 $filled/$required 项 · $timeStr',
+                                  style: const TextStyle(fontSize: 16, color: Color(0xFF999999)),
+                                ),
+                                const SizedBox(height: 10),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: _kOrange,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: const [
+                                        BoxShadow(color: Color(0x33FF6D00), blurRadius: 8, offset: Offset(0, 2)),
+                                      ],
+                                    ),
+                                    child: const Text('继续', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w500)),
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: _kOrange,
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: const [
-                                BoxShadow(color: Color(0x33FF6D00), blurRadius: 8, offset: Offset(0, 2)),
-                              ],
-                            ),
-                            child: const Text('继续', style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w500)),
                           ),
                         ],
                       ),
@@ -296,14 +383,5 @@ class _DraftsPageState extends State<DraftsPage> {
         ),
       ),
     );
-  }
-
-  String _routeForPageId(String pageId) {
-    return switch (pageId) {
-      'yibao_jiaofei' => '/service/yibao-jiaofei',
-      'yibao_query' => '/service/yibao-query',
-      'pension_query' => '/service/pension-query',
-      _ => '',
-    };
   }
 }

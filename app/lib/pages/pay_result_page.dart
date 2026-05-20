@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
+import '../services/draft_service.dart';
+import '../services/draft_store.dart';
 import '../services/log_service.dart';
 import '../services/pay_record_store.dart';
 import '../theme/design_tokens.dart';
@@ -51,6 +53,8 @@ class _PayResultPageState extends ConsumerState<PayResultPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref.read(payRecordsProvider.notifier).add(record);
+      DraftService.markCompleted('yibao_jiaofei');
+      DraftStore.deleteByPageId('yibao_jiaofei');
       LogService.saveManual(
         scene: 'yibao_jiaofei',
         summary: '为${record.target}缴纳${record.year}${record.xianzhong}，'

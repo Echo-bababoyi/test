@@ -10,17 +10,13 @@ class DraftStore {
     final tx = db.transaction(_storeName, idbModeReadWrite);
     final store = tx.objectStore(_storeName);
 
-    final all = (await store.getAll()).cast<Map<String, dynamic>>();
-    for (final item in all) {
-      if (item['page_id'] == draft['page_id'] && item['draft_id'] != draft['draft_id']) {
-        await store.delete(item['draft_id']);
-      }
-    }
-    final remaining = all.where((m) =>
-      !(m['page_id'] == draft['page_id'] && m['draft_id'] != draft['draft_id'])
-    ).toList();
-    if (remaining.length >= _maxDrafts) {
-      await store.delete(remaining.first['draft_id']);
+    final raw = await store.getAll();
+    final all = raw.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    if (all.length >= _maxDrafts &&
+        !all.any((m) => m['draft_id'] == draft['draft_id'])) {
+      all.sort((a, b) =>
+          (a['updated_at'] as String? ?? '').compareTo(b['updated_at'] as String? ?? ''));
+      await store.delete(all.first['draft_id']);
     }
 
     await store.put(draft);
@@ -54,6 +50,28 @@ class DraftStore {
     final tx = db.transaction(_storeName, idbModeReadWrite);
     final store = tx.objectStore(_storeName);
     await store.delete(draftId);
+    await tx.completed;
+  }
+
+  static Future<void> deleteByPageId(String pageId) async {
+    final db = await DbInit.open();
+    final tx = db.transaction(_storeName, idbModeReadWrite);
+    final store = tx.objectStore(_storeName);
+    final all = await store.getAll();
+    for (final item in all) {
+      final map = Map<String, dynamic>.from(item as Map);
+      if (map['page_id'] == pageId) {
+        await store.delete(map['draft_id']);
+      }
+    }
+    await tx.completed;
+  }
+
+  static Future<void> clearAll() async {
+    final db = await DbInit.open();
+    final tx = db.transaction(_storeName, idbModeReadWrite);
+    final store = tx.objectStore(_storeName);
+    await store.clear();
     await tx.completed;
   }
 }
