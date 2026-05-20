@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../router.dart';
 import '../services/agent_element_registry.dart';
+import '../services/log_service.dart';
 import '../services/ws_client.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
@@ -58,6 +59,14 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
         'unit': '元',
       },
     });
+    LogService.saveManual(
+      scene: 'pension_query',
+      summary: '查询 $_selectedMonth 养老金发放情况，金额 $_mockAmount 元',
+      steps: [
+        {'action': '查询月份', 'target': _selectedMonth},
+        {'action': '查询结果', 'target': '¥ $_mockAmount'},
+      ],
+    );
   }
 
   @override

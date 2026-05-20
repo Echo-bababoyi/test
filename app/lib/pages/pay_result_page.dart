@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
+import '../services/log_service.dart';
 import '../services/pay_record_store.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
@@ -50,6 +51,18 @@ class _PayResultPageState extends ConsumerState<PayResultPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref.read(payRecordsProvider.notifier).add(record);
+      LogService.saveManual(
+        scene: 'yibao_jiaofei',
+        summary: '为${record.target}缴纳${record.year}${record.xianzhong}，'
+            '金额 ${record.amount} 元',
+        steps: [
+          {'action': '险种', 'target': record.xianzhong},
+          if (record.dangci.isNotEmpty)
+            {'action': '档次', 'target': record.dangci},
+          {'action': '缴费年度', 'target': record.year},
+          {'action': '确认支付', 'target': '¥ ${record.amount}'},
+        ],
+      );
     });
   }
 

@@ -36,4 +36,11 @@ class OperationLogStore {
     await store.delete(logId);
     await tx.completed;
   }
+
+  static Future<void> clearAll() async {
+    final db = await DbInit.open();
+    final tx = db.transaction(_storeName, idbModeReadWrite);
+    await tx.objectStore(_storeName).clear();
+    await tx.completed;
+  }
 }

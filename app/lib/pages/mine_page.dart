@@ -278,7 +278,6 @@ class _MyActivitySection extends StatelessWidget {
   const _MyActivitySection();
 
   static const _items = [
-    (Icons.work_outline, '办事记录', AppRoutes.operationLogs),
     (Icons.edit_note_outlined, '我的草稿', AppRoutes.drafts),
     (Icons.history, '我的足迹', null),
     (Icons.bookmark_add_outlined, '我的订阅', null),
@@ -297,6 +296,10 @@ class _MyActivitySection extends StatelessWidget {
       ),
       child: Column(
         children: [
+          _OperationLogEntry(
+            onTap: () => context.push(AppRoutes.operationLogs),
+          ),
+          const SizedBox(height: Spacing.lg),
           for (int row = 0; row < (_items.length / 2).ceil(); row++)
             Padding(
               padding: row > 0
@@ -319,6 +322,55 @@ class _MyActivitySection extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _OperationLogEntry extends StatelessWidget {
+  final VoidCallback onTap;
+  const _OperationLogEntry({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+            horizontal: Spacing.sm, vertical: Spacing.sm),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.elderPrimary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.manage_search,
+                  color: AppColors.elderPrimary, size: 26),
+            ),
+            const SizedBox(width: Spacing.md),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('操作记录',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600)),
+                  SizedBox(height: 2),
+                  Text(
+                    '小浙帮您做了什么，一目了然',
+                    style: TextStyle(fontSize: 16, color: Color(0xFF9E9E9E)),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right,
+                color: AppColors.textSecondary, size: 20),
+          ],
+        ),
       ),
     );
   }

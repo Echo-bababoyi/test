@@ -9,6 +9,7 @@ import '../router.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../services/agent_element_registry.dart';
+import '../services/log_service.dart';
 import '../widgets/sms_notification.dart';
 
 class VerifyPage extends ConsumerStatefulWidget {
@@ -117,11 +118,20 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
   void _confirmSmsCode(BuildContext context) {
     _smsArriveTimer?.cancel();
     _smsAutoCloseTimer?.cancel();
+    final phone = _phoneController.text;
     setState(() {
       _loginSuccess = true;
       _showSms = false;
     });
     ref.read(loginProvider.notifier).login('用户');
+    LogService.saveManual(
+      scene: 'otp_login',
+      summary: '通过验证码登录（手机号尾号 ${phone.length >= 4 ? phone.substring(phone.length - 4) : phone}）',
+      steps: [
+        {'action': '发送验证码', 'target': '手机号已接收'},
+        {'action': '验证码登录', 'target': '验证成功'},
+      ],
+    );
     final router = GoRouter.of(context);
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (!mounted) return;

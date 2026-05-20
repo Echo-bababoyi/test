@@ -12,6 +12,7 @@ import '../widgets/camera_view.dart';
 import '../services/agent_element_registry.dart';
 import '../services/camera_service.dart';
 import '../services/face_detector_service.dart';
+import '../services/log_service.dart';
 import '../services/login_page_snackbar.dart';
 
 enum _TopState { prepare, authenticating, permissionDenied }
@@ -36,6 +37,14 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
 
   void _onAllSuccess() {
     ref.read(loginProvider.notifier).login('用户');
+    LogService.saveManual(
+      scene: 'face_login',
+      summary: '通过刷脸验证完成登录',
+      steps: [
+        {'action': '人脸检测', 'target': '眨眼 + 转头验证通过'},
+        {'action': '登录', 'target': '验证成功'},
+      ],
+    );
     context.go(AppRoutes.elderHome);
   }
 

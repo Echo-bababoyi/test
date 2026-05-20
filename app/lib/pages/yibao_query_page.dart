@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../router.dart';
 import '../services/agent_element_registry.dart';
+import '../services/log_service.dart';
 import '../services/ws_client.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/connection_indicator.dart';
@@ -39,6 +40,13 @@ class _YibaoQueryPageState extends State<YibaoQueryPage> {
         'status': '正常',
       },
     });
+    LogService.saveManual(
+      scene: 'yibao_query',
+      summary: '查询医保账户余额，状态正常，余额 $_mockBalance 元',
+      steps: [
+        {'action': '查询', 'target': '医保账户余额'},
+      ],
+    );
   }
 
   @override
