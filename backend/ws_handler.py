@@ -106,10 +106,15 @@ class WSHandler:
             logger.error("session=%s _dispatch error: %s raw=%s", self.session_id, exc, raw)
 
     async def _on_agent_wake(self, payload):
-        logger.info("session=%s agent_wake trigger=%s page=%s", self.session_id, payload.trigger, payload.current_page)
+        logger.info("session=%s agent_wake trigger=%s page=%s trust=%s",
+                    self.session_id, payload.trigger, payload.current_page, payload.trust_level)
 
         from backend.agent_core import AgentCore
-        self._agent_core = AgentCore(session_id=self.session_id, ws_handler=self)
+        self._agent_core = AgentCore(
+            session_id=self.session_id,
+            ws_handler=self,
+            trust_level=payload.trust_level,
+        )
         self._audio_buf = []
         self.state = SessionState.listening
 

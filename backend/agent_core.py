@@ -58,6 +58,22 @@ SCENE_PROMPTS = {
 
 _SENSITIVE_TOOLS = {"fill_field_sensitive", "read_sms"}
 
+_PASSWORD_FIELDS = {
+    "input_pay_password", "input_login_password",
+    "input_old_password", "input_new_password",
+}
+
+
+def _is_password_field(field_key: str) -> bool:
+    """密码字段全级别硬拒（v0.6 决策 5）。"""
+    if not field_key:
+        return False
+    if field_key in _PASSWORD_FIELDS:
+        return True
+    lower = field_key.lower()
+    return "password" in lower or "pwd" in lower
+
+
 _PERMISSION_META = {
     "fill_field_sensitive": {
         "permission_type": "fill_sensitive_field",
@@ -108,13 +124,15 @@ def _load_scene_prompt(scene_id: str) -> str:
 
 
 class AgentCore:
-    def __init__(self, session_id: str, ws_handler):
+    def __init__(self, session_id: str, ws_handler, trust_level: str = "guide"):
         self.session_id = session_id
         self.ws = ws_handler
         self._send_fn: Callable[..., Coroutine[Any, Any, None]] = ws_handler.send
         self._current_scene: str | None = None
         self._permission_event: asyncio.Event = asyncio.Event()
         self._permission_granted: bool = False
+        self.trust_level: str = trust_level
+        self._task_sensitive_authorized: bool = False
         # Pending query results forwarded from ws_handler
         self._query_result: dict | None = None
         self._query_event: asyncio.Event = asyncio.Event()
@@ -124,7 +142,7 @@ class AgentCore:
             session_id=f"{session_id}_cls",
             instructions=_INTENT_PROMPT,
             markdown=False,
-            add_history_to_context=False,
+            add_history_to_messages=False,
         )
 
         self._rephraser = Agent(
@@ -132,7 +150,7 @@ class AgentCore:
             session_id=f"{session_id}_rph",
             instructions=_CONFIRM_PROMPT,
             markdown=False,
-            add_history_to_context=False,
+            add_history_to_messages=False,
         )
 
         self._executor: Agent | None = None
@@ -170,44 +188,63 @@ class AgentCore:
             session_id=f"{self.session_id}_oos",
             instructions=_OUT_OF_SCOPE_PROMPT,
             markdown=False,
-            add_history_to_context=False,
+            add_history_to_messages=False,
         )
         response = await agent.arun(user_input)
         return (response.content or "抱歉，这个功能暂时帮不到您").strip()
 
     async def execute_task(self, intent_summary: str) -> str:
-        """Execute the task for the classified scene with HITL loop for sensitive tools.
-
-        Returns a one-line summary for task_done.
-        """
+        """Execute the task for the classified scene with HITL loop for sensitive tools."""
         scene_id = self._current_scene
         if not scene_id or scene_id == "out_of_scope":
             logger.info("session=%s execute_task skipped: out_of_scope", self.session_id)
             return ""
 
+        self._task_sensitive_authorized = False
+
         instructions = _load_scene_prompt(scene_id)
-        tools = SCENE_TOOLS.get(scene_id, [cmd_navigate, cmd_highlight])
+        tools = get_scene_tools(scene_id, self.trust_level)
         self._executor = Agent(
             model=DeepSeek(id="deepseek-chat"),
             session_id=self.session_id,
             tools=tools,
             instructions=instructions,
             markdown=False,
-            add_history_to_context=True,
+            add_history_to_messages=True,
             num_history_runs=10,
         )
 
         input_msg = intent_summary
-        last_content = ""
         while True:
-            logger.info("session=%s execute_task scene=%s input=%r", self.session_id, scene_id, input_msg)
+            logger.info("session=%s execute_task scene=%s trust=%s input=%r",
+                        self.session_id, scene_id, self.trust_level, input_msg)
             response = await self._executor.arun(input_msg)
             last_content = response.content or ""
-
-            await self._push_tool_results(response)
-
             stopped_tool = self._get_stopped_tool(response)
+
             if stopped_tool in _SENSITIVE_TOOLS:
+                await self._push_tool_results(response, skip_stopped=stopped_tool)
+
+                field_key = self._get_tool_field_key(response, stopped_tool)
+
+                if stopped_tool == "fill_field_sensitive" and _is_password_field(field_key):
+                    logger.info("session=%s password field hard-rejected: %s",
+                                self.session_id, field_key)
+                    await self._send_fn("agent_reply", {
+                        "text": "这步需要您亲手输入密码",
+                        "tts_audio_base64": None,
+                        "tts_format": "mp3",
+                        "requires_confirmation": False,
+                        "confirmation_timeout_ms": None,
+                    })
+                    input_msg = "用户必须自己输入密码，请用 cmd_say 提示后继续后续步骤"
+                    continue
+
+                if self.trust_level == "full" and self._task_sensitive_authorized:
+                    await self._push_stopped_tool(response, stopped_tool)
+                    input_msg = "用户已授权，继续执行"
+                    continue
+
                 permission_id = str(uuid.uuid4())
                 self._permission_event.clear()
                 try:
@@ -216,25 +253,25 @@ class AgentCore:
                         self._build_permission_payload(stopped_tool, permission_id),
                     )
                 except Exception as exc:
-                    logger.error("session=%s permission_request send error: %s", self.session_id, exc)
+                    logger.error("session=%s permission_request send error: %s",
+                                 self.session_id, exc)
                     return ""
                 granted = await self.wait_for_permission()
-                if not granted:
-                    logger.info("session=%s permission denied for %s", self.session_id, stopped_tool)
-                    await self._send_fn("agent_reply", {
-                        "text": "好的，已取消",
-                        "tts_audio_base64": None,
-                        "tts_format": "mp3",
-                        "requires_confirmation": False,
-                        "confirmation_timeout_ms": None,
-                    })
-                    return "已取消"
-                input_msg = "用户已授权，继续执行"
-            else:
-                logger.info("session=%s execute_task done content=%s", self.session_id, last_content)
-                break
+                if granted:
+                    await self._push_stopped_tool(response, stopped_tool)
+                    if self.trust_level == "full":
+                        self._task_sensitive_authorized = True
+                    input_msg = "用户已授权，继续执行"
+                else:
+                    logger.info("session=%s permission denied for %s, skipping field",
+                                self.session_id, stopped_tool)
+                    input_msg = ("用户拒绝代填该字段，请用 cmd_say 提示用户自己填写，"
+                                 "然后继续后续步骤")
+                continue
 
-        return last_content or intent_summary
+            await self._push_tool_results(response)
+            logger.info("session=%s execute_task done content=%s", self.session_id, last_content)
+            return last_content or intent_summary
 
     def set_query_result(self, page_id: str, result_fields: dict) -> None:
         """Called by ws_handler when query_result_ready arrives from frontend."""
@@ -251,12 +288,12 @@ class AgentCore:
             model=DeepSeek(id="deepseek-chat"),
             session_id=f"{self.session_id}_broadcast",
             markdown=False,
-            add_history_to_context=False,
+            add_history_to_messages=False,
         )
         response = await agent.arun(prompt)
         return (response.content or result_text).strip()
 
-    async def _push_tool_results(self, response) -> None:
+    async def _push_tool_results(self, response, skip_stopped: str | None = None) -> None:
         """Forward current-round tool call results to the frontend as cmd_* WebSocket messages."""
         import ast
         for msg in (response.messages or []):
@@ -265,6 +302,9 @@ class AgentCore:
             if msg.role != "tool":
                 continue
             tool_name = getattr(msg, "tool_name", None)
+            if skip_stopped and tool_name == skip_stopped \
+                    and getattr(msg, "stop_after_tool_call", False):
+                continue
             msg_type = _TOOL_TO_MSG_TYPE.get(tool_name)
             if not msg_type:
                 continue
@@ -283,6 +323,61 @@ class AgentCore:
                 await self._send_fn(msg_type, payload)
             except Exception as exc:
                 logger.error("session=%s push tool result send error: %s", self.session_id, exc)
+
+    async def _push_stopped_tool(self, response, stopped_tool: str) -> None:
+        """Push the stopped sensitive tool's result to the frontend (after user authorizes)."""
+        import ast
+        for msg in (response.messages or []):
+            if getattr(msg, "from_history", False):
+                continue
+            if msg.role != "tool":
+                continue
+            if not getattr(msg, "stop_after_tool_call", False):
+                continue
+            if getattr(msg, "tool_name", None) != stopped_tool:
+                continue
+            msg_type = _TOOL_TO_MSG_TYPE.get(stopped_tool)
+            if not msg_type:
+                return
+            content = msg.content
+            if isinstance(content, dict):
+                payload = content
+            elif isinstance(content, str):
+                try:
+                    payload = ast.literal_eval(content)
+                except Exception:
+                    payload = {}
+            else:
+                payload = {}
+            logger.info("session=%s push stopped tool: %s %s", self.session_id, msg_type, payload)
+            try:
+                await self._send_fn(msg_type, payload)
+            except Exception as exc:
+                logger.error("session=%s push stopped tool send error: %s", self.session_id, exc)
+            return
+
+    def _get_tool_field_key(self, response, tool_name: str) -> str:
+        """Extract field_key from a stopped tool's content (used for password detection)."""
+        import ast
+        for msg in (response.messages or []):
+            if getattr(msg, "from_history", False):
+                continue
+            if msg.role != "tool":
+                continue
+            if not getattr(msg, "stop_after_tool_call", False):
+                continue
+            if getattr(msg, "tool_name", None) != tool_name:
+                continue
+            content = msg.content
+            if isinstance(content, dict):
+                return content.get("field_key", "") or ""
+            if isinstance(content, str):
+                try:
+                    d = ast.literal_eval(content)
+                    return d.get("field_key", "") or ""
+                except Exception:
+                    return ""
+        return ""
 
     def _get_stopped_tool(self, response) -> str | None:
         """Return the tool_name of the message that caused stop_after_tool_call, or None.
