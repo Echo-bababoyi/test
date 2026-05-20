@@ -1,21 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/state/app_state.dart';
 import '../router.dart';
 import '../services/agent_settings_service.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
+import '../widgets/system_dialog.dart';
+import '../widgets/trust_level_cards.dart';
 
-class AgentSettingsPage extends StatefulWidget {
+class AgentSettingsPage extends ConsumerStatefulWidget {
   const AgentSettingsPage({super.key});
   @override
-  State<AgentSettingsPage> createState() => _AgentSettingsPageState();
+  ConsumerState<AgentSettingsPage> createState() => _AgentSettingsPageState();
 }
 
-class _AgentSettingsPageState extends State<AgentSettingsPage> {
+class _AgentSettingsPageState extends ConsumerState<AgentSettingsPage> {
   final _svc = AgentSettingsService.instance;
+
+  static const _kOrder = {'guide': 1, 'semi': 2, 'full': 3};
+
+  void _onTrustChanged(String newLevel) {
+    final current = _svc.trustLevel;
+    if (current == newLevel) return;
+    final isUpgrade = (_kOrder[newLevel] ?? 0) > (_kOrder[current] ?? 0);
+    final title = _trustTitleFor(newLevel);
+    if (isUpgrade) {
+      SystemDialog.show(
+        context,
+        title: '切换权限',
+        message: '即将切换到「$title」，小浙将帮您做更多。是否确认？',
+        confirmLabel: '确认切换',
+        denyLabel: '取消',
+        onConfirm: () => _applyTrust(newLevel, title),
+      );
+    } else {
+      _applyTrust(newLevel, title);
+    }
+  }
+
+  void _applyTrust(String level, String title) {
+    setState(() => _svc.trustLevel = level);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('已切换到「$title」'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  String _trustTitleFor(String level) {
+    switch (level) {
+      case 'guide': return '我自己做，小浙提醒我';
+      case 'semi':  return '小浙帮我填，我自己点提交';
+      case 'full':  return '小浙全程代办，关键步骤我确认';
+      default: return '';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isLoggedIn = ref.watch(loginProvider).isLoggedIn;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -28,6 +73,18 @@ class _AgentSettingsPageState extends State<AgentSettingsPage> {
         children: [
           ListView(
         children: [
+          if (!isLoggedIn) const _LoginBanner(),
+          const _SectionHeader(title: '小浙能帮您做多少'),
+          Container(
+            color: AppColors.surface,
+            padding: const EdgeInsets.all(Spacing.lg),
+            child: TrustLevelCards(
+              selected: isLoggedIn ? _svc.trustLevel : '',
+              onChanged: _onTrustChanged,
+              readonly: !isLoggedIn,
+            ),
+          ),
+          const SizedBox(height: Spacing.sm),
           const _SectionHeader(title: '语音设置'),
           Container(
             color: Colors.white,
@@ -122,7 +179,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-    child: Text(title, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+    child: Text(title, style: const TextStyle(fontSize: 15, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
   );
 }
 
@@ -154,6 +211,45 @@ class _SpeedBtn extends StatelessWidget {
   }
 }
 
+class _LoginBanner extends StatelessWidget {
+  const _LoginBanner();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFFFFF4D6),
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.md),
+      child: Row(
+        children: [
+          const Icon(Icons.warning_amber_outlined, size: 20, color: Color(0xFFCC8800)),
+          const SizedBox(width: Spacing.sm),
+          const Expanded(
+            child: Text(
+              '登录后可调整小浙的工作方式',
+              style: TextStyle(fontSize: 16, color: AppColors.textPrimary),
+            ),
+          ),
+          Material(
+            color: AppColors.elderPrimary,
+            borderRadius: BorderRadius.circular(AppRadius.xlarge),
+            child: InkWell(
+              onTap: () => context.push(AppRoutes.login),
+              borderRadius: BorderRadius.circular(AppRadius.xlarge),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: Spacing.md, vertical: 6),
+                child: Text(
+                  '去登录',
+                  style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _HelpCard extends StatelessWidget {
   final IconData icon;
   final String title, desc;
@@ -174,7 +270,7 @@ class _HelpCard extends StatelessWidget {
           children: [
             Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
-            Text(desc, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.4)),
+            Text(desc, style: const TextStyle(fontSize: 16, color: AppColors.textSecondary, height: 1.4)),
           ],
         )),
       ],

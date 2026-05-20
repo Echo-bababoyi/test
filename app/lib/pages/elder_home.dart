@@ -9,6 +9,8 @@ import '../widgets/connection_indicator.dart';
 import '../widgets/elder_bottom_nav.dart';
 import '../widgets/login_guard.dart';
 import '../widgets/press_scale_wrapper.dart';
+import '../services/agent_settings_service.dart';
+import '../widgets/trust_level_cards.dart';
 
 void _showTodo(BuildContext context) {
   ScaffoldMessenger.of(context).showSnackBar(
@@ -29,6 +31,48 @@ class ElderHome extends ConsumerStatefulWidget {
 class _ElderHomeState extends ConsumerState<ElderHome>
     with SingleTickerProviderStateMixin {
   late final TabController _tab = TabController(length: 3, vsync: this);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowFirstTrustChoice());
+  }
+
+  Future<void> _maybeShowFirstTrustChoice() async {
+    if (!mounted) return;
+    final isLoggedIn = ref.read(loginProvider).isLoggedIn;
+    if (!isLoggedIn) return;
+    if (AgentSettingsService.instance.firstChoiceShown) return;
+
+    final picked = await showModalBottomSheet<String?>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _FirstTrustChoiceSheet(),
+    );
+
+    AgentSettingsService.instance.firstChoiceShown = true;
+    if (picked != null && mounted) {
+      AgentSettingsService.instance.trustLevel = picked;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('已设为「${_trustTitleFor(picked)}」'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  String _trustTitleFor(String level) {
+    switch (level) {
+      case 'guide': return '我自己做，小浙提醒我';
+      case 'semi':  return '小浙帮我填，我自己点提交';
+      case 'full':  return '小浙全程代办，关键步骤我确认';
+      default: return '';
+    }
+  }
 
   @override
   void dispose() {
@@ -922,6 +966,68 @@ class _EldFooterSection extends StatelessWidget {
           fontSize: AppFontSize.caption,
           color: AppColors.textSecondary,
           fontStyle: FontStyle.italic,
+        ),
+      ),
+    );
+  }
+}
+
+class _FirstTrustChoiceSheet extends StatefulWidget {
+  const _FirstTrustChoiceSheet();
+  @override
+  State<_FirstTrustChoiceSheet> createState() => _FirstTrustChoiceSheetState();
+}
+
+class _FirstTrustChoiceSheetState extends State<_FirstTrustChoiceSheet> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xlarge)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        Spacing.lg, Spacing.sm, Spacing.lg,
+        Spacing.lg + MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                icon: const Icon(Icons.close, size: 24, color: AppColors.textSecondary),
+                onPressed: () => Navigator.of(context).pop(null),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.only(left: Spacing.xs, bottom: Spacing.xs),
+              child: Text(
+                '小浙能帮您做多少',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.only(left: Spacing.xs, bottom: Spacing.lg),
+              child: Text(
+                '您可以现在选一种，以后随时在设置里调整',
+                style: TextStyle(fontSize: 16, color: AppColors.textSecondary, height: 1.4),
+              ),
+            ),
+            TrustLevelCards(
+              selected: '',
+              onChanged: (level) => Navigator.of(context).pop(level),
+            ),
+          ],
         ),
       ),
     );
