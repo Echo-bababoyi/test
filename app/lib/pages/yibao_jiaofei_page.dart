@@ -23,10 +23,10 @@ class YibaoJiaofeiPage extends StatefulWidget {
 }
 
 class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
-  String? _targetPerson = '本人';
-  String? _xianzhong = '城乡居民医保';
-  String? _year = '2026年度';
-  _JiaofeiDangci? _dangci = _dangciOptions['城乡居民医保']!.first;
+  String? _targetPerson;
+  String? _xianzhong;
+  String? _year;
+  _JiaofeiDangci? _dangci;
   final _idController = TextEditingController();
   final _idFocus = FocusNode();
   final _dailiNameController = TextEditingController();
@@ -134,7 +134,7 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
   void _onXianzhongChanged(String? v) {
     setState(() {
       _xianzhong = v;
-      _dangci = v == null ? null : _dangciOptions[v]!.first;
+      _dangci = null;
     });
   }
 
@@ -171,6 +171,7 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
                     DropdownButtonFormField<String>(
                       key: _targetKey,
                       initialValue: _targetPerson,
+                      hint: const Text('请选择缴费对象', style: TextStyle(fontSize: 18, color: Color(0xFF999999))),
                       items: _persons.map((p) => DropdownMenuItem(
                         value: p,
                         child: Text(p, style: const TextStyle(fontSize: 18)),
@@ -185,6 +186,7 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
                     DropdownButtonFormField<String>(
                       key: _xianzhongKey,
                       initialValue: _xianzhong,
+                      hint: const Text('请选择险种', style: TextStyle(fontSize: 18, color: Color(0xFF999999))),
                       items: _xianzhongs.map((x) => DropdownMenuItem(
                         value: x,
                         child: Text(x, style: const TextStyle(fontSize: 18)),
@@ -205,6 +207,7 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
                     DropdownButtonFormField<String>(
                       key: _yearKey,
                       initialValue: _year,
+                      hint: const Text('请选择缴费年度', style: TextStyle(fontSize: 18, color: Color(0xFF999999))),
                       items: _years.map((y) => DropdownMenuItem(
                         value: y,
                         child: Text(y, style: const TextStyle(fontSize: 18)),
@@ -219,6 +222,10 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> {
                     DropdownButtonFormField<_JiaofeiDangci>(
                       key: _dangciKey,
                       initialValue: _dangci,
+                      hint: Text(
+                        _xianzhong == null ? '请先选择险种' : '请选择缴费档次',
+                        style: const TextStyle(fontSize: 18, color: Color(0xFF999999)),
+                      ),
                       items: (_xianzhong == null
                               ? <_JiaofeiDangci>[]
                               : _dangciOptions[_xianzhong]!)

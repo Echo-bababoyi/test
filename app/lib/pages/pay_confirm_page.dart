@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
@@ -12,12 +13,45 @@ class PayConfirmPage extends StatefulWidget {
 }
 
 class _PayConfirmPageState extends State<PayConfirmPage> {
-  // 银行卡选择（mock，默认选中尾号 5678）
-  int _selectedBank = 1;
-  static const _banks = [
-    ('icbc', '中国工商银行', '1234'),
-    ('boc', '中国银行', '5678'),
-  ];
+  final _cardController = TextEditingController();
+  final _cardFocus = FocusNode();
+  bool _cardFocused = false;
+
+  final _idController = TextEditingController();
+  final _idFocus = FocusNode();
+  bool _idFocused = false;
+
+  bool get _cardValid {
+    final digits = _cardController.text.replaceAll(RegExp(r'\D'), '');
+    return digits.length >= 16 && digits.length <= 19;
+  }
+
+  bool get _idValid =>
+      RegExp(r'^\d{17}[\dXx]$').hasMatch(_idController.text);
+  bool get _idInvalid =>
+      _idController.text.isNotEmpty && !_idValid;
+  bool get _canPay => _cardValid && _idValid;
+
+  String _maskId(String id) =>
+      id.length == 18 ? '${id.substring(0, 3)}****${id.substring(14)}' : id;
+
+  @override
+  void initState() {
+    super.initState();
+    _cardController.addListener(() => setState(() {}));
+    _cardFocus.addListener(() => setState(() => _cardFocused = _cardFocus.hasFocus));
+    _idController.addListener(() => setState(() {}));
+    _idFocus.addListener(() => setState(() => _idFocused = _idFocus.hasFocus));
+  }
+
+  @override
+  void dispose() {
+    _cardController.dispose();
+    _cardFocus.dispose();
+    _idController.dispose();
+    _idFocus.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +65,8 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
     final dailiName = inExtra['daili_name'] as String?;
     final dailiIdMasked = inExtra['daili_id_masked'] as String?;
     final isDaili = dailiName != null && dailiName.isNotEmpty;
-
-    final bank = _banks[_selectedBank];
+    final cardDigits = _cardController.text.replaceAll(RegExp(r'\D'), '');
+    final bankTail = cardDigits.length >= 4 ? cardDigits.substring(cardDigits.length - 4) : '';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -71,7 +105,42 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
                   ],
           ),
           const SizedBox(height: Spacing.md),
-          // 银行卡选择（R1：迁移到 RadioGroup）
+          Container(
+            padding: const EdgeInsets.all(Spacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.large),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 4),
+                  child: Text('支付人身份证',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: Spacing.sm),
+                  child: Text('为保障资金安全，请输入支付人身份证',
+                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                ),
+                _MaskedIdField(
+                  controller: _idController,
+                  focusNode: _idFocus,
+                  focused: _idFocused,
+                  invalid: _idInvalid,
+                  maskFn: _maskId,
+                ),
+                if (_idInvalid)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 6),
+                    child: Text('请输入18位身份证号',
+                        style: TextStyle(fontSize: 14, color: Color(0xFFFF3B30))),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: Spacing.md),
           Container(
             padding: const EdgeInsets.all(Spacing.md),
             decoration: BoxDecoration(
@@ -83,37 +152,22 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
               children: [
                 const Padding(
                   padding: EdgeInsets.only(bottom: Spacing.sm),
-                  child: Text('选择银行卡',
+                  child: Text('银行卡号',
                       style: TextStyle(
                           fontSize: 16, fontWeight: FontWeight.w600)),
                 ),
-                RadioGroup<int>(
-                  groupValue: _selectedBank,
-                  onChanged: (v) => setState(() => _selectedBank = v!),
-                  child: Column(
-                    children: [
-                      for (int i = 0; i < _banks.length; i++)
-                        RadioListTile<int>(
-                          contentPadding: EdgeInsets.zero,
-                          value: i,
-                          title: Text('${_banks[i].$2} 尾号 ${_banks[i].$3}',
-                              style: const TextStyle(fontSize: 16)),
-                        ),
-                    ],
+                _MaskedCardField(
+                  controller: _cardController,
+                  focusNode: _cardFocus,
+                  focused: _cardFocused,
+                  valid: _cardValid,
+                ),
+                if (_cardController.text.isNotEmpty && !_cardValid)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 6),
+                    child: Text('请输入 16-19 位银行卡号',
+                        style: TextStyle(fontSize: 14, color: Color(0xFFFF3B30))),
                   ),
-                ),
-                TextButton.icon(
-                  onPressed: () =>
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('请前往银行柜台或银行 App 绑定银行卡'),
-                    duration: Duration(seconds: 2),
-                  )),
-                  icon: const Icon(Icons.add,
-                      color: AppColors.textSecondary, size: 18),
-                  label: const Text('添加银行卡',
-                      style: TextStyle(
-                          fontSize: 14, color: AppColors.textSecondary)),
-                ),
               ],
             ),
           ),
@@ -128,17 +182,21 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
           SizedBox(
             height: 56,
             child: ElevatedButton(
-              onPressed: () => context.push(
-                AppRoutes.yibaoJiaofeiPay,
-                extra: {
-                  ...inExtra,
-                  'bank_name': bank.$2,
-                  'bank_tail': bank.$3,
-                },
-              ),
+              onPressed: _canPay
+                  ? () => context.push(
+                        AppRoutes.yibaoJiaofeiPay,
+                        extra: {
+                          ...inExtra,
+                          'bank_name': '银行卡',
+                          'bank_tail': bankTail,
+                        },
+                      )
+                  : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.elderPrimary,
+                disabledBackgroundColor: const Color(0xFFE0E0E0),
                 foregroundColor: Colors.white,
+                disabledForegroundColor: const Color(0xFF999999),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
@@ -151,6 +209,168 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
         ],
       ),
       bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
+    );
+  }
+}
+
+class _MaskedIdField extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool focused;
+  final bool invalid;
+  final String Function(String) maskFn;
+
+  const _MaskedIdField({
+    required this.controller,
+    required this.focusNode,
+    required this.focused,
+    required this.invalid,
+    required this.maskFn,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasValue = controller.text.isNotEmpty;
+    final showMasked = !focused && hasValue && !invalid;
+
+    if (showMasked) {
+      return InkWell(
+        onTap: () => focusNode.requestFocus(),
+        child: Container(
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFAFAFA),
+            border: Border.all(color: const Color(0xFFE5E5E5)),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(maskFn(controller.text),
+                    style: const TextStyle(fontSize: 18)),
+              ),
+              const Text('编辑',
+                  style: TextStyle(fontSize: 14, color: Color(0xFFFF6D00))),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 56,
+      child: TextField(
+        controller: controller,
+        focusNode: focusNode,
+        keyboardType: TextInputType.text,
+        maxLength: 18,
+        decoration: InputDecoration(
+          counterText: '',
+          hintText: '请输入身份证号',
+          hintStyle: const TextStyle(fontSize: 18, color: Color(0xFF999999)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFFFF6D00), width: 1.5),
+          ),
+          filled: true,
+          fillColor: const Color(0xFFFAFAFA),
+        ),
+        style: const TextStyle(fontSize: 18),
+      ),
+    );
+  }
+}
+
+class _MaskedCardField extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool focused;
+  final bool valid;
+
+  const _MaskedCardField({
+    required this.controller,
+    required this.focusNode,
+    required this.focused,
+    required this.valid,
+  });
+
+  String _mask(String text) {
+    final digits = text.replaceAll(RegExp(r'\D'), '');
+    if (digits.length < 4) return '**** **** **** ????';
+    final tail = digits.substring(digits.length - 4);
+    return '**** **** **** $tail';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasValue = controller.text.isNotEmpty;
+    final showMasked = !focused && hasValue && valid;
+
+    if (showMasked) {
+      return InkWell(
+        onTap: () => focusNode.requestFocus(),
+        child: Container(
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFAFAFA),
+            border: Border.all(color: const Color(0xFFE5E5E5)),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(_mask(controller.text),
+                    style: const TextStyle(fontSize: 18)),
+              ),
+              const Text('编辑',
+                  style: TextStyle(fontSize: 14, color: Color(0xFFFF6D00))),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 56,
+      child: TextField(
+        controller: controller,
+        focusNode: focusNode,
+        keyboardType: TextInputType.number,
+        maxLength: 19,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        decoration: InputDecoration(
+          counterText: '',
+          hintText: '请输入银行卡号',
+          hintStyle: const TextStyle(fontSize: 18, color: Color(0xFF999999)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFFFF6D00), width: 1.5),
+          ),
+          filled: true,
+          fillColor: const Color(0xFFFAFAFA),
+        ),
+        style: const TextStyle(fontSize: 18),
+      ),
     );
   }
 }

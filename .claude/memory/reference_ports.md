@@ -22,10 +22,11 @@ cd app && ../bin/flutter run -d web-server --web-port=3080 --web-hostname=0.0.0.
 - 必须用 `-d web-server`（服务器无 X display，`-d chrome` 会失败）
 - 使用 `run_in_background` 时**不要**管道 `| head -N`，截断会导致进程退出
 
-**3. 检查服务就绪**：
+**3. 确认启动成功（必做，不能跳过）**：
+启动命令用 `run_in_background` 后，必须用 `ss -tlnp | grep -E '3080|8080'` 确认端口在监听后才能告诉用户"已就绪"。不要说"启动中等一下"就完事——必须验证。
 ```bash
-curl -s http://localhost:8080/health   # 应返回 {"status":"ok"}
-curl -s -o /dev/null -w "%{http_code}" http://localhost:3080/   # 应返回 200
+ss -tlnp | grep -E '3080|8080'   # 确认进程在监听
+curl -s http://localhost:8080/health   # 后端应返回 {"status":"ok"}
 ```
 
 **4. 先检查端口再启动**：

@@ -6,7 +6,6 @@ import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/in_app_overlay.dart';
 import '../widgets/permission_flow_helper.dart';
-import '../widgets/login_guard.dart';
 import '../widgets/search_suggestion_list.dart';
 import '../widgets/elder_bottom_nav.dart';
 
@@ -215,33 +214,6 @@ class _DefaultBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '我的常用',
-            style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: Spacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: _QuickItem(
-                  icon: Icons.manage_search,
-                  iconColor: AppColors.elderPrimary,
-                  label: '社保查询',
-                  onTap: () => LoginGuard.tryNavigate(context, AppRoutes.shebaoQuery),
-                ),
-              ),
-              const SizedBox(width: Spacing.lg),
-              Expanded(
-                child: _QuickItem(
-                  icon: Icons.health_and_safety_outlined,
-                  iconColor: AppColors.elderPrimary,
-                  label: '医保查询',
-                  onTap: () => LoginGuard.tryNavigate(context, AppRoutes.yibaoQuery),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: Spacing.xl),
-          const Text(
             '为你推荐',
             style: TextStyle(fontSize: AppFontSize.subtitle, fontWeight: FontWeight.w700),
           ),
@@ -266,49 +238,6 @@ class _DefaultBody extends StatelessWidget {
           ),
           const SizedBox(height: Spacing.lg),
         ],
-      ),
-    );
-  }
-}
-
-class _QuickItem extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final VoidCallback? onTap;
-
-  const _QuickItem({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.all(Spacing.xs),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: iconColor, size: 22),
-            ),
-            const SizedBox(width: Spacing.sm),
-            Text(
-              label,
-              style: const TextStyle(fontSize: AppFontSize.elderBody, color: AppColors.textPrimary),
-            ),
-          ],
-        ),
       ),
     );
   }
