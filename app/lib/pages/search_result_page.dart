@@ -168,6 +168,7 @@ class _ResultBody extends StatelessWidget {
 
   bool get _isPensionQuery {
     const aliases = [
+      '养老金',
       '养老金查询',
       '本月养老金',
       '养老金账单',
@@ -234,7 +235,7 @@ class _ResultBody extends StatelessWidget {
           title: '浙里医保',
           chips: const ['医保地图', '医保个人账户', '医保'],
           department: '省医保局',
-          onTap: null,
+          onTap: () => context.push(AppRoutes.yibaoQuery),
         ),
         _ServiceItem(
           iconColor: const Color(0xFFFF6D00),
@@ -250,11 +251,19 @@ class _ResultBody extends StatelessWidget {
           title: '社保查询',
           chips: const [],
           department: '省人力社保厅',
-          onTap: null,
+          onTap: () => context.push(AppRoutes.shebaoQuery),
         ),
       ];
 
   List<Widget> _pensionServices(BuildContext context) => [
+        _ServiceItem(
+          iconColor: const Color(0xFFFF6D00),
+          icon: Icons.account_balance_wallet_outlined,
+          title: '养老金查询',
+          chips: const ['本月养老金', '养老金账单'],
+          department: '省人力社保厅',
+          onTap: () => context.push(AppRoutes.pensionQuery),
+        ),
         _ServiceItem(
           iconColor: AppColors.elderPrimary,
           icon: Icons.manage_search,
