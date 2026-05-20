@@ -232,7 +232,6 @@ class _ServiceIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      key: key,
       onTap: onTap,
       borderRadius: BorderRadius.circular(28),
       child: SizedBox(

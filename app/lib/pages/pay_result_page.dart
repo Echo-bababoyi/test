@@ -36,7 +36,7 @@ class _PayResultPageState extends ConsumerState<PayResultPage> {
     final success = extra?['success'] as bool? ?? true;
     if (!success) return;
     _recordWritten = true;
-    ref.read(payRecordsProvider.notifier).add(PayRecord(
+    final record = PayRecord(
       xianzhong: extra?['xianzhong'] as String? ?? '城乡居民医保',
       dangci: extra?['dangci_label'] as String? ?? '',
       year: extra?['year'] as String? ?? '',
@@ -46,7 +46,11 @@ class _PayResultPageState extends ConsumerState<PayResultPage> {
       status: '缴费成功',
       createdAt: _createdAt,
       flowId: _flowId,
-    ));
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(payRecordsProvider.notifier).add(record);
+    });
   }
 
   @override
