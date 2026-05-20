@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 from pydantic import BaseModel
 
 
@@ -27,6 +27,7 @@ class OutboundMessageType(str, Enum):
     agent_out_of_scope = "agent_out_of_scope"
     asr_listening_ack = "asr_listening_ack"
     cmd_press_button = "cmd_press_button"
+    cmd_say = "cmd_say"
 
 
 # Inbound payload models
@@ -35,6 +36,7 @@ class AgentWakePayload(BaseModel):
     session_id: str
     trigger: str
     current_page: str
+    trust_level: Literal["guide", "semi", "full"] = "guide"
 
 
 class AudioChunkPayload(BaseModel):
@@ -173,6 +175,10 @@ class CmdPressButtonPayload(BaseModel):
     button_key: str
     button_label: str
     is_deterministic: bool
+    voice_hint: str
+
+
+class CmdSayPayload(BaseModel):
     voice_hint: str
 
 

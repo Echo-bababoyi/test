@@ -13,18 +13,40 @@ from backend.tools.highlight import cmd_highlight
 from backend.tools.fill_field import fill_field_normal, fill_field_sensitive
 from backend.tools.press_button import cmd_press_button
 from backend.tools.read_sms import read_sms
+from backend.tools.say import cmd_say
 
 logger = logging.getLogger(__name__)
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
 
 SCENE_TOOLS = {
-    "login_face": [cmd_navigate, cmd_highlight],
-    "login_verify": [cmd_navigate, cmd_highlight, fill_field_normal, read_sms],
-    "yibao_jiaofei": [cmd_navigate, cmd_highlight, fill_field_normal, fill_field_sensitive],
-    "pension_query": [cmd_navigate, cmd_highlight, fill_field_normal, cmd_press_button],
-    "yibao_query": [cmd_navigate, cmd_highlight, fill_field_normal, cmd_press_button],
+    "login_face":    [cmd_highlight, cmd_say],
+    "login_verify":  [cmd_highlight, cmd_say],
+    "yibao_jiaofei": [cmd_navigate, cmd_highlight, cmd_say,
+                      fill_field_normal, fill_field_sensitive],
+    "pension_query": [cmd_navigate, cmd_highlight, cmd_say,
+                      fill_field_normal, cmd_press_button],
+    "yibao_query":   [cmd_navigate, cmd_highlight, cmd_say,
+                      fill_field_normal, cmd_press_button],
 }
+
+_LEVEL_TOOLS: dict[str, set[str]] = {
+    "guide": {"cmd_highlight", "cmd_say"},
+    "semi":  {"cmd_navigate", "cmd_highlight", "cmd_say",
+              "fill_field_normal", "cmd_press_button",
+              "read_sms", "fill_field_sensitive"},
+    "full":  {"cmd_navigate", "cmd_highlight", "cmd_say",
+              "fill_field_normal", "cmd_press_button",
+              "read_sms", "fill_field_sensitive"},
+}
+
+
+def get_scene_tools(scene_id: str, trust_level: str) -> list:
+    """场景集 ∩ 用户级别集；级别非法时兜底 guide（最保守）。"""
+    scene_max = SCENE_TOOLS.get(scene_id, [cmd_navigate, cmd_highlight])
+    user_max = _LEVEL_TOOLS.get(trust_level, _LEVEL_TOOLS["guide"])
+    return [t for t in scene_max if t.name in user_max]
+
 
 SCENE_PROMPTS = {
     "login_face": "scene_login_face.txt",
@@ -72,6 +94,7 @@ _TOOL_TO_MSG_TYPE: dict[str, str] = {
     "cmd_press_button": "cmd_press_button",
     "fill_field_normal": "cmd_fill_field",
     "fill_field_sensitive": "cmd_fill_field",
+    "cmd_say": "cmd_say",
 }
 
 
