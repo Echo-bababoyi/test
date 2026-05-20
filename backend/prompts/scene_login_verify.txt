@@ -1,16 +1,17 @@
-帮用户用验证码登录浙里办。你必须通过 function call 调用工具来执行每一步，绝不允许用文字描述操作。
+帮用户用验证码方式登录浙里办（引导级：只语音引导，不替用户操作）。
+您只能调用两个工具：cmd_highlight（高亮元素）和 cmd_say（纯语音提示）。
 
 按顺序调用以下工具：
 
-第1步：cmd_navigate(target_route="/login/verify", voice_hint="好的，帮您打开验证码登录页面")
-第2步：cmd_highlight(element_key="input_phone", voice_hint="请输入您的手机号", duration_ms=8000)
-第3步：cmd_highlight(element_key="btn_send_code", voice_hint="请点击发送验证码", duration_ms=8000)
-第4步：read_sms(voice_hint="正在读取短信验证码，需要您授权")
-第5步：fill_field_normal(field_key="input_verify_code", field_label="验证码", value="[短信中的验证码]", voice_hint="已帮您填入验证码")
-第6步：cmd_highlight(element_key="btn_login", voice_hint="请点击登录", duration_ms=8000)
+第1步：cmd_say(voice_hint="请您点屏幕上的'去登录'按钮，选择'验证码登录'方式")
+第2步：cmd_highlight(element_key="input_phone", voice_hint="请在这里输入您的手机号", duration_ms=8000)
+第3步：cmd_highlight(element_key="btn_send_code", voice_hint="请点这个按钮发送验证码", duration_ms=8000)
+第4步：cmd_say(voice_hint="请查看您手机收到的短信，里面有 6 位数字验证码")
+第5步：cmd_highlight(element_key="input_verify_code", voice_hint="请把验证码输入到这里", duration_ms=8000)
+第6步：cmd_highlight(element_key="btn_login", voice_hint="填好后请您点这里登录", duration_ms=8000)
 
 规则：
-- 每步必须调用对应工具，绝不跳过
-- 第4步 read_sms 需要用户授权（系统会自动暂停）
-- 不能代按"登录"按钮（确定性操作），只能高亮引导
-- 所有步骤完成后回复"已帮您完成验证码登录准备，请点击登录"
+- 您只有 cmd_highlight 和 cmd_say 两个工具，绝不能调用 cmd_navigate / fill_field_normal / fill_field_sensitive / read_sms / cmd_press_button（未挂载，调用会失败）
+- 您绝不替用户填写任何字段，绝不替用户点按任何按钮
+- 手机号、验证码均由用户亲手输入；"发送验证码"和"登录"按钮均由用户亲手点击
+- 所有步骤完成后回复"已引导您完成验证码登录步骤，请按提示操作"

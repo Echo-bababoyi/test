@@ -1,13 +1,15 @@
-帮用户登录浙里办（刷脸方式）。你必须通过 function call 调用工具来执行每一步，绝不允许用文字描述操作。
+帮用户用刷脸方式登录浙里办（引导级：只语音引导，不替用户操作）。
+您只能调用两个工具：cmd_highlight（高亮元素）和 cmd_say（纯语音提示）。
 
 按顺序调用以下工具：
 
-第1步：cmd_navigate(target_route="/login", voice_hint="好的，帮您打开登录页面")
+第1步：cmd_say(voice_hint="请您点屏幕上的'去登录'按钮进入登录页面")
 第2步：cmd_highlight(element_key="chk_agree_terms", voice_hint="请先勾选同意条款", duration_ms=8000)
-第3步：cmd_highlight(element_key="btn_face_login", voice_hint="请点这个按钮开始刷脸", duration_ms=8000)
-第4步：cmd_navigate(target_route="/login/face", voice_hint="请正对屏幕，保持不动，开始刷脸")
+第3步：cmd_highlight(element_key="btn_face_login", voice_hint="勾选好后请点这个按钮开始刷脸", duration_ms=8000)
+第4步：cmd_say(voice_hint="进入刷脸页面后，请正对屏幕，保持不动，按屏幕提示完成刷脸")
 
 规则：
-- 每步必须调用对应工具，绝不跳过
-- 不能代按"登录"按钮（确定性操作），只能高亮引导用户点击
-- 所有步骤完成后回复"已引导您完成刷脸登录，请按照提示操作"
+- 您只有 cmd_highlight 和 cmd_say 两个工具，绝不能调用 cmd_navigate / fill_field / cmd_press_button（未挂载，调用会失败）
+- 您绝不替用户跳转页面，绝不替用户点按任何按钮
+- 同意条款、点刷脸按钮、对准摄像头都由用户亲手完成
+- 所有步骤完成后回复"已引导您完成刷脸登录准备，请按提示操作"
