@@ -31,6 +31,8 @@ class AgentCommandExecutor {
         _onFillField(payload);
       case 'cmd_press_button':
         _onPressButton(payload);
+      case 'cmd_say':
+        _speakHint(payload['voice_hint'] as String? ?? '');
     }
   }
 

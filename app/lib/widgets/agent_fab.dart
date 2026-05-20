@@ -15,6 +15,8 @@ import '../services/log_service.dart';
 import '../services/page_meta.dart';
 import '../services/ws_client.dart';
 import '../services/session_state.dart';
+import '../services/agent_settings_service.dart';
+import '../services/auth_state.dart';
 import 'agent_bubble.dart';
 import 'auth_card.dart';
 
@@ -472,10 +474,15 @@ class _BubbleWindowState extends State<_BubbleWindow>
         _session.websocketConnected = true;
         _session.state = 'listening';
       });
+      final isLoggedIn = AuthState.instance.isLoggedIn;
+      final effectiveTrust = isLoggedIn
+          ? AgentSettingsService.instance.trustLevel
+          : 'guide';
       _ws.send('agent_wake', {
         'session_id': id,
         'trigger': 'button',
         'current_page': widget.currentPath ?? '',
+        'trust_level': effectiveTrust,
       });
       _wsSub = _ws.messages.listen(_handleMessage);
       await _checkPageDraft();

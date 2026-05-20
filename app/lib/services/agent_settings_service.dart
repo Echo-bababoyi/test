@@ -7,6 +7,8 @@ class AgentSettingsService {
 
   static const _keyVoice = 'xiaozhe_voice_enabled';
   static const _keyRate  = 'xiaozhe_speech_rate';
+  static const _keyTrust = 'xiaozhe_trust_level';
+  static const _keyFirstChoice = 'xiaozhe_first_choice_shown';
 
   bool get voiceEnabled {
     final v = html.window.localStorage[_keyVoice];
@@ -18,4 +20,10 @@ class AgentSettingsService {
   set speedMode(String m) => html.window.localStorage[_keyRate] = m;
 
   double get speechRate => speedMode == 'slow' ? 0.85 : 1.0;
+
+  String get trustLevel => html.window.localStorage[_keyTrust] ?? 'guide';
+  set trustLevel(String v) => html.window.localStorage[_keyTrust] = v;
+
+  bool get firstChoiceShown => html.window.localStorage[_keyFirstChoice] == 'true';
+  set firstChoiceShown(bool v) => html.window.localStorage[_keyFirstChoice] = v.toString();
 }
