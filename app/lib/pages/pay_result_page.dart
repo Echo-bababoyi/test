@@ -97,7 +97,7 @@ class PayResultPage extends StatelessWidget {
               SizedBox(
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () => context.go(AppRoutes.elderHome),
+                  onPressed: () => context.go(AppRoutes.shebaoJiaona),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.elderPrimary,
                     foregroundColor: Colors.white,
@@ -105,7 +105,7 @@ class PayResultPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
-                  child: const Text('返回首页',
+                  child: const Text('返回',
                       style: TextStyle(
                           fontSize: 20, fontWeight: FontWeight.w600)),
                 ),

@@ -19,6 +19,7 @@ class _PayPasswordPageState extends State<PayPasswordPage>
   int _remainingAttempts = _kMaxAttempts;
   String? _errorText;
   bool _locked = false;
+  bool _paying = false;
   Map<String, dynamic>? _incomingExtra;
 
   late final AnimationController _shakeCtrl;
@@ -64,13 +65,13 @@ class _PayPasswordPageState extends State<PayPasswordPage>
 
   void _onSubmit() {
     if (_input == _kCorrectPwd) {
-      context.pushReplacement(
-        AppRoutes.yibaoJiaofeiResult,
-        extra: {
-          ...?_incomingExtra,
-          'success': true,
-        },
-      );
+      setState(() => _paying = true);
+      final router = GoRouter.of(context);
+      final extra = {...?_incomingExtra, 'success': true};
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (!mounted) return;
+        router.pushReplacement(AppRoutes.yibaoJiaofeiResult, extra: extra);
+      });
       return;
     }
     setState(() {
@@ -104,7 +105,9 @@ class _PayPasswordPageState extends State<PayPasswordPage>
         centerTitle: true,
       ),
       // 注意：本页严禁放 AgentFab（密码安全红线）
-      body: Padding(
+      body: Stack(
+        children: [
+          Padding(
         padding: const EdgeInsets.all(Spacing.lg),
         child: Column(
           children: [
@@ -185,6 +188,43 @@ class _PayPasswordPageState extends State<PayPasswordPage>
             ),
           ],
         ),
+      ),
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: !_paying,
+              child: AnimatedOpacity(
+                opacity: _paying ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: Container(
+                  color: Colors.white.withValues(alpha: 0.92),
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        height: 80,
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFFF6D00),
+                          strokeWidth: 6,
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      Text('正在支付',
+                          style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF333333))),
+                      SizedBox(height: 8),
+                      Text('请稍候，正在为您处理…',
+                          style: TextStyle(
+                              fontSize: 18, color: Color(0xFF999999))),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
