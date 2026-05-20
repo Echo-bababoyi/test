@@ -154,14 +154,19 @@ class _ResultBody extends StatelessWidget {
   final String query;
   const _ResultBody({required this.query});
 
+  bool get _isMedicalQuery {
+    const aliases = [
+      '医保查询', '医保余额', '医保账户', '医保余额查询',
+    ];
+    return aliases.contains(query);
+  }
+
   bool get _isMedicalPay {
     const aliases = [
-      '医保缴费',
-      '少儿医保缴费',
-      '医保缴费记录',
-      '农村医保缴费',
-      '城乡居民医保缴费',
-      '社保费缴纳',
+      '医保缴费', '少儿医保缴费', '医保缴费记录', '农村医保缴费',
+      '城乡居民医保缴费', '社保费缴纳',
+      '医保', '浙里医保', '健康医保', '居民医保', '城乡居民医保',
+      '缴医保', '交医保',
     ];
     return aliases.contains(query);
   }
@@ -197,13 +202,15 @@ class _ResultBody extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     )),
                 const SizedBox(height: Spacing.md),
-                if (_isMedicalPay) ..._medicalPayServices(context),
+                if (_isMedicalQuery) ..._medicalQueryServices(context),
+                if (!_isMedicalQuery && _isMedicalPay) ..._medicalPayServices(context),
                 if (_isPensionQuery) ..._pensionServices(context),
-                if (!_isMedicalPay && !_isPensionQuery) const _EmptyHint(),
+                if (!_isMedicalQuery && !_isMedicalPay && !_isPensionQuery)
+                  const _EmptyHint(),
               ],
             ),
           ),
-          if (_isMedicalPay || _isPensionQuery)
+          if (_isMedicalPay || _isPensionQuery || _isMedicalQuery)
             Container(
               margin: const EdgeInsets.only(top: Spacing.md),
               padding: const EdgeInsets.all(Spacing.lg),
@@ -219,6 +226,7 @@ class _ResultBody extends StatelessWidget {
                   const SizedBox(height: Spacing.md),
                   if (_isMedicalPay) ..._medicalPayAffairs(),
                   if (_isPensionQuery) ..._pensionAffairs(),
+                  if (_isMedicalQuery) ..._medicalQueryAffairs(),
                 ],
               ),
             ),
@@ -235,7 +243,7 @@ class _ResultBody extends StatelessWidget {
           title: '浙里医保',
           chips: const ['医保地图', '医保个人账户', '医保'],
           department: '省医保局',
-          onTap: () => context.push(AppRoutes.yibaoQuery),
+          onTap: () => context.push(AppRoutes.yibaoJiaofei),
         ),
         _ServiceItem(
           iconColor: const Color(0xFFFF6D00),
@@ -290,6 +298,25 @@ class _ResultBody extends StatelessWidget {
         ),
       ];
 
+  List<Widget> _medicalQueryServices(BuildContext context) => [
+        _ServiceItem(
+          iconColor: AppColors.elderPrimary,
+          icon: Icons.health_and_safety_outlined,
+          title: '浙里医保',
+          chips: const ['医保余额', '医保账户'],
+          department: '省医保局',
+          onTap: () => context.push(AppRoutes.yibaoQuery),
+        ),
+        _ServiceItem(
+          iconColor: const Color(0xFFFF6D00),
+          icon: Icons.manage_search,
+          title: '医保缴费',
+          chips: const ['城乡居民医保'],
+          department: '省医保局',
+          onTap: () => context.push(AppRoutes.yibaoJiaofei),
+        ),
+      ];
+
   List<Widget> _medicalPayAffairs() => [
         const _AffairItem('职工参保登记（医保）'),
         const _AffairItem('职工医保补缴'),
@@ -297,6 +324,11 @@ class _ResultBody extends StatelessWidget {
 
   List<Widget> _pensionAffairs() => [
         const _AffairItem('退休高级职称人员增加养老金待遇'),
+      ];
+
+  List<Widget> _medicalQueryAffairs() => [
+        const _AffairItem('医保参保信息查询'),
+        const _AffairItem('医保就诊记录查询'),
       ];
 }
 

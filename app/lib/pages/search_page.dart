@@ -235,7 +235,7 @@ class _DefaultBody extends StatelessWidget {
                   icon: Icons.health_and_safety_outlined,
                   iconColor: AppColors.elderPrimary,
                   label: '医保查询',
-                  onTap: () => LoginGuard.tryNavigate(context, AppRoutes.shebaoJiaona),
+                  onTap: () => LoginGuard.tryNavigate(context, AppRoutes.yibaoQuery),
                 ),
               ),
             ],

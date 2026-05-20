@@ -15,6 +15,10 @@ import 'pages/shebao_query_page.dart';
 import 'pages/pension_query_page.dart';
 import 'pages/yibao_jiaofei_page.dart';
 import 'pages/yibao_query_page.dart';
+import 'pages/yibao_hub_page.dart';
+import 'pages/pay_confirm_page.dart';
+import 'pages/pay_password_page.dart';
+import 'pages/pay_result_page.dart';
 import 'pages/operation_logs_page.dart';
 import 'pages/drafts_page.dart';
 import 'pages/agent_settings_page.dart';
@@ -36,6 +40,10 @@ class AppRoutes {
   static const pensionQuery = '/service/pension-query';
   static const yibaoJiaofei = '/service/yibao-jiaofei';
   static const yibaoQuery = '/service/yibao-query';
+  static const yibaoHub = '/service/yibao-hub';
+  static const yibaoJiaofeiConfirm = '/service/yibao-jiaofei/confirm';
+  static const yibaoJiaofeiPay = '/service/yibao-jiaofei/pay';
+  static const yibaoJiaofeiResult = '/service/yibao-jiaofei/result';
   static const operationLogs = '/elder/operation-logs';
   static const drafts = '/elder/drafts';
   static const agentSettings = '/elder/agent-settings';
@@ -59,6 +67,7 @@ class AppRoutes {
     ('社保费缴纳', shebaoJiaona),
     ('社保查询', shebaoQuery),
     ('养老金查询', pensionQuery),
+    ('医保 hub', yibaoHub),
     ('医保缴费', yibaoJiaofei),
     ('医保查询', yibaoQuery),
     ('操作日志', operationLogs),
@@ -135,6 +144,22 @@ final appRouter = GoRouter(
         GoRoute(
           path: AppRoutes.yibaoQuery,
           pageBuilder: (ctx, st) => _fadePage(const YibaoQueryPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.yibaoHub,
+          pageBuilder: (ctx, st) => _fadePage(const YibaoHubPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.yibaoJiaofeiConfirm,
+          pageBuilder: (ctx, st) => _fadePage(const PayConfirmPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.yibaoJiaofeiPay,
+          pageBuilder: (ctx, st) => _fadePage(const PayPasswordPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.yibaoJiaofeiResult,
+          pageBuilder: (ctx, st) => _fadePage(const PayResultPage()),
         ),
         GoRoute(
           path: AppRoutes.operationLogs,

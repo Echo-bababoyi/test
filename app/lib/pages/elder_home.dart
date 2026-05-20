@@ -437,7 +437,7 @@ class _EldFavoritesContent extends StatelessWidget {
                   icon: Icons.health_and_safety,
                   iconColor: const Color(0xFF3B82F6),
                   label: '浙里医保',
-                  onTap: () => _showTodo(context),
+                  onTap: () => LoginGuard.tryNavigate(context, AppRoutes.yibaoHub),
                 ),
               ),
               const SizedBox(width: Spacing.md),
@@ -611,7 +611,7 @@ class _EldOnlineServiceSection extends StatelessWidget {
                 _EldOnlineGridItem(
                   item: item,
                   onTap: item.label == '健康医保'
-                      ? () => LoginGuard.tryNavigate(context, AppRoutes.shebaoJiaona)
+                      ? () => LoginGuard.tryNavigate(context, AppRoutes.yibaoHub)
                       : () => _showTodo(context),
                 ),
             ],
