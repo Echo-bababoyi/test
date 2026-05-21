@@ -1,58 +1,51 @@
 ---
 name: 项目开发进展
-description: 会话 13 后状态 — 三级权限系统 v0.6 全部落地（6 commit）
+description: 会话 14 后状态 — 三级权限审查修正 + WS 连接修复 + 性能优化 + 登录分支选择
 type: project
 ---
 
-## 当前状态（2026-05-20 会话 13 后）
+## 当前状态（2026-05-21 会话 14 后）
 
-本地领先 origin/main 34 个 commit，未 push。
+本地领先 origin/main 42 个 commit，未 push。
 
-**会话 13 核心交付**：三级权限系统 v0.6 全量开发完成（PM 需求 R1-R26 全部落地），6 个 commit：
+**会话 14 核心交付**：
 
-1. `b88ee3e` feat: 后端基础层 — say 工具 + trust_level 模型 + 场景×级别工具集
-   - 新建 backend/tools/say.py（cmd_say 纯语音提示工具）
-   - models.py: AgentWakePayload 加 trust_level 字段（guide/semi/full，默认 guide）
-   - agent_core.py: SCENE_TOOLS 全场景加 cmd_say + login 场景收紧为仅 {highlight, say}
-   - 新增 _LEVEL_TOOLS + get_scene_tools() 实现场景集 ∩ 级别集三道 AND 机制
+1. `fdcf19d` fix: 三级权限审查 3 处修正 — read_sms 注释 + prompt 兜底 + 弹卡 flag 提前
+2. `64bd793` docs: DEPLOY.md 全面修订 — 端口/环境变量/路由表/资源说明对齐实际（8 项）
+3. `f5ad852` fix: WS 连接 3 处修复 — 动态 host 推导 + 订阅时序 + 单例残留
+4. `073bb38` docs: DEPLOY.md 补充跨机访问说明
+5. `8dcbb4b` fix: load_dotenv 路径改为相对于 main.py，修复 DEEPSEEK_API_KEY 读不到
+6. `e8f0b7f` perf: 响应延迟优化 11s→1s — 关遥测 + 参数调优 + OOS 合并 + 去 TTS 阻塞
+7. `97e94c2` feat: AgentFab 聊天记录跨开关/跨页面持久化（ChatHistory 单例）
+8. `24e4fce` fix: ModeNotifier 持久化到 localStorage，F5 刷新后模式不丢失
+9. `a9332ba` feat: 登录分支选择 — 模糊登录意图弹两按钮让用户选
 
-2. `383d237` feat: 后端核心流程 — execute_task 权限分级 + 密码硬拒
-   - 密码白名单 _PASSWORD_FIELDS + _is_password_field 模糊匹配
-   - execute_task 整段重写：密码硬拒 → full+已授权快路径 → 弹 permission_request → 拒绝跳过不取消
-   - ws_handler 透传 trust_level 给 AgentCore
-   - 修复 agno API add_history_to_context → add_history_to_messages
+**前端改为 release build + 静态服务**（python3 -m http.server），不再用 flutter run debug 模式，避免白屏。
 
-3. `e54b81e` feat: 后端 prompt 重写 — 登录场景纯引导 + 医保缴费去 mock
-   - login_face/login_verify prompt 改为 cmd_highlight + cmd_say 纯引导
-   - yibao_jiaofei 4 处硬编码 mock 值替换为用户意图占位符
+**测试进展**（P0 清单）：
+- P0-1 启动+进入长辈版 ✅
+- P0-2 登录后首次弹卡 ✅
+- P0-3 AgentFab 基本对话 ✅
+- P0-4 引导级登录场景 — 发现面板自动关闭 + 高亮不生效（未修）
+- P0-5 半委托级医保缴费 — 未测
+- P0-6 人脸验证 — 未测
 
-4. `d975c01` feat: 前端基础层 — 设置服务 + cmd_say + 权限卡组件 + fab 传参
-   - agent_settings_service 新增 trustLevel/firstChoiceShown 读写（localStorage）
-   - agent_command_executor 加 cmd_say 分支
-   - 新建 trust_level_cards.dart 三卡组件（适老化字号 + 橙色选中态 + readonly 灰显）
-   - agent_fab _initSession 传 effective_trust_level（未登录强制 guide）
-
-5. `9d09441` feat: 前端页面集成 — 首次弹卡 + 设置页三卡 + 未登录灰显
-   - elder_home 登录后首次进入弹 BottomSheet 选择信任等级
-   - agent_settings_page 改 ConsumerStatefulWidget，新增三卡 section
-   - 升级弹 SystemDialog 确认 / 降级直接生效
-   - 未登录黄色 banner + 三卡 readonly 灰显
-   - SectionHeader 13→15sp / HelpCard desc 14→16sp
-
-6. `66b6cb3` docs: AGENT_SPEC.md v1.0 → v1.1 — 三级信任模型全面对齐
-
-**联调验收**：后端 uvicorn 启动 OK + 7 条工具集验证全绿；前端 flutter analyze 无 error + build web 编译成功。
+**已发现未修的问题**：
+- AgentFab 面板自动关闭（代理输出消息后面板自动收起，用户来不及看完）
+- cmd_highlight 高亮不生效
+- DeepSeek 503 过载时错误提示不够精确（通用"处理失败"而非"服务繁忙"）
+- wait_for 超时 30s 对适老化太长（建议降到 15s）
+- agent_core.py JSONDecode 二次解析未在 try/except 内（潜在隐患）
+- 需要备选 LLM 做 fallback（DeepSeek 过载时切换）
 
 **下次会话接续点**：
-- **首要**：浏览器手动走核心用户旅程（登录→弹卡选级→唤醒小浙→场景执行），验证 UI 效果和 WS 交互
-- 验证码登录流程（需前端 login 页面完善）
-- N1 麦克风 Web Speech API（ASR 输入）
-- N2 云服务器部署（TLS 反代）
-- N4 真机测试
-- N5 Prompt 调优（业务知识补充）
+- **首要**：修面板自动关闭 + 高亮不生效，继续 P0-4 ~ P0-6 测试
+- 备选 LLM fallback 方案（阿里通义/智谱 GLM/Moonshot）
+- DeepSeek 503 错误区分 + 超时降到 15s
+- JSONDecode 加固
+- 语音合成/识别方案待定（用户倾向讯飞）
+- N2 云服务器部署
 - N6 答辩准备
-- 代理文本对话基本可用（DeepSeek API key 已配）
-- 语音输入（ASR）待用户申请讯飞 API 后再做
 
-**Why:** 下次会话恢复时快速了解三级权限已落地、下一步做什么。
-**How to apply:** 新会话开始时读此记忆，三级权限无需再开发，重点转向端到端手动验证和后续任务。
+**Why:** 下次会话恢复时快速了解会话 14 做了什么、哪些问题待修。
+**How to apply:** 新会话读此记忆，直接接续未修问题和未完成测试。
