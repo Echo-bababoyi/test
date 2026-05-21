@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_theme.dart';
 import '../../services/auth_state.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 
 /// ---- 登录态 ----
 class LoginState {
@@ -28,12 +30,31 @@ final loginProvider =
 
 /// ---- 当前模式（标准版 / 长辈版）----
 class ModeNotifier extends Notifier<AppMode> {
+  static const _kModeKey = 'app_mode';
+
   @override
-  AppMode build() => AppMode.standard;
-  void toElder() => state = AppMode.elder;
-  void toStandard() => state = AppMode.standard;
-  void toggle() =>
-      state = state == AppMode.standard ? AppMode.elder : AppMode.standard;
+  AppMode build() {
+    final v = html.window.localStorage[_kModeKey];
+    return v == 'elder' ? AppMode.elder : AppMode.standard;
+  }
+
+  void toElder() {
+    state = AppMode.elder;
+    html.window.localStorage[_kModeKey] = 'elder';
+  }
+
+  void toStandard() {
+    state = AppMode.standard;
+    html.window.localStorage[_kModeKey] = 'standard';
+  }
+
+  void toggle() {
+    if (state == AppMode.standard) {
+      toElder();
+    } else {
+      toStandard();
+    }
+  }
 }
 
 final modeProvider = NotifierProvider<ModeNotifier, AppMode>(ModeNotifier.new);
