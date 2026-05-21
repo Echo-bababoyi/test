@@ -1,26 +1,29 @@
 ---
 name: 项目开发进展
-description: 会话 14 后状态 — 三级权限审查修正 + WS 连接修复 + 性能优化 + 登录分支选择
+description: 会话 14 后状态 — 审查修正 + WS 修复 + 性能优化 + 登录分支 + 部署文档完善，已 push
 type: project
 ---
 
 ## 当前状态（2026-05-21 会话 14 后）
 
-本地领先 origin/main 42 个 commit，未 push。
+本地与 origin/main 同步（已 push），共 45 个 commit。
 
-**会话 14 核心交付**：
+**会话 14 核心交付（12 个 commit）**：
 
-1. `fdcf19d` fix: 三级权限审查 3 处修正 — read_sms 注释 + prompt 兜底 + 弹卡 flag 提前
-2. `64bd793` docs: DEPLOY.md 全面修订 — 端口/环境变量/路由表/资源说明对齐实际（8 项）
-3. `f5ad852` fix: WS 连接 3 处修复 — 动态 host 推导 + 订阅时序 + 单例残留
-4. `073bb38` docs: DEPLOY.md 补充跨机访问说明
-5. `8dcbb4b` fix: load_dotenv 路径改为相对于 main.py，修复 DEEPSEEK_API_KEY 读不到
-6. `e8f0b7f` perf: 响应延迟优化 11s→1s — 关遥测 + 参数调优 + OOS 合并 + 去 TTS 阻塞
-7. `97e94c2` feat: AgentFab 聊天记录跨开关/跨页面持久化（ChatHistory 单例）
-8. `24e4fce` fix: ModeNotifier 持久化到 localStorage，F5 刷新后模式不丢失
-9. `a9332ba` feat: 登录分支选择 — 模糊登录意图弹两按钮让用户选
+1. `77df54b` chore: 更新项目记忆 — 会话 13 进展同步
+2. `fdcf19d` fix: 三级权限审查 3 处修正 — read_sms 注释 + prompt 兜底 + 弹卡 flag 提前
+3. `64bd793` docs: DEPLOY.md 全面修订 — 端口/环境变量/路由表/资源说明对齐实际（8 项）
+4. `f5ad852` fix: WS 连接 3 处修复 — 动态 host 推导 + 订阅时序 + 单例残留
+5. `073bb38` docs: DEPLOY.md 补充跨机访问说明
+6. `8dcbb4b` fix: load_dotenv 路径改为相对于 main.py，修复 DEEPSEEK_API_KEY 读不到
+7. `e8f0b7f` perf: 响应延迟优化 11s→1s — 关遥测 + 参数调优 + OOS 合并 + 去 TTS 阻塞
+8. `97e94c2` feat: AgentFab 聊天记录跨开关/跨页面持久化（ChatHistory 单例）
+9. `24e4fce` fix: ModeNotifier 持久化到 localStorage，F5 刷新后模式不丢失
+10. `a9332ba` feat: 登录分支选择 — 模糊登录意图弹两按钮让用户选
+11. `ccd5145` chore: .gitignore 防御性加固 — 显式忽略 .venv/venv/env/.pytest_cache
+12. `d6df16c` docs: DEPLOY.md 从零 clone 到跑通完整补全（9 项 GAP-A~I）
 
-**前端改为 release build + 静态服务**（python3 -m http.server），不再用 flutter run debug 模式，避免白屏。
+**前端改为 release build + 静态服务**（python3 -m http.server），避免 debug 模式白屏。
 
 **测试进展**（P0 清单）：
 - P0-1 启动+进入长辈版 ✅
