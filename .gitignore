@@ -39,6 +39,12 @@ build/
 .#*
 \#*\#
 
+# Python 虚拟环境
+.venv/
+venv/
+env/
+.pytest_cache/
+
 # 防御性
 node_modules/
 __pycache__/
