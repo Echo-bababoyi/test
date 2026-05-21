@@ -478,13 +478,13 @@ class _BubbleWindowState extends State<_BubbleWindow>
       final effectiveTrust = isLoggedIn
           ? AgentSettingsService.instance.trustLevel
           : 'guide';
+      _wsSub = _ws.messages.listen(_handleMessage);
       _ws.send('agent_wake', {
         'session_id': id,
         'trigger': 'button',
         'current_page': widget.currentPath ?? '',
         'trust_level': effectiveTrust,
       });
-      _wsSub = _ws.messages.listen(_handleMessage);
       await _checkPageDraft();
     } catch (e) {
       debugPrint('[BubbleWindow] connect error: $e');

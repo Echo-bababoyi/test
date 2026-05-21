@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -7,7 +9,10 @@ class WsClient {
   static final WsClient instance = WsClient._();
   WsClient._();
 
-  static const _baseUrl = 'ws://localhost:8080/ws/session/';
+  static String get _baseUrl {
+    final host = html.window.location.hostname ?? 'localhost';
+    return 'ws://$host:8080/ws/session/';
+  }
 
   WebSocketChannel? _channel;
   final _controller = StreamController<Map<String, dynamic>>.broadcast();
@@ -18,6 +23,12 @@ class WsClient {
   Stream<Map<String, dynamic>> get messages => _controller.stream;
 
   Future<void> connect(String sessionId) async {
+    if (_channel != null) {
+      try { await _channel!.sink.close(); } catch (_) {}
+      _channel = null;
+    }
+    _connected = false;
+
     final uri = Uri.parse('$_baseUrl$sessionId');
     debugPrint('[WsClient] connecting to $uri');
     _channel = WebSocketChannel.connect(uri);
@@ -25,17 +36,21 @@ class WsClient {
     _connected = true;
     debugPrint('[WsClient] connected session=$sessionId');
 
-    _channel!.stream.listen(
+    final ch = _channel!;
+    ch.stream.listen(
       (raw) {
+        if (!identical(_channel, ch)) return;
         final data = jsonDecode(raw as String) as Map<String, dynamic>;
         debugPrint('[WsClient] recv type=${data['type']}');
         _controller.add(data);
       },
       onDone: () {
+        if (!identical(_channel, ch)) return;
         debugPrint('[WsClient] connection closed');
         _connected = false;
       },
       onError: (err) {
+        if (!identical(_channel, ch)) return;
         debugPrint('[WsClient] connection error: $err');
         _connected = false;
       },
