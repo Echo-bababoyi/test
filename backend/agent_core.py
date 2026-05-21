@@ -175,12 +175,17 @@ class AgentCore:
 
         logger.info("session=%s classified scene=%s summary=%s", self.session_id, scene_id, intent_summary)
 
-        if scene_id == "out_of_scope":
-            oos_reply = (intent.get("reply_text") or "").strip()
+        if scene_id in ("out_of_scope", "login_choose"):
+            quick_reply = (intent.get("reply_text") or "").strip()
+            fallback = (
+                "您想用刷脸登录还是验证码登录？"
+                if scene_id == "login_choose"
+                else "抱歉，这个功能暂时帮不到您"
+            )
             return {
                 "scene_id": scene_id,
                 "intent_summary": intent_summary,
-                "confirm_text": oos_reply or "抱歉，这个功能暂时帮不到您",
+                "confirm_text": quick_reply or fallback,
             }
 
         rph_response = await self._rephraser.arun(intent_summary)

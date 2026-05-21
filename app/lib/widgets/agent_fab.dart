@@ -551,6 +551,14 @@ class _BubbleWindowState extends State<_BubbleWindow>
             'description': payload['description'] as String? ?? '需要您的授权',
           });
 
+        case 'agent_choice_request':
+          final text = payload['text'] as String? ?? '';
+          final opts = (payload['options'] as List<dynamic>? ?? [])
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
+          _session.state = 'listening';
+          _items.add({'type': 'choice', 'text': text, 'options': opts});
+
         case 'task_done':
           _session.state = 'done';
           LogService.saveFromTaskDone(payload);
@@ -802,6 +810,47 @@ class _BubbleWindowState extends State<_BubbleWindow>
       );
     }
 
+    if (item['type'] == 'choice') {
+      final text = item['text'] as String? ?? '';
+      final opts = (item['options'] as List<dynamic>? ?? [])
+          .cast<Map<String, dynamic>>();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AgentBubble(text: text, isAgent: true),
+          if (opts.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+              child: Row(
+                children: [
+                  for (int k = 0; k < opts.length; k++) ...[
+                    Expanded(
+                      child: _ChoiceBtn(
+                        label: opts[k]['label'] as String,
+                        primary: widget.primary,
+                        onTap: () {
+                          final value = opts[k]['value'] as String;
+                          setState(() {
+                            item.remove('options');
+                            _items.add({'role': 'user', 'text': value});
+                          });
+                          _ws.send('text_input', {
+                            'session_id': _session.sessionId,
+                            'text': value,
+                          });
+                          _scrollToBottom();
+                        },
+                      ),
+                    ),
+                    if (k < opts.length - 1) const SizedBox(width: 8),
+                  ],
+                ],
+              ),
+            ),
+        ],
+      );
+    }
+
     if (item['type'] == 'thinking') {
       return Padding(
         padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
@@ -902,6 +951,47 @@ class _ConfirmBtn extends StatelessWidget {
               fontSize: 14, fontWeight: FontWeight.w500,
               color: isPrimary ? Colors.white : Colors.grey.shade700,
             )),
+      ),
+    );
+  }
+}
+
+class _ChoiceBtn extends StatelessWidget {
+  final String label;
+  final Color primary;
+  final VoidCallback onTap;
+  const _ChoiceBtn({
+    required this.label,
+    required this.primary,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: primary,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.3),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }

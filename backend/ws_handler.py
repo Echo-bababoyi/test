@@ -20,6 +20,7 @@ from backend.models import (
     CmdHighlightPayload,
     TaskDonePayload,
     AsrResultPayload,
+    AgentChoiceRequestPayload,
 )
 
 logger = logging.getLogger(__name__)
@@ -262,6 +263,19 @@ class WSHandler:
                     scope_type="not_supported",
                     voice_hint=reply_text,
                     tts_audio_base64=None,
+                ).model_dump())
+                return
+
+            if scene_id == "login_choose":
+                self.state = SessionState.listening
+                self._pending_intent = None
+                prompt_text = intent.get("confirm_text") or "您想用刷脸登录还是验证码登录？"
+                await self.send("agent_choice_request", AgentChoiceRequestPayload(
+                    text=prompt_text,
+                    options=[
+                        {"value": "刷脸登录", "label": "刷脸登录"},
+                        {"value": "验证码登录", "label": "验证码登录"},
+                    ],
                 ).model_dump())
                 return
 

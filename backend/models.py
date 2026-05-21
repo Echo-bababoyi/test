@@ -28,6 +28,7 @@ class OutboundMessageType(str, Enum):
     asr_listening_ack = "asr_listening_ack"
     cmd_press_button = "cmd_press_button"
     cmd_say = "cmd_say"
+    agent_choice_request = "agent_choice_request"
 
 
 # Inbound payload models
@@ -180,6 +181,11 @@ class CmdPressButtonPayload(BaseModel):
 
 class CmdSayPayload(BaseModel):
     voice_hint: str
+
+
+class AgentChoiceRequestPayload(BaseModel):
+    text: str
+    options: list[dict]
 
 
 # Envelope
