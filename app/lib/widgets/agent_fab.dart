@@ -16,6 +16,7 @@ import '../services/page_meta.dart';
 import '../services/ws_client.dart';
 import '../services/session_state.dart';
 import '../services/agent_settings_service.dart';
+import '../services/chat_history.dart';
 import '../services/auth_state.dart';
 import 'agent_bubble.dart';
 import 'auth_card.dart';
@@ -382,7 +383,7 @@ class _BubbleWindowState extends State<_BubbleWindow>
   final _textCtrl = TextEditingController();
   AgentCommandExecutor? _executor;
   StreamSubscription<Map<String, dynamic>>? _wsSub;
-  final List<Map<String, dynamic>> _items = [];
+  final List<Map<String, dynamic>> _items = ChatHistory.instance.items;
 
   @override
   void initState() {
@@ -407,8 +408,10 @@ class _BubbleWindowState extends State<_BubbleWindow>
   void _initDemoData() {
     _session.websocketConnected = true;
     _session.state = 'listening';
-    final path = widget.currentPath ?? '';
-    _items.addAll(_demoDialogFor(path));
+    if (_items.isEmpty) {
+      final path = widget.currentPath ?? '';
+      _items.addAll(_demoDialogFor(path));
+    }
   }
 
   List<Map<String, dynamic>> _demoDialogFor(String path) {
@@ -521,7 +524,9 @@ class _BubbleWindowState extends State<_BubbleWindow>
         case 'agent_ready':
           final greeting = payload['greeting'] as String? ?? '您好，有什么可以帮您？';
           _session.state = 'listening';
-          _items.add({'role': 'agent', 'text': greeting});
+          if (_items.isEmpty) {
+            _items.add({'role': 'agent', 'text': greeting});
+          }
 
         case 'asr_result':
           break;
