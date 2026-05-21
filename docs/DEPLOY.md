@@ -74,6 +74,14 @@ cd app
 - TTS 默认走 Edge TTS；若配齐 `XUNFEI_APP_ID` / `API_KEY` / `API_SECRET` 自动切换讯飞
 - Web Speech API（麦克风语音识别）在非 localhost 环境需要 HTTPS。当前阶段麦克风功能尚未接入（N1 任务），主要走文本输入
 
+### 跨机访问
+
+前端 WS 地址从浏览器当前 URL 的 `hostname` 动态推导。若前后端跑在同一台机器、浏览器在**另一台机器**上访问时：
+
+- **必须用后端机器的内网 IP** 访问前端（如 `http://192.168.x.x:3080`），**不能用 `localhost:3080`**
+- 原因：`localhost` 在浏览器里指向用户自己的机器，会导致 WS 连不到后端
+- 查看后端机器 IP：`ip a` 或 `hostname -I`
+
 ## 人脸验证（MediaPipe）
 
 - 资源已本地化在 `app/web/mediapipe/`（`face_landmarker.task` + `vision_bundle.mjs` + `wasm/`）
