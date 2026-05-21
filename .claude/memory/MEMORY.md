@@ -7,5 +7,5 @@
 - [踩坑教训](feedback_lessons.md) — 成员越权 commit / 批量改动回退 / 粗略方案驳回 / CDN 国内不通 / team-lead 越权写代码
 - [git commit 只由 team-lead 执行](feedback_git_commit_team_lead_only.md) — review/方案完成后不要建议 commit
 - [用户工作偏好](feedback_user_style.md) — 一步一步确认 / 先看方案再实施 / 不批量改 / 方案要逐帧详细 / 外部依赖本地化
-- [项目开发进展](project_progress.md) — 会话 9：人脸验证 MediaPipe + AgentFab 全覆盖 + 标准版收紧，待真机测试
+- [项目开发进展](project_progress.md) — 会话 13：三级权限 v0.6 全量落地（6 commit，R1-R26）
 - [前后端端口约定](reference_ports.md) — 后端 8080 / 前端 3080
