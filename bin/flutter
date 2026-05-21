@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 项目级 Flutter 包装脚本
-# - 指向本项目 archive/flutter/ 的 SDK（封存期保留，将来激活场景画布时可用）
+# - 指向项目根 `flutter/` 目录的 SDK（需自行获取，见 docs/DEPLOY.md）
 # - 自动走国内镜像（pub.dev 与 Flutter engine storage）
 set -e
 ARCHIVE_ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
