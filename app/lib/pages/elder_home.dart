@@ -44,6 +44,8 @@ class _ElderHomeState extends ConsumerState<ElderHome>
     if (!isLoggedIn) return;
     if (AgentSettingsService.instance.firstChoiceShown) return;
 
+    AgentSettingsService.instance.firstChoiceShown = true;
+
     final picked = await showModalBottomSheet<String?>(
       context: context,
       isScrollControlled: true,
@@ -53,7 +55,6 @@ class _ElderHomeState extends ConsumerState<ElderHome>
       builder: (_) => const _FirstTrustChoiceSheet(),
     );
 
-    AgentSettingsService.instance.firstChoiceShown = true;
     if (picked != null && mounted) {
       AgentSettingsService.instance.trustLevel = picked;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -30,6 +30,7 @@ SCENE_TOOLS = {
                       fill_field_normal, cmd_press_button],
 }
 
+# read_sms 为 AGENT_SPEC.md §5 能力矩阵预留（L2/L3 代读短信），当前五个场景的 SCENE_TOOLS 均未挂载，三道 AND 取交集后不会被实际调用；新增短信相关场景时需在对应 SCENE_TOOLS 列表中加入。
 _LEVEL_TOOLS: dict[str, set[str]] = {
     "guide": {"cmd_highlight", "cmd_say"},
     "semi":  {"cmd_navigate", "cmd_highlight", "cmd_say",
