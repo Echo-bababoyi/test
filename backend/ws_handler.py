@@ -256,26 +256,20 @@ class WSHandler:
 
             if scene_id == "out_of_scope":
                 self.state = SessionState.idle
-                await self.send("agent_thinking", AgentThinkingPayload(
-                    hint_text="小浙正在想…",
-                    estimated_wait_ms=2000,
-                ).model_dump())
-                reply_text = await self._agent_core.handle_out_of_scope(intent["intent_summary"])
-                tts_b64 = await self._tts_to_b64(reply_text)
+                reply_text = intent.get("confirm_text") or "抱歉，这个功能暂时帮不到您"
                 await self.send("agent_out_of_scope", AgentOutOfScopePayload(
                     user_intent=intent["intent_summary"],
                     scope_type="not_supported",
                     voice_hint=reply_text,
-                    tts_audio_base64=tts_b64,
+                    tts_audio_base64=None,
                 ).model_dump())
                 return
 
             self.state = SessionState.confirming
             confirm_text = intent["confirm_text"]
-            tts_b64 = await self._tts_to_b64(confirm_text)
             await self.send("agent_reply", AgentReplyPayload(
                 text=confirm_text,
-                tts_audio_base64=tts_b64,
+                tts_audio_base64=None,
                 tts_format="mp3",
                 requires_confirmation=True,
                 confirmation_timeout_ms=15000,

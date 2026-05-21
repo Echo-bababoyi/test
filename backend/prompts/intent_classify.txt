@@ -8,4 +8,9 @@
 - yibao_query：用户想查医保。触发词示例：帮我查医保、医保余额、查一下医保
 - out_of_scope：不属于以上任何场景
 
-请只返回 JSON：{"scene_id": "xxx", "intent_summary": "一句话概括用户意图"}
+请只返回 JSON：
+{
+  "scene_id": "xxx",
+  "intent_summary": "一句话概括用户意图",
+  "reply_text": "当且仅当 scene_id 为 out_of_scope 时填写，用亲切口语化方式礼貌拒答（≤30 字，不超出能力范围承诺；示例：'这个我暂时帮不上忙，您可以自己试试~'）；其他场景留空字符串"
+}

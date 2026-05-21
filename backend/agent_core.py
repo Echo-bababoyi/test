@@ -139,19 +139,21 @@ class AgentCore:
         self._query_event: asyncio.Event = asyncio.Event()
 
         self._classifier = Agent(
-            model=DeepSeek(id="deepseek-chat"),
+            model=DeepSeek(id="deepseek-chat", max_tokens=256, temperature=0.3),
             session_id=f"{session_id}_cls",
             instructions=_INTENT_PROMPT,
             markdown=False,
             add_history_to_messages=False,
+            telemetry=False,
         )
 
         self._rephraser = Agent(
-            model=DeepSeek(id="deepseek-chat"),
+            model=DeepSeek(id="deepseek-chat", max_tokens=256, temperature=0.3),
             session_id=f"{session_id}_rph",
             instructions=_CONFIRM_PROMPT,
             markdown=False,
             add_history_to_messages=False,
+            telemetry=False,
         )
 
         self._executor: Agent | None = None
@@ -173,6 +175,14 @@ class AgentCore:
 
         logger.info("session=%s classified scene=%s summary=%s", self.session_id, scene_id, intent_summary)
 
+        if scene_id == "out_of_scope":
+            oos_reply = (intent.get("reply_text") or "").strip()
+            return {
+                "scene_id": scene_id,
+                "intent_summary": intent_summary,
+                "confirm_text": oos_reply or "抱歉，这个功能暂时帮不到您",
+            }
+
         rph_response = await self._rephraser.arun(intent_summary)
         confirm_text = (rph_response.content or intent_summary).strip()
 
@@ -185,11 +195,12 @@ class AgentCore:
     async def handle_out_of_scope(self, user_input: str) -> str:
         """Generate a polite out-of-scope reply using the scene_out_of_scope prompt."""
         agent = Agent(
-            model=DeepSeek(id="deepseek-chat"),
+            model=DeepSeek(id="deepseek-chat", max_tokens=256, temperature=0.3),
             session_id=f"{self.session_id}_oos",
             instructions=_OUT_OF_SCOPE_PROMPT,
             markdown=False,
             add_history_to_messages=False,
+            telemetry=False,
         )
         response = await agent.arun(user_input)
         return (response.content or "抱歉，这个功能暂时帮不到您").strip()
@@ -206,13 +217,14 @@ class AgentCore:
         instructions = _load_scene_prompt(scene_id)
         tools = get_scene_tools(scene_id, self.trust_level)
         self._executor = Agent(
-            model=DeepSeek(id="deepseek-chat"),
+            model=DeepSeek(id="deepseek-chat", max_tokens=1024, temperature=0.5),
             session_id=self.session_id,
             tools=tools,
             instructions=instructions,
             markdown=False,
             add_history_to_messages=True,
             num_history_runs=10,
+            telemetry=False,
         )
 
         input_msg = intent_summary
@@ -286,10 +298,11 @@ class AgentCore:
         prompt = f"请用口语化方式，简短播报以下查询结果（不超过30字）：{result_text}"
 
         agent = Agent(
-            model=DeepSeek(id="deepseek-chat"),
+            model=DeepSeek(id="deepseek-chat", max_tokens=256, temperature=0.5),
             session_id=f"{self.session_id}_broadcast",
             markdown=False,
             add_history_to_messages=False,
+            telemetry=False,
         )
         response = await agent.arun(prompt)
         return (response.content or result_text).strip()
