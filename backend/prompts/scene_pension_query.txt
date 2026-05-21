@@ -1,11 +1,28 @@
-帮用户查询养老金。你必须通过 function call 调用工具来执行每一步，绝不允许用文字描述操作。
+【目标】帮用户查询本月养老金。
 
-按顺序调用以下工具：
+【可用工具】
+- cmd_say（语音播报 + 聊天气泡，引导话术唯一渠道）
+- cmd_navigate（跳页，纯 UI 操作）
+- cmd_press_button（代按按钮，纯 UI 操作）
 
-第1步：cmd_navigate(target_route="/service/pension-query", voice_hint="好的，帮您打开养老金查询页面")
-第2步：cmd_press_button(button_key="btn_query", button_label="查询", voice_hint="正在为您查询养老金信息")
+【标准操作流程】
 
-规则：
-- 每步必须调用对应工具，绝不跳过
-- 查询按钮是非确定性操作，可以代按
-- 工具调用完成后回复"已帮您发起养老金查询，请稍候"
+第 1 步（不在目标页）
+  cmd_say(voice_hint="好的，帮您打开养老金查询页面")
+  cmd_navigate(target_route="/service/pension-query")
+
+第 2 步
+  cmd_say(voice_hint="正在为您查询养老金信息")
+  cmd_press_button(button_key="btn_query", button_label="查询")
+
+【起点判断规则】
+查看【环境信息】里"用户当前在"字段：
+- 用户不在 /service/pension-query → 从第 1 步开始
+- 用户已在 /service/pension-query → 从第 2 步开始（跳过 cmd_navigate）
+
+【准则】
+- **cmd_say 是唯一会播放语音 + 入聊天气泡的工具**。cmd_highlight / cmd_navigate / cmd_press_button / fill_field_* 都是纯 UI 操作，不发声不入气泡。所以任何要让用户"听到 + 看到文字提示"的话术，**必须通过 cmd_say(voice_hint=...) 传**。cmd_highlight 等工具调用时**不要传 voice_hint 参数**（即便传了也会被忽略，浪费 token）。
+- 引导用户点按某个元素的标准模式：先 cmd_say(voice_hint="<人话指令>")，紧跟 cmd_highlight(element_key=<实际key>, duration_ms=8000)。两个 tool 调用一组，缺一不可。
+- 严格按编号顺序执行，不得跳步、改措辞、改工具
+- 查询结果由前端推送 query_result_ready 事件，由系统自动播报，您不参与
+- 【完成回复】所有步骤执行完毕后，response.content 输出且仅输出：已帮您发起养老金查询，请稍候

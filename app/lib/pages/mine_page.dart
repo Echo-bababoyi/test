@@ -8,6 +8,9 @@ import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 import '../widgets/persistent_banner.dart';
 import '../widgets/press_scale_wrapper.dart';
+import '../services/agent_element_registry.dart';
+
+final _btnGoLoginKey = AgentElementRegistry.register('btn_go_login');
 
 class MinePage extends ConsumerWidget {
   const MinePage({super.key});
@@ -135,7 +138,9 @@ class _LoginPrompt extends StatelessWidget {
             ),
           ),
           const SizedBox(height: Spacing.xl),
-          PressScaleWrapper(
+          KeyedSubtree(
+            key: _btnGoLoginKey,
+            child: PressScaleWrapper(
             pressedScale: 0.96,
             onTap: () => context.go(AppRoutes.login),
             borderRadius: BorderRadius.circular(28),
@@ -157,6 +162,7 @@ class _LoginPrompt extends StatelessWidget {
                 ),
               ),
             ),
+          ),
           ),
         ],
       ),

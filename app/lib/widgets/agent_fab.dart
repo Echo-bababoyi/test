@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,34 +6,19 @@ import 'package:go_router/go_router.dart';
 import '../core/state/app_state.dart';
 import '../core/theme/app_theme.dart';
 import '../theme/design_tokens.dart';
-import '../services/agent_command_executor.dart';
+import '../services/agent_session.dart';
 import '../services/audio_player.dart';
-import '../services/draft_service.dart';
-import '../services/draft_store.dart';
-import '../services/log_service.dart';
-import '../services/page_meta.dart';
-import '../services/ws_client.dart';
-import '../services/session_state.dart';
+import '../services/auth_state.dart';
 import '../services/agent_settings_service.dart';
 import '../services/chat_history.dart';
-import '../services/auth_state.dart';
+import '../services/draft_service.dart';
+import '../services/draft_store.dart';
+import '../services/page_meta.dart';
+import '../services/ws_client.dart';
 import 'agent_bubble.dart';
 import 'auth_card.dart';
 
 const _kFabSize = 52.0;
-
-String _generateSessionId() {
-  final rand = Random.secure();
-  final bytes = List<int>.generate(16, (_) => rand.nextInt(256));
-  bytes[6] = (bytes[6] & 0x0f) | 0x40;
-  bytes[8] = (bytes[8] & 0x3f) | 0x80;
-  String hex(int b) => b.toRadixString(16).padLeft(2, '0');
-  return '${bytes.sublist(0, 4).map(hex).join()}-'
-      '${bytes.sublist(4, 6).map(hex).join()}-'
-      '${bytes.sublist(6, 8).map(hex).join()}-'
-      '${bytes.sublist(8, 10).map(hex).join()}-'
-      '${bytes.sublist(10).map(hex).join()}';
-}
 
 const _kDemoMode = bool.fromEnvironment('DEMO_MODE');
 
@@ -48,8 +32,7 @@ class AgentFab extends ConsumerStatefulWidget {
 }
 
 class _AgentFabState extends ConsumerState<AgentFab> {
-  bool _panelOpen = _kDemoMode;
-  bool _hasUnread = false;
+  StreamSubscription<void>? _uiSub;
 
   // FAB 位置
   double _fabX = -1;
@@ -68,14 +51,12 @@ class _AgentFabState extends ConsumerState<AgentFab> {
   static const double _bubbleH = 340.0;
 
   void _openPanel() {
-    setState(() {
-      _panelOpen = true;
-      _hasUnread = false;
-    });
+    AgentSession.instance.setPanelOpen(true);
+    AgentSession.instance.clearNewMessage();
   }
 
-  void _closePanel() => setState(() => _panelOpen = false);
-  void _onNewMessage() => setState(() { if (!_panelOpen) _hasUnread = true; });
+  void _closePanel() => AgentSession.instance.setPanelOpen(false);
+  void _onNewMessage() {}
 
   void _snapFabToEdge(double maxW) {
     final center = _fabX + _fabSize / 2;
@@ -84,6 +65,37 @@ class _AgentFabState extends ConsumerState<AgentFab> {
           ? -(_fabSize - _peekOffset)
           : maxW - _peekOffset;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _uiSub = AgentSession.instance.uiSignal.listen((_) {
+      if (mounted) setState(() {});
+    });
+    if (_kDemoMode) {
+      AgentSession.instance.setPanelOpen(true);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final path = widget.currentPath ?? '';
+      final meta = metaForRoute(path);
+      AgentSession.instance.bindPage(
+        token: this,
+        router: GoRouter.of(context),
+        overlayContext: context,
+        currentPath: widget.currentPath,
+        pageId: meta?.pageId,
+        pageTitle: meta?.pageTitle,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _uiSub?.cancel();
+    AgentSession.instance.unbindPage(this);
+    super.dispose();
   }
 
   @override
@@ -128,7 +140,7 @@ class _AgentFabState extends ConsumerState<AgentFab> {
         clipBehavior: Clip.none,
         children: [
           // ── 气泡聊天窗 ──────────────────────────────────────
-          if (_panelOpen && _initialized)
+          if (AgentSession.instance.panelOpen && _initialized)
             Positioned(
               left: _bubbleX.clamp(0.0, maxW - _bubbleW),
               bottom: 10,
@@ -148,7 +160,7 @@ class _AgentFabState extends ConsumerState<AgentFab> {
             ),
 
           // ── 悬浮图标（气泡窗收起时显示）──────────────────────
-          if (!_panelOpen)
+          if (!AgentSession.instance.panelOpen)
             AnimatedPositioned(
               duration: _fabDragging ? Duration.zero : const Duration(milliseconds: 260),
               curve: Curves.easeOutCubic,
@@ -169,7 +181,7 @@ class _AgentFabState extends ConsumerState<AgentFab> {
                     _snapFabToEdge(maxW);
                   },
                   child: _FabIcon(
-                    hasUnread: _hasUnread,
+                    hasUnread: AgentSession.instance.hasNewMessage,
                     hovering: _fabHovering || _fabDragging,
                     primary: primary,
                   ),
@@ -377,37 +389,37 @@ class _BubbleWindowState extends State<_BubbleWindow>
     parent: _animCtrl, curve: Curves.easeOutBack,
   );
 
-  final _session = SessionState();
-  final _ws = WsClient.instance;
   final _scrollCtrl = ScrollController();
   final _textCtrl = TextEditingController();
-  AgentCommandExecutor? _executor;
-  StreamSubscription<Map<String, dynamic>>? _wsSub;
+  StreamSubscription<void>? _uiSub;
   final List<Map<String, dynamic>> _items = ChatHistory.instance.items;
 
   @override
   void initState() {
     super.initState();
-    _animCtrl.forward();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final meta = metaForRoute(widget.currentPath ?? '');
-      _executor = AgentCommandExecutor(
-        router: GoRouter.of(context),
-        overlayContext: context,
-        pageId: meta?.pageId,
-        pageTitle: meta?.pageTitle,
-      );
+    if (AgentSession.instance.consumeAnimateOpenFlag()) {
+      _animCtrl.forward();
+    } else {
+      _animCtrl.value = 1.0;
+    }
+    _uiSub = AgentSession.instance.uiSignal.listen((_) {
+      if (mounted) setState(() {});
     });
     if (_kDemoMode) {
       _initDemoData();
     } else {
-      _initSession();
+      final isLoggedIn = AuthState.instance.isLoggedIn;
+      final effectiveTrust = isLoggedIn
+          ? AgentSettingsService.instance.trustLevel
+          : 'guide';
+      AgentSession.instance.ensureSession(trustLevel: effectiveTrust);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _checkPageDraft();
+      });
     }
   }
 
   void _initDemoData() {
-    _session.websocketConnected = true;
-    _session.state = 'listening';
     if (_items.isEmpty) {
       final path = widget.currentPath ?? '';
       _items.addAll(_demoDialogFor(path));
@@ -468,33 +480,6 @@ class _BubbleWindowState extends State<_BubbleWindow>
     ];
   }
 
-  Future<void> _initSession() async {
-    final id = _generateSessionId();
-    _session.sessionId = id;
-    try {
-      await _ws.connect(id);
-      setState(() {
-        _session.websocketConnected = true;
-        _session.state = 'listening';
-      });
-      final isLoggedIn = AuthState.instance.isLoggedIn;
-      final effectiveTrust = isLoggedIn
-          ? AgentSettingsService.instance.trustLevel
-          : 'guide';
-      _wsSub = _ws.messages.listen(_handleMessage);
-      _ws.send('agent_wake', {
-        'session_id': id,
-        'trigger': 'button',
-        'current_page': widget.currentPath ?? '',
-        'trust_level': effectiveTrust,
-      });
-      await _checkPageDraft();
-    } catch (e) {
-      debugPrint('[BubbleWindow] connect error: $e');
-      setState(() => _session.websocketConnected = false);
-    }
-  }
-
   Future<void> _checkPageDraft() async {
     if (!mounted) return;
     final meta = metaForRoute(widget.currentPath ?? '');
@@ -505,83 +490,6 @@ class _BubbleWindowState extends State<_BubbleWindow>
       'type': 'draft_prompt', 'draft': draft,
       'pageId': meta.pageId, 'pageTitle': meta.pageTitle,
     }));
-    _scrollToBottom();
-  }
-
-  void _handleMessage(Map<String, dynamic> msg) {
-    final type = msg['type'] as String?;
-    final payload = msg['payload'] as Map<String, dynamic>? ?? {};
-
-    if (type != null && type.startsWith('cmd_')) {
-      _executor?.handleMessage(msg);
-      return;
-    }
-    widget.onNewMessage();
-
-    setState(() {
-      _items.removeWhere((e) => e['type'] == 'thinking');
-      switch (type) {
-        case 'agent_ready':
-          final greeting = payload['greeting'] as String? ?? '您好，有什么可以帮您？';
-          _session.state = 'listening';
-          if (_items.isEmpty) {
-            _items.add({'role': 'agent', 'text': greeting});
-          }
-
-        case 'asr_result':
-          break;
-
-        case 'agent_thinking':
-          _session.state = 'confirming';
-          _items.add({'type': 'thinking'});
-
-        case 'agent_reply':
-        case 'agent_text':
-          final text = payload['text'] as String? ?? '';
-          final needsConfirm = payload['requires_confirmation'] as bool? ?? false;
-          _session.state = needsConfirm ? 'confirming' : 'executing';
-          _items.add({'role': 'agent', 'text': text, if (needsConfirm) 'showConfirm': true});
-          AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
-
-        case 'permission_request':
-        case 'agent_auth_request':
-          _items.add({
-            'type': 'auth',
-            'permission_id': payload['permission_id'] as String? ?? '',
-            'description': payload['description'] as String? ?? '需要您的授权',
-          });
-
-        case 'agent_choice_request':
-          final text = payload['text'] as String? ?? '';
-          final opts = (payload['options'] as List<dynamic>? ?? [])
-              .map((e) => Map<String, dynamic>.from(e as Map))
-              .toList();
-          _session.state = 'listening';
-          _items.add({'type': 'choice', 'text': text, 'options': opts});
-
-        case 'task_done':
-          _session.state = 'done';
-          LogService.saveFromTaskDone(payload);
-          final summary = payload['summary'] as String?;
-          if (summary != null && summary.isNotEmpty) {
-            _items.add({'role': 'agent', 'text': summary});
-          }
-          _scheduleAutoDismiss();
-
-        case 'agent_error':
-          final code = payload['error_code'] as String?;
-          final errText = code == 'asr_unclear'
-              ? '没听清，请再说一次'
-              : (payload['voice_hint'] as String? ?? '出错了，请重试');
-          _session.state = code == 'asr_unclear' ? 'listening' : 'idle';
-          _items.add({'role': 'agent', 'text': errText});
-
-        case 'agent_out_of_scope':
-          _session.state = 'idle';
-          final hint = payload['voice_hint'] as String? ?? '浙里办没有这个服务';
-          _items.add({'role': 'agent', 'text': hint});
-      }
-    });
     _scrollToBottom();
   }
 
@@ -601,30 +509,23 @@ class _BubbleWindowState extends State<_BubbleWindow>
     final text = _textCtrl.text.trim();
     if (text.isEmpty) return;
     setState(() => _items.add({'role': 'user', 'text': text}));
-    _ws.send('text_input', {'session_id': _session.sessionId, 'text': text});
+    AgentSession.instance.sendText(text);
     _textCtrl.clear();
     _scrollToBottom();
   }
 
   Future<void> _close() async {
     await _animCtrl.reverse();
-    _ws.disconnect();
     widget.onClose();
-  }
-
-  Future<void> _scheduleAutoDismiss() async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) _close();
   }
 
   @override
   void dispose() {
-    _wsSub?.cancel();
+    _uiSub?.cancel();
     _animCtrl.dispose();
     _scrollCtrl.dispose();
     _textCtrl.dispose();
     AudioPlayer.stop();
-    _ws.disconnect();
     super.dispose();
   }
 
@@ -691,7 +592,7 @@ class _BubbleWindowState extends State<_BubbleWindow>
                           const SizedBox(width: 8),
                           const Text('小浙助手',
                               style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
-                          if (!_session.websocketConnected) ...[
+                          if (!WsClient.instance.isConnected) ...[
                             const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -794,18 +695,11 @@ class _BubbleWindowState extends State<_BubbleWindow>
         description: item['description'] as String,
         onApprove: () {
           setState(() => _items.removeAt(i));
-          _session.grantPermission('granted');
-          _ws.send('permission_response', {
-            'permission_id': permId, 'granted': true,
-            'input_mode': 'touch', 'raw_text': '可以',
-          });
+          AgentSession.instance.sendPermissionResponse(permId, true, '可以');
         },
         onReject: () {
           setState(() => _items.removeAt(i));
-          _ws.send('permission_response', {
-            'permission_id': permId, 'granted': false,
-            'input_mode': 'touch', 'raw_text': '不行',
-          });
+          AgentSession.instance.sendPermissionResponse(permId, false, '不行');
         },
       );
     }
@@ -834,10 +728,7 @@ class _BubbleWindowState extends State<_BubbleWindow>
                             item.remove('options');
                             _items.add({'role': 'user', 'text': value});
                           });
-                          _ws.send('text_input', {
-                            'session_id': _session.sessionId,
-                            'text': value,
-                          });
+                          AgentSession.instance.sendChoiceText(value);
                           _scrollToBottom();
                         },
                       ),
@@ -899,19 +790,13 @@ class _BubbleWindowState extends State<_BubbleWindow>
             child: Row(children: [
               _ConfirmBtn(label: '对的', isPrimary: true, primary: widget.primary, onTap: () {
                 setState(() { item.remove('showConfirm'); _items.add({'role': 'user', 'text': '对的'}); });
-                _ws.send('user_confirm', {
-                  'session_id': _session.sessionId, 'answer': 'yes',
-                  'input_mode': 'text', 'raw_text': '对的',
-                });
+                AgentSession.instance.sendUserConfirm('yes', '对的');
                 _scrollToBottom();
               }),
               const SizedBox(width: 8),
               _ConfirmBtn(label: '不是', isPrimary: false, primary: widget.primary, onTap: () {
                 setState(() { item.remove('showConfirm'); _items.add({'role': 'user', 'text': '不是'}); });
-                _ws.send('user_confirm', {
-                  'session_id': _session.sessionId, 'answer': 'no',
-                  'input_mode': 'text', 'raw_text': '不是',
-                });
+                AgentSession.instance.sendUserConfirm('no', '不是');
                 _scrollToBottom();
               }),
             ]),

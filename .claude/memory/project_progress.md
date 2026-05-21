@@ -1,54 +1,60 @@
 ---
 name: 项目开发进展
-description: 会话 14 后状态 — 审查修正 + WS 修复 + 性能优化 + 登录分支 + 部署文档完善，已 push
+description: 会话 15 后状态 — 代理引导机制大重构 + 跨页 session + Bug 修复，18 文件未提交
 type: project
 ---
 
-## 当前状态（2026-05-21 会话 14 后）
+## 当前状态（2026-05-21 会话 15 后）
 
-本地与 origin/main 同步（已 push），共 45 个 commit。
+本地有 18 个文件改动，**尚未 git commit / push**。
 
-**会话 14 核心交付（12 个 commit）**：
+**会话 15 核心交付**：
 
-1. `77df54b` chore: 更新项目记忆 — 会话 13 进展同步
-2. `fdcf19d` fix: 三级权限审查 3 处修正 — read_sms 注释 + prompt 兜底 + 弹卡 flag 提前
-3. `64bd793` docs: DEPLOY.md 全面修订 — 端口/环境变量/路由表/资源说明对齐实际（8 项）
-4. `f5ad852` fix: WS 连接 3 处修复 — 动态 host 推导 + 订阅时序 + 单例残留
-5. `073bb38` docs: DEPLOY.md 补充跨机访问说明
-6. `8dcbb4b` fix: load_dotenv 路径改为相对于 main.py，修复 DEEPSEEK_API_KEY 读不到
-7. `e8f0b7f` perf: 响应延迟优化 11s→1s — 关遥测 + 参数调优 + OOS 合并 + 去 TTS 阻塞
-8. `97e94c2` feat: AgentFab 聊天记录跨开关/跨页面持久化（ChatHistory 单例）
-9. `24e4fce` fix: ModeNotifier 持久化到 localStorage，F5 刷新后模式不丢失
-10. `a9332ba` feat: 登录分支选择 — 模糊登录意图弹两按钮让用户选
-11. `ccd5145` chore: .gitignore 防御性加固 — 显式忽略 .venv/venv/env/.pytest_cache
-12. `d6df16c` docs: DEPLOY.md 从零 clone 到跑通完整补全（9 项 GAP-A~I）
+### 1. Bug 修复
+- Bug 1：AgentFab 面板自动关闭 → 删除 `_scheduleAutoDismiss`
+- Bug 2：cmd_highlight element_key 错配 → login_page 补 `chk_agree_terms`；prompt 对齐 `btn_login` / `btn_verify_login`；agent_command_executor 加 debugPrint 日志
 
-**前端改为 release build + 静态服务**（python3 -m http.server），避免 debug 模式白屏。
+### 2. 跨页 session 不断连
+- 新建 `app/lib/services/agent_session.dart` 单例（WS 连接 + 消息分发 + 页面绑定）
+- agent_fab.dart 大瘦身（约 250 行删减），BubbleWindow 不再拥有 WS / executor
+- 面板状态（panelOpen）/ 未读红点（hasNewMessage）提升到 AgentSession 全局
+- 跳页动画跳过（consumeAnimateOpenFlag）
 
-**测试进展**（P0 清单）：
-- P0-1 启动+进入长辈版 ✅
-- P0-2 登录后首次弹卡 ✅
-- P0-3 AgentFab 基本对话 ✅
-- P0-4 引导级登录场景 — 发现面板自动关闭 + 高亮不生效（未修）
-- P0-5 半委托级医保缴费 — 未测
-- P0-6 人脸验证 — 未测
+### 3. 代理引导机制升级（核心重构）
+- **页面知识库** `backend/knowledge/pages.py`：10 个页面（含新增 /my、/service/yibao-hub），结构化 ElementSpec / PageSpec / Transition + BFS find_path
+- **页面感知**：前端 page_changed → 后端 AgentCore.set_current_page 实时同步
+- **5 个 scene prompt 三段式重写**：标准操作流程写死 + LLM 仅选起点 + 环境信息自动注入
+- **agent_core 改造**：`_build_executor_prompt` + `_render_environment_section` + `SCENE_TARGET_ROUTE` + `SCENE_DONE_SUMMARY` 硬编码兜底
+- **启动校验**：`_validate_prompts_against_knowledge()` 部署期拦截 element_key / route 漂移
+- **_EXECUTOR_PREFIX 重写**：明确 voice_hint 与 response.content 两渠道分工
+- **工具职责清晰化**：cmd_say 唯一发声+入气泡；cmd_highlight / cmd_navigate / cmd_press_button / fill_field 纯 UI 操作不发声不入气泡；task_done summary 不入气泡
+- **prompt cmd_say + cmd_highlight 配对模式**：每步先 cmd_say 说话，紧跟 cmd_highlight 高亮
 
-**已发现未修的问题**：
-- AgentFab 面板自动关闭（代理输出消息后面板自动收起，用户来不及看完）
-- cmd_highlight 高亮不生效
-- DeepSeek 503 过载时错误提示不够精确（通用"处理失败"而非"服务繁忙"）
-- wait_for 超时 30s 对适老化太长（建议降到 15s）
-- agent_core.py JSONDecode 二次解析未在 try/except 内（潜在隐患）
-- 需要备选 LLM 做 fallback（DeepSeek 过载时切换）
+### 4. 前端元素注册
+- 5 个新 element_key：`tab_my`（elder_bottom_nav）、`card_yibao_hub`（elder_home）、`btn_go_login`（mine_page）、`card_yibao_jiaofei_entry` + `card_yibao_query_entry`（yibao_hub_page）
+- `btn_switch_elder`（standard_home）
+
+### 5. 文档
+- DEPLOY.md 前端启动改为 release build + 静态服务
+- AGENT_KNOWLEDGE_DESIGN.md v2.0 全链路技术方案
+
+**未解决的已知问题**：
+
+1. **高亮挖洞不生效** — Flutter Web HTML renderer 下 Path.combine(difference) 不工作，蒙版全屏无洞。architect 已出方案（saveLayer + BlendMode.clear），未实施
+2. **蒙版层级** — 蒙版遮住聊天框（应该不遮）；底部导航栏没被遮（应该遮住只挖洞）。architect 有方案（多洞 + panelRect 上报），未实施
+3. **LLM 一次执行完就结束** — 缺少"等用户操作 → 感知页面变化 → 继续下一步"的循环机制。当前 LLM 只做当前页能做的步骤就 task_done
+4. **LLM response.content 仍不空** — prefix 已反复强调空字符串，但 DeepSeek 仍输出思考过程。SCENE_DONE_SUMMARY 硬编码兜住了最终气泡
+5. **工具职责审查** — 用户要求 architect 审查所有工具职责边界，architect 未回复即关闭
+6. **O-2：pop 返回 executor 失效** — 用户按浏览器返回时 unbindPage 清掉 executor，已知未修
+7. **草稿重复追加** — _checkPageDraft 反复执行会重复追加 draft_prompt 卡
+8. **btn_query 双重注册** — pension_query 和 yibao_query 都注册 'btn_query'
 
 **下次会话接续点**：
-- **首要**：修面板自动关闭 + 高亮不生效，继续 P0-4 ~ P0-6 测试
-- 备选 LLM fallback 方案（阿里通义/智谱 GLM/Moonshot）
-- DeepSeek 503 错误区分 + 超时降到 15s
-- JSONDecode 加固
-- 语音合成/识别方案待定（用户倾向讯飞）
-- N2 云服务器部署
-- N6 答辩准备
+- **首要**：修高亮挖洞（saveLayer + BlendMode.clear）+ 蒙版层级（多洞 + 聊天框不被遮）
+- 工具职责边界审查（用户上次要求的，被中断）
+- LLM 多步执行机制（等用户操作后继续下一步）— 这是代理引导能真正跑通的关键
+- 测试完整登录流程端到端
+- git commit 会话 15 所有改动
 
-**Why:** 下次会话恢复时快速了解会话 14 做了什么、哪些问题待修。
-**How to apply:** 新会话读此记忆，直接接续未修问题和未完成测试。
+**Why:** 下次会话恢复时快速了解会话 15 做了什么、哪些问题待修。
+**How to apply:** 新会话读此记忆，直接接续未修问题。

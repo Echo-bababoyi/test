@@ -4,6 +4,10 @@ import '../router.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
+import '../services/agent_element_registry.dart';
+
+final _cardYibaoJiaofeiKey = AgentElementRegistry.register('card_yibao_jiaofei_entry');
+final _cardYibaoQueryKey = AgentElementRegistry.register('card_yibao_query_entry');
 
 class YibaoHubPage extends StatelessWidget {
   const YibaoHubPage({super.key});
@@ -25,21 +29,27 @@ class YibaoHubPage extends StatelessWidget {
           ListView(
             padding: const EdgeInsets.all(Spacing.md),
             children: [
-              _HubCard(
-                icon: Icons.medical_services,
-                iconColor: AppColors.elderPrimary,
-                title: '医保缴费',
-                subtitle: '城乡居民医保年度缴费',
-                primary: true,
-                onTap: () => context.push(AppRoutes.yibaoJiaofei),
+              KeyedSubtree(
+                key: _cardYibaoJiaofeiKey,
+                child: _HubCard(
+                  icon: Icons.medical_services,
+                  iconColor: AppColors.elderPrimary,
+                  title: '医保缴费',
+                  subtitle: '城乡居民医保年度缴费',
+                  primary: true,
+                  onTap: () => context.push(AppRoutes.yibaoJiaofei),
+                ),
               ),
               const SizedBox(height: Spacing.md),
-              _HubCard(
-                icon: Icons.search,
-                iconColor: AppColors.elderPrimary,
-                title: '医保查询',
-                subtitle: '查询账户余额和状态',
-                onTap: () => context.push(AppRoutes.yibaoQuery),
+              KeyedSubtree(
+                key: _cardYibaoQueryKey,
+                child: _HubCard(
+                  icon: Icons.search,
+                  iconColor: AppColors.elderPrimary,
+                  title: '医保查询',
+                  subtitle: '查询账户余额和状态',
+                  onTap: () => context.push(AppRoutes.yibaoQuery),
+                ),
               ),
               const SizedBox(height: Spacing.md),
               _HubCard(

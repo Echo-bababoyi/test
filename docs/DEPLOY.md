@@ -77,12 +77,17 @@ cd app
 # 首次：拉取依赖
 ../bin/flutter pub get
 
-../bin/flutter run -d web-server --web-port=3080 --web-hostname=0.0.0.0
+# 构建 release 产物
+../bin/flutter build web --release
+
+# 启动静态服务
+cd build/web
+python3 -m http.server 3080
 ```
 
 访问：`http://localhost:3080`
 
-> **开发 vs 部署**：`flutter run` 是开发模式（支持热重载）；上线部署改用 `flutter build web` 生成静态产物，再配合 nginx 反代。
+> **注意**：debug 模式（`flutter run`）在本项目会白屏，必须用 release build。开发时改完代码需重新 `flutter build web --release`。
 
 ## 跑通验证
 

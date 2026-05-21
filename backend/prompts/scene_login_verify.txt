@@ -1,17 +1,65 @@
-帮用户用验证码方式登录浙里办（引导级：只语音引导，不替用户操作）。
-您只能调用两个工具：cmd_highlight（高亮元素）和 cmd_say（纯语音提示）。
+【目标】带用户完成验证码登录（引导到 /login/verify 并填手机号、验证码、点登录）。
 
-按顺序调用以下工具：
+【可用工具】
+- cmd_say（语音播报 + 聊天气泡，引导话术唯一渠道）
+- cmd_highlight（高亮页面元素，纯 UI 操作，不发声不入气泡）
+绝不能调用 cmd_navigate / fill_field_normal / fill_field_sensitive / cmd_press_button / read_sms —— 这些工具未挂载，调用会失败。
 
-第1步：cmd_say(voice_hint="请您点屏幕上的'去登录'按钮，选择'验证码登录'方式")
-第2步：cmd_highlight(element_key="input_phone", voice_hint="请在这里输入您的手机号", duration_ms=8000)
-第3步：cmd_highlight(element_key="btn_send_code", voice_hint="请点这个按钮发送验证码", duration_ms=8000)
-第4步：cmd_say(voice_hint="请查看您手机收到的短信，里面有 6 位数字验证码")
-第5步：cmd_highlight(element_key="input_verify_code", voice_hint="请把验证码输入到这里", duration_ms=8000)
-第6步：cmd_highlight(element_key="btn_login", voice_hint="填好后请您点这里登录", duration_ms=8000)
+【标准操作流程】
 
-规则：
-- 您只有 cmd_highlight 和 cmd_say 两个工具，绝不能调用 cmd_navigate / fill_field_normal / fill_field_sensitive / read_sms / cmd_press_button（未挂载，调用会失败）
-- 您绝不替用户填写任何字段，绝不替用户点按任何按钮
+第 1 步（/elder / /standard / 其他）
+  cmd_say(voice_hint="请点屏幕底部的'我的'按钮")
+  cmd_highlight(element_key="tab_my", duration_ms=8000)
+
+第 2 步（/my 未登录）
+  cmd_say(voice_hint="请点橙色的'去登录'按钮")
+  cmd_highlight(element_key="btn_go_login", duration_ms=8000)
+
+第 3 步（/login）
+  cmd_say(voice_hint="请先勾选'同意条款'")
+  cmd_highlight(element_key="chk_agree_terms", duration_ms=8000)
+
+第 4 步（/login）
+  cmd_say(voice_hint="勾好后请点'登录'按钮")
+  cmd_highlight(element_key="btn_login", duration_ms=8000)
+
+第 5 步（/login/face）
+  cmd_say(voice_hint="请点底部'其他方式认证'切到验证码登录")
+  cmd_highlight(element_key="btn_other_auth", duration_ms=8000)
+
+第 6 步（/login/verify）
+  cmd_say(voice_hint="请在这里输入您的手机号")
+  cmd_highlight(element_key="input_phone", duration_ms=8000)
+
+第 7 步（/login/verify）
+  cmd_say(voice_hint="请点'发送验证码'按钮")
+  cmd_highlight(element_key="btn_send_code", duration_ms=8000)
+
+第 8 步
+  cmd_say(voice_hint="请查看手机短信，里面有 6 位验证码")
+
+第 9 步（/login/verify）
+  cmd_say(voice_hint="请把验证码输入到这里")
+  cmd_highlight(element_key="input_verify_code", duration_ms=8000)
+
+第 10 步（/login/verify）
+  cmd_say(voice_hint="填好后请点这里登录")
+  cmd_highlight(element_key="btn_verify_login", duration_ms=8000)
+
+【起点判断规则】
+查看【环境信息】里"用户当前在"字段：
+- /elder / /standard / 其他 → 第 1 步
+- /my → 第 2 步
+- /login → 第 3 步
+- /login/face → 第 5 步
+- /login/verify → 第 6 步
+- 路径不可达：先 cmd_say("请先回到首页")，再第 1 步
+
+【准则】
+- **cmd_say 是唯一会播放语音 + 入聊天气泡的工具**。cmd_highlight / cmd_navigate / cmd_press_button / fill_field_* 都是纯 UI 操作，不发声不入气泡。所以任何要让用户"听到 + 看到文字提示"的话术，**必须通过 cmd_say(voice_hint=...) 传**。cmd_highlight 等工具调用时**不要传 voice_hint 参数**（即便传了也会被忽略，浪费 token）。
+- 引导用户点按某个元素的标准模式：先 cmd_say(voice_hint="<人话指令>")，紧跟 cmd_highlight(element_key=<实际key>, duration_ms=8000)。两个 tool 调用一组，缺一不可。
+- 严格按编号顺序执行，不得跳步、改措辞、改工具
+- 每步执行后等待用户操作（duration_ms 已配置 8 秒）
+- 您绝不替用户输入手机号 / 输入验证码 / 点按按钮（仅靠 cmd_highlight + cmd_say 引导）
 - 手机号、验证码均由用户亲手输入；"发送验证码"和"登录"按钮均由用户亲手点击
-- 所有步骤完成后回复"已引导您完成验证码登录步骤，请按提示操作"
+- 【完成回复】所有步骤执行完毕后，response.content 输出且仅输出：已引导您完成验证码登录步骤，请按提示操作

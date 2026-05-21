@@ -17,6 +17,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _phoneController = TextEditingController();
   final _loginBtnKey = AgentElementRegistry.register('btn_login');
+  final _agreeCheckboxKey = AgentElementRegistry.register('chk_agree_terms');
   bool _agreed = false;
 
   @override
@@ -141,6 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: Spacing.lg),
                     // 条款勾选（装饰性，不控制按钮）
                     Row(
+                      key: _agreeCheckboxKey,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Material(

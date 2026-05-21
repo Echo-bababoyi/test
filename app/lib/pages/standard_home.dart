@@ -6,6 +6,9 @@ import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/press_scale_wrapper.dart';
 import '../router.dart';
+import '../services/agent_element_registry.dart';
+
+final _switchElderKey = AgentElementRegistry.register('btn_switch_elder');
 
 void _showTodo(BuildContext context) {
   ScaffoldMessenger.of(context).showSnackBar(
@@ -176,7 +179,7 @@ class _QuickActionsRow extends StatelessWidget {
       children: [
         _QuickActionItem(icon: Icons.qr_code_scanner, label: '扫一扫', onTap: () => _showTodo(context)),
         _QuickActionItem(icon: Icons.credit_card, label: '卡包', onTap: () => _showTodo(context)),
-        _QuickActionItem(icon: Icons.elderly, label: '长辈版', onTap: onElderEntryTap),
+        KeyedSubtree(key: _switchElderKey, child: _QuickActionItem(icon: Icons.elderly, label: '长辈版', onTap: onElderEntryTap)),
       ],
     );
   }

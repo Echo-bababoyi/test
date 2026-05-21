@@ -11,6 +11,7 @@ class InboundMessageType(str, Enum):
     permission_response = "permission_response"
     query_result_ready = "query_result_ready"
     text_input = "text_input"
+    page_changed = "page_changed"
 
 
 class OutboundMessageType(str, Enum):
@@ -75,6 +76,11 @@ class TextInputPayload(BaseModel):
     text: str
 
 
+class PageChangedPayload(BaseModel):
+    session_id: str
+    current_page: str
+
+
 INBOUND_PAYLOAD_MAP: dict[str, type] = {
     InboundMessageType.agent_wake: AgentWakePayload,
     InboundMessageType.audio_chunk: AudioChunkPayload,
@@ -83,6 +89,7 @@ INBOUND_PAYLOAD_MAP: dict[str, type] = {
     InboundMessageType.permission_response: PermissionResponsePayload,
     InboundMessageType.query_result_ready: QueryResultReadyPayload,
     InboundMessageType.text_input: TextInputPayload,
+    InboundMessageType.page_changed: PageChangedPayload,
 }
 
 

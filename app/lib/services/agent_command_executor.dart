@@ -58,22 +58,27 @@ class AgentCommandExecutor {
     } else {
       router.push(route);
     }
-    final voiceHint = payload['voice_hint'] as String?;
-    if (voiceHint != null && voiceHint.isNotEmpty) {
-      _speakHint(voiceHint);
-    }
   }
 
   void _onHighlight(Map<String, dynamic> payload) {
     final elementKey = payload['element_key'] as String?;
     final durationMs = payload['duration_ms'] as int? ?? 2000;
-    if (elementKey == null) return;
+    if (elementKey == null) {
+      debugPrint('[cmd_highlight] missing element_key');
+      return;
+    }
 
     final key = AgentElementRegistry.get(elementKey);
-    if (key == null) return;
+    if (key == null) {
+      debugPrint('[cmd_highlight] no registered key for "$elementKey"');
+      return;
+    }
 
     final renderBox = key.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
+    if (renderBox == null) {
+      debugPrint('[cmd_highlight] key "$elementKey" has no mounted context (page not on top?)');
+      return;
+    }
 
     final offset = renderBox.localToGlobal(Offset.zero);
     final size = renderBox.size;
@@ -91,11 +96,6 @@ class AgentCommandExecutor {
     Future.delayed(Duration(milliseconds: durationMs), () {
       if (entry.mounted) entry.remove();
     });
-
-    final voiceHint = payload['voice_hint'] as String?;
-    if (voiceHint != null && voiceHint.isNotEmpty) {
-      _speakHint(voiceHint);
-    }
   }
 
   Future<void> _onFillField(Map<String, dynamic> payload) async {

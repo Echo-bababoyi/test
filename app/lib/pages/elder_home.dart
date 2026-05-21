@@ -9,8 +9,11 @@ import '../widgets/connection_indicator.dart';
 import '../widgets/elder_bottom_nav.dart';
 import '../widgets/login_guard.dart';
 import '../widgets/press_scale_wrapper.dart';
+import '../services/agent_element_registry.dart';
 import '../services/agent_settings_service.dart';
 import '../widgets/trust_level_cards.dart';
+
+final _cardYibaoHubKey = AgentElementRegistry.register('card_yibao_hub');
 
 void _showTodo(BuildContext context) {
   ScaffoldMessenger.of(context).showSnackBar(
@@ -653,12 +656,19 @@ class _EldOnlineServiceSection extends StatelessWidget {
             childAspectRatio: 1.5,
             children: [
               for (final item in _items)
-                _EldOnlineGridItem(
-                  item: item,
-                  onTap: item.label == '健康医保'
-                      ? () => LoginGuard.tryNavigate(context, AppRoutes.yibaoHub)
-                      : () => _showTodo(context),
-                ),
+                if (item.label == '健康医保')
+                  KeyedSubtree(
+                    key: _cardYibaoHubKey,
+                    child: _EldOnlineGridItem(
+                      item: item,
+                      onTap: () => LoginGuard.tryNavigate(context, AppRoutes.yibaoHub),
+                    ),
+                  )
+                else
+                  _EldOnlineGridItem(
+                    item: item,
+                    onTap: () => _showTodo(context),
+                  ),
             ],
           ),
         ],

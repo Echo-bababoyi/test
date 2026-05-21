@@ -97,6 +97,7 @@ class WSHandler:
                 InboundMessageType.permission_response: self._on_permission_response,
                 InboundMessageType.query_result_ready: self._on_query_result_ready,
                 InboundMessageType.text_input: self._on_text_input,
+                InboundMessageType.page_changed: self._on_page_changed,
             }.get(msg_type)
 
             if handler:
@@ -115,6 +116,7 @@ class WSHandler:
             session_id=self.session_id,
             ws_handler=self,
             trust_level=payload.trust_level,
+            current_page=payload.current_page,
         )
         self._audio_buf = []
         self.state = SessionState.listening
@@ -125,6 +127,11 @@ class WSHandler:
             has_draft=False,
             draft_id=None,
         ).model_dump())
+
+    async def _on_page_changed(self, payload):
+        logger.info("session=%s page_changed → %s", self.session_id, payload.current_page)
+        if self._agent_core:
+            self._agent_core.set_current_page(payload.current_page)
 
     async def _on_text_input(self, payload):
         """直接文本输入（跳过 ASR，用于演示/测试）"""

@@ -57,6 +57,14 @@ SCENE_PROMPTS = {
     "yibao_query": "scene_yibao_query.txt",
 }
 
+SCENE_DONE_SUMMARY = {
+    "login_face":    "已引导您完成刷脸登录准备，请按提示操作",
+    "login_verify":  "已引导您完成验证码登录步骤，请按提示操作",
+    "yibao_jiaofei": "已帮您填好缴费表单，请点击'去支付'",
+    "pension_query": "已帮您发起养老金查询，请稍候",
+    "yibao_query":   "已帮您发起医保查询，请稍候",
+}
+
 _SENSITIVE_TOOLS = {"fill_field_sensitive", "read_sms"}
 
 _PASSWORD_FIELDS = {
@@ -93,13 +101,35 @@ _CONFIRM_PROMPT = (_PROMPTS_DIR / "confirm_rephrase.txt").read_text(encoding="ut
 _OUT_OF_SCOPE_PROMPT = (_PROMPTS_DIR / "scene_out_of_scope.txt").read_text(encoding="utf-8")
 
 _EXECUTOR_PREFIX = """\
-你是小浙智能助手的执行引擎。你的唯一职责是通过调用工具（function call）来完成用户任务。
+你是小浙智能助手的执行引擎。你的唯一职责是通过 function call 完成任务。
 
-【关键规则】：
-1. 你必须通过调用工具来执行操作，绝不允许仅用文字描述你会做什么
-2. 每次只调用一个工具，等待返回结果后再调用下一个
-3. 不要在回复中解释你在做什么，直接调用工具
-4. 如果所有步骤执行完毕，回复一句简短总结即可
+【重要 —— 用户能"看到 / 听到"什么】
+
+老年用户的聊天气泡内容有 2 个来源，互不重叠：
+
+1. **cmd_say(voice_hint=...) 和 cmd_highlight(voice_hint=...) 的 voice_hint 参数**：前端会**同时**把它语音播报 + 显示为一条聊天气泡。这是引导话术的**唯一**渠道——你要告诉用户的每一句话都必须通过 voice_hint 传。
+2. **你的 response.content**：仅在任务全部完成时，作为最后一条气泡显示场景剧本中"【完成回复】"标注的那句固定结束语。
+
+因此：
+- **执行任务过程中**：response.content **必须**是空字符串。要说给用户的话全部塞进 cmd_say / cmd_highlight 的 voice_hint。如果你在 response 里写了引导文字，会和 voice_hint 重复，造成气泡刷屏——这是绝对禁止的。
+- **任务执行完毕时**：response.content 只输出场景剧本"【完成回复】"那一句固定结束语，一字不差，不要前后加任何说明、不要多写一个字。
+
+任何情况下 response.content 都**不允许**出现：
+- 步骤编号（"第 1 步"、"接下来" 等）
+- 工具名称（cmd_say / cmd_highlight / fill_field_normal 等）
+- 路由路径（/elder、/login、/login/face 等）
+- 元素 key（tab_my、btn_go_login、chk_agree_terms 等）
+- 元思考（"我先..."、"用户当前在..."、"按照流程我应该..." 等）
+- **与 voice_hint 重复的引导话**——想告诉用户"请点这个按钮"就只写进 voice_hint，不要在 response 里再说一遍
+
+【voice_hint 写作要求】
+- 用最朴素的老年友好口语，例如"请点屏幕底部的'我的'按钮"
+- 一句话不超过 20 字；避免"请您在屏幕底部找到带'我的'文字标识的导航 Tab 按钮并轻触"这种书面长句
+- 直接给指令，不解释原因，不复述上一步
+
+【其他规则】
+- 必须通过调用工具来执行操作，绝不允许仅用文字描述你会做什么
+- 每步执行后等待用户操作，不要一次性把所有 tool 调完
 
 以下是你要完成的具体任务：
 """
@@ -124,8 +154,103 @@ def _load_scene_prompt(scene_id: str) -> str:
     return _EXECUTOR_PREFIX + scene_text
 
 
+SCENE_TARGET_ROUTE = {
+    'login_face': '/login/face',
+    'login_verify': '/login/verify',
+    'yibao_jiaofei': '/service/yibao-jiaofei',
+    'pension_query': '/service/pension-query',
+    'yibao_query': '/service/yibao-query',
+}
+
+
+def _build_executor_prompt(scene_id: str, current_page: str) -> str:
+    base = (_PROMPTS_DIR / SCENE_PROMPTS[scene_id]).read_text(encoding='utf-8')
+    env_block = _render_environment_section(scene_id, current_page)
+    return _EXECUTOR_PREFIX + base + '\n\n' + env_block
+
+
+def _render_environment_section(scene_id: str, current_page: str) -> str:
+    from backend.knowledge.pages import PAGES, page_by_route, find_path
+    target_route = SCENE_TARGET_ROUTE.get(scene_id, '')
+    target = page_by_route(target_route)
+    cur = page_by_route(current_page)
+    lines = ['【环境信息】']
+
+    cur_label = f'（{cur.title}）' if cur else '（未知页面，建议先回首页）'
+    lines.append(f'用户当前在：{current_page}{cur_label}')
+
+    if target:
+        lines.append(f'本场景目标页：{target.route}（{target.title}）— {target.description}')
+
+    if cur and cur.elements:
+        lines.append('')
+        lines.append('当前页可交互元素：')
+        for e in cur.elements:
+            sens = '  [敏感]' if e.sensitive else ''
+            desc = f' — {e.description}' if e.description else ''
+            lines.append(f'  {e.key}（{e.label}）{desc}{sens}')
+
+    if target and target.route != current_page and target.elements:
+        lines.append('')
+        lines.append('目标页可交互元素：')
+        for e in target.elements:
+            sens = '  [敏感]' if e.sensitive else ''
+            desc = f' — {e.description}' if e.description else ''
+            lines.append(f'  {e.key}（{e.label}）{desc}{sens}')
+
+    if target and current_page != target_route:
+        path = find_path(current_page, target_route)
+        if path:
+            lines.append('')
+            lines.append('导航路径（当前页 → 目标页）：')
+            for i, t in enumerate(path, 1):
+                lines.append(f'  第{i}跳：{t.user_guidance}（到达 {t.to_route}）')
+        else:
+            lines.append('')
+            scene_tools = SCENE_TOOLS.get(scene_id, [])
+            has_navigate = any(getattr(t, 'name', '') == 'cmd_navigate' for t in scene_tools)
+            if has_navigate:
+                lines.append(f'导航路径：可通过 cmd_navigate 直接跳转到目标页 {target_route}')
+            else:
+                lines.append('导航路径：当前位置不可达目标页（可能用户在偏远页面）')
+
+    return '\n'.join(lines)
+
+
+def _validate_prompts_against_knowledge() -> None:
+    """启动期扫描所有 scene prompt，校验引用的 element_key / target_route 在 PAGES 中存在。"""
+    import re
+    from backend.knowledge.pages import all_element_keys, all_routes
+    valid_keys = all_element_keys()
+    valid_routes = all_routes()
+    errors: list[str] = []
+    for scene_id, filename in SCENE_PROMPTS.items():
+        path = _PROMPTS_DIR / filename
+        text = path.read_text(encoding='utf-8')
+        for m in re.finditer(r'element_key\s*=\s*["\']([^"\']+)["\']', text):
+            key = m.group(1)
+            if key not in valid_keys:
+                errors.append(f'{filename}: element_key="{key}" 未在 PAGES 中定义')
+        for m in re.finditer(r'target_route\s*=\s*["\']([^"\']+)["\']', text):
+            route = m.group(1)
+            if route not in valid_routes:
+                errors.append(f'{filename}: target_route="{route}" 未在 PAGES 中定义')
+    for scene_id, route in SCENE_TARGET_ROUTE.items():
+        if route not in valid_routes:
+            errors.append(f'SCENE_TARGET_ROUTE[{scene_id}]="{route}" 未在 PAGES 中定义')
+    if errors:
+        raise RuntimeError(
+            'Prompt 与知识库不一致（请先同步 backend/knowledge/pages.py）：\n  '
+            + '\n  '.join(errors)
+        )
+
+
+_validate_prompts_against_knowledge()   # 模块加载时执行
+
+
 class AgentCore:
-    def __init__(self, session_id: str, ws_handler, trust_level: str = "guide"):
+    def __init__(self, session_id: str, ws_handler, trust_level: str = "guide",
+                 current_page: str = ""):
         self.session_id = session_id
         self.ws = ws_handler
         self._send_fn: Callable[..., Coroutine[Any, Any, None]] = ws_handler.send
@@ -133,6 +258,7 @@ class AgentCore:
         self._permission_event: asyncio.Event = asyncio.Event()
         self._permission_granted: bool = False
         self.trust_level: str = trust_level
+        self.current_page: str = current_page
         self._task_sensitive_authorized: bool = False
         # Pending query results forwarded from ws_handler
         self._query_result: dict | None = None
@@ -157,6 +283,10 @@ class AgentCore:
         )
 
         self._executor: Agent | None = None
+
+    def set_current_page(self, page: str) -> None:
+        self.current_page = page
+        logger.info("session=%s current_page set to %s", self.session_id, page)
 
     async def process_text(self, text: str) -> dict:
         """Classify intent and return rephrase for confirmation."""
@@ -219,7 +349,10 @@ class AgentCore:
 
         self._task_sensitive_authorized = False
 
-        instructions = _load_scene_prompt(scene_id)
+        if scene_id in SCENE_PROMPTS:
+            instructions = _build_executor_prompt(scene_id, self.current_page)
+        else:
+            instructions = _load_scene_prompt(scene_id)
         tools = get_scene_tools(scene_id, self.trust_level)
         self._executor = Agent(
             model=DeepSeek(id="deepseek-chat", max_tokens=1024, temperature=0.5),
@@ -289,7 +422,8 @@ class AgentCore:
 
             await self._push_tool_results(response)
             logger.info("session=%s execute_task done content=%s", self.session_id, last_content)
-            return last_content or intent_summary
+            final_summary = SCENE_DONE_SUMMARY.get(scene_id) or last_content or intent_summary
+            return final_summary
 
     def set_query_result(self, page_id: str, result_fields: dict) -> None:
         """Called by ws_handler when query_result_ready arrives from frontend."""

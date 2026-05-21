@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
+import '../services/agent_element_registry.dart';
 import 'press_scale_wrapper.dart';
+
+final _tabMyKey = AgentElementRegistry.register('tab_my');
 
 const _kOrange = Color(0xFFFF6D00);
 
@@ -25,11 +28,14 @@ class ElderBottomNav extends StatelessWidget {
               selected: currentIndex == 0,
               onTap: () => context.go(AppRoutes.elderHome),
             ),
-            _NavItem(
-              icon: currentIndex == 2 ? Icons.person : Icons.person_outline,
-              label: '我的',
-              selected: currentIndex == 2,
-              onTap: () => context.go(AppRoutes.my),
+            KeyedSubtree(
+              key: _tabMyKey,
+              child: _NavItem(
+                icon: currentIndex == 2 ? Icons.person : Icons.person_outline,
+                label: '我的',
+                selected: currentIndex == 2,
+                onTap: () => context.go(AppRoutes.my),
+              ),
             ),
           ],
         ),
