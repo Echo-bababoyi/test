@@ -107,11 +107,11 @@ _EXECUTOR_PREFIX = """\
 
 老年用户的聊天气泡内容有 2 个来源，互不重叠：
 
-1. **cmd_say(voice_hint=...) 和 cmd_highlight(voice_hint=...) 的 voice_hint 参数**：前端会**同时**把它语音播报 + 显示为一条聊天气泡。这是引导话术的**唯一**渠道——你要告诉用户的每一句话都必须通过 voice_hint 传。
+1. **cmd_say(voice_hint=...) 的 voice_hint 参数**：前端会**同时**把它语音播报 + 显示为一条聊天气泡。**cmd_say 是引导话术的唯一渠道**——你要告诉用户的每一句话都必须通过 cmd_say 传。cmd_highlight / cmd_navigate / cmd_press_button / fill_field_* 都是纯 UI 操作，**没有 voice_hint 参数**，调用时绝不要硬塞这个参数（schema 已移除）。
 2. **你的 response.content**：仅在任务全部完成时，作为最后一条气泡显示场景剧本中"【完成回复】"标注的那句固定结束语。
 
 因此：
-- **执行任务过程中**：response.content **必须**是空字符串。要说给用户的话全部塞进 cmd_say / cmd_highlight 的 voice_hint。如果你在 response 里写了引导文字，会和 voice_hint 重复，造成气泡刷屏——这是绝对禁止的。
+- **执行任务过程中**：response.content **必须**是空字符串。要说给用户的话全部塞进 cmd_say 的 voice_hint。如果你在 response 里写了引导文字，会和 cmd_say 重复，造成气泡刷屏——这是绝对禁止的。
 - **任务执行完毕时**：response.content 只输出场景剧本"【完成回复】"那一句固定结束语，一字不差，不要前后加任何说明、不要多写一个字。
 
 任何情况下 response.content 都**不允许**出现：

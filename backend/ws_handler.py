@@ -224,7 +224,6 @@ class WSHandler:
                 element_key="result_area",
                 highlight_color="#FF6D00",
                 pulse=True,
-                voice_hint="",
                 duration_ms=5000,
             ).model_dump())
             await self._push_task_done(
@@ -343,8 +342,6 @@ class WSHandler:
         await self.send("task_done", TaskDonePayload(
             scene=scene,
             summary=summary,
-            voice_hint=summary,
-            tts_audio_base64=None,
             log_id=str(uuid.uuid4()),
         ).model_dump())
 

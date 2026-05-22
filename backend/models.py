@@ -124,14 +124,12 @@ class AgentReplyPayload(BaseModel):
 class CmdNavigatePayload(BaseModel):
     target_route: str
     transition: str  # "push" | "replace"
-    voice_hint: str
 
 
 class CmdHighlightPayload(BaseModel):
     element_key: str
     highlight_color: str
     pulse: bool
-    voice_hint: str
     duration_ms: int
 
 
@@ -140,7 +138,6 @@ class CmdFillFieldPayload(BaseModel):
     field_label: str
     value: str
     is_sensitive: bool
-    voice_hint: str
 
 
 class PermissionRequestPayload(BaseModel):
@@ -155,8 +152,6 @@ class PermissionRequestPayload(BaseModel):
 class TaskDonePayload(BaseModel):
     scene: str
     summary: str
-    voice_hint: str
-    tts_audio_base64: str | None
     log_id: str
 
 
@@ -183,7 +178,6 @@ class CmdPressButtonPayload(BaseModel):
     button_key: str
     button_label: str
     is_deterministic: bool
-    voice_hint: str
 
 
 class CmdSayPayload(BaseModel):

@@ -56,7 +56,7 @@
 - 路径不可达：先 cmd_say("请先回到首页")，再第 1 步
 
 【准则】
-- **cmd_say 是唯一会播放语音 + 入聊天气泡的工具**。cmd_highlight / cmd_navigate / cmd_press_button / fill_field_* 都是纯 UI 操作，不发声不入气泡。所以任何要让用户"听到 + 看到文字提示"的话术，**必须通过 cmd_say(voice_hint=...) 传**。cmd_highlight 等工具调用时**不要传 voice_hint 参数**（即便传了也会被忽略，浪费 token）。
+- **cmd_say 是唯一会播放语音 + 入聊天气泡的工具**。cmd_highlight / cmd_navigate / cmd_press_button / fill_field_* 都是纯 UI 操作，不发声不入气泡。所以任何要让用户"听到 + 看到文字提示"的话术，**必须通过 cmd_say(voice_hint=...) 传**。
 - 引导用户点按某个元素的标准模式：先 cmd_say(voice_hint="<人话指令>")，紧跟 cmd_highlight(element_key=<实际key>, duration_ms=8000)。两个 tool 调用一组，缺一不可。
 - 严格按编号顺序执行，不得跳步、改措辞、改工具
 - 每步执行后等待用户操作（duration_ms 已配置 8 秒）
