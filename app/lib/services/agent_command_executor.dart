@@ -194,7 +194,8 @@ class _HighlightBorderOverlayState extends State<_HighlightBorderOverlay>
     if (ctx == null) return null;
     final rb = ctx.findRenderObject() as RenderBox?;
     if (rb == null || !rb.attached) return null;
-    return rb.localToGlobal(Offset.zero) & rb.size;
+    final transform = rb.getTransformTo(null);
+    return MatrixUtils.transformRect(transform, Offset.zero & rb.size);
   }
 
   void _onPointerDown(PointerDownEvent event) {
