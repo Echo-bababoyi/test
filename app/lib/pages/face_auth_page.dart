@@ -1,4 +1,6 @@
 import 'dart:async';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +14,7 @@ import '../widgets/camera_view.dart';
 import '../services/agent_element_registry.dart';
 import '../services/camera_service.dart';
 import '../services/face_detector_service.dart';
+import '../services/agent_settings_service.dart';
 import '../services/log_service.dart';
 import '../services/login_page_snackbar.dart';
 
@@ -645,11 +648,26 @@ class _AuthFlowState extends State<_AuthFlow>
   }
 
   // ─── S5 眨眼 ─────────────────────────────────────────────────────────────
+  void _speakHint(String text) {
+    final settings = AgentSettingsService.instance;
+    if (!settings.voiceEnabled) return;
+    try {
+      final synth = html.window.speechSynthesis;
+      if (synth == null) return;
+      synth.cancel();
+      final utterance = html.SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-CN';
+      utterance.rate = settings.speechRate;
+      synth.speak(utterance);
+    } catch (_) {}
+  }
+
   void _enterBlink() {
     setState(() {
       _sub = _SubState.blinkDetecting;
       _blinkLevel = 0;
     });
+    _speakHint('请眨眨眼');
     _stateClock
       ..reset()
       ..start();
@@ -700,6 +718,7 @@ class _AuthFlowState extends State<_AuthFlow>
       _sub = _SubState.headTurnDetecting;
       _turnLevel = 0;
     });
+    _speakHint('请左右慢慢转头');
     _stateClock
       ..reset()
       ..start();
