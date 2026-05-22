@@ -143,7 +143,7 @@ class _AgentFabState extends ConsumerState<AgentFab> {
           if (AgentSession.instance.panelOpen && _initialized)
             Positioned(
               left: _bubbleX.clamp(0.0, maxW - _bubbleW),
-              bottom: 10,
+              top: _bubbleY.clamp(0.0, maxH - _bubbleH),
               child: _BubbleWindow(
                 width: _bubbleW,
                 height: _bubbleH,
@@ -154,6 +154,7 @@ class _AgentFabState extends ConsumerState<AgentFab> {
                 onDragUpdate: (dx, dy) {
                   setState(() {
                     _bubbleX = (_bubbleX + dx).clamp(0.0, maxW - _bubbleW);
+                    _bubbleY = (_bubbleY + dy).clamp(0.0, maxH - _bubbleH);
                   });
                 },
               ),
