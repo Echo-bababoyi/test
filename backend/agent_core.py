@@ -269,6 +269,7 @@ class AgentCore:
         self._query_event: asyncio.Event = asyncio.Event()
         self._step_event: asyncio.Event = asyncio.Event()
         self._step_payload: dict | None = None
+        self._step_debounce_task: asyncio.Task | None = None
 
         self._classifier = Agent(
             model=DeepSeek(id="deepseek-chat", max_tokens=256, temperature=0.3),
@@ -601,6 +602,19 @@ class AgentCore:
         return self._permission_granted
 
     def resolve_step(self, payload: dict) -> None:
-        """Called by ws_handler when step_completed arrives from frontend."""
+        """Called by ws_handler when step_completed arrives from frontend.
+
+        Coalesces rapid consecutive events (e.g., clicked_highlight + page_changed
+        from a single user click that triggers navigation) into a single LLM resume.
+        """
         self._step_payload = payload
-        self._step_event.set()
+        if self._step_debounce_task is not None and not self._step_debounce_task.done():
+            self._step_debounce_task.cancel()
+        self._step_debounce_task = asyncio.create_task(self._delayed_set_step_event())
+
+    async def _delayed_set_step_event(self) -> None:
+        try:
+            await asyncio.sleep(0.3)
+            self._step_event.set()
+        except asyncio.CancelledError:
+            pass
