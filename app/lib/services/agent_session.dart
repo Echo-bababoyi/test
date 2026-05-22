@@ -87,6 +87,7 @@ class AgentSession {
       overlayContext: _overlayContext!,
       pageId: _currentPageId,
       pageTitle: _currentPageTitle,
+      currentRoute: _currentPath,
     );
     debugPrint('[AgentSession] bindPage path=$currentPath pageId=$pageId');
     if (_sessionId != null && WsClient.instance.isConnected) {

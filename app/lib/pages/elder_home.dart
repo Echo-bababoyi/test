@@ -13,8 +13,6 @@ import '../services/agent_element_registry.dart';
 import '../services/agent_settings_service.dart';
 import '../widgets/trust_level_cards.dart';
 
-final _cardYibaoHubKey = AgentElementRegistry.register('card_yibao_hub');
-
 void _showTodo(BuildContext context) {
   ScaffoldMessenger.of(context).showSnackBar(
     const SnackBar(
@@ -81,6 +79,7 @@ class _ElderHomeState extends ConsumerState<ElderHome>
   @override
   void dispose() {
     _tab.dispose();
+    AgentElementRegistry.unregisterPage(AppRoutes.elderHome);
     super.dispose();
   }
 
@@ -632,6 +631,7 @@ class _EldOnlineServiceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _cardYibaoHubKey = AgentElementRegistry.register(AppRoutes.elderHome, 'card_yibao_hub');
     return Container(
       margin: const EdgeInsets.only(top: Spacing.md),
       padding: const EdgeInsets.all(Spacing.lg),

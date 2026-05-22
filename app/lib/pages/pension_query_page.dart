@@ -18,6 +18,7 @@ class PensionQueryPage extends StatefulWidget {
 }
 
 class _PensionQueryPageState extends State<PensionQueryPage> {
+  static const _route = AppRoutes.pensionQuery;
   bool _hasResult = false;
   int _monthOffset = 0;
   static const _mockAmount = '3280';
@@ -46,8 +47,14 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
     }
   }
 
-  final _queryKey = AgentElementRegistry.register('btn_query');
-  final _resultKey = AgentElementRegistry.register('result_pension_amount');
+  final _queryKey = AgentElementRegistry.register(_route, 'btn_query');
+  final _resultKey = AgentElementRegistry.register(_route, 'result_pension_amount');
+
+  @override
+  void dispose() {
+    AgentElementRegistry.unregisterPage(_route);
+    super.dispose();
+  }
 
   void _doQuery() {
     setState(() => _hasResult = true);

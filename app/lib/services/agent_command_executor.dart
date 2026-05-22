@@ -11,6 +11,7 @@ class AgentCommandExecutor {
   final BuildContext overlayContext;
   final String? pageId;
   final String? pageTitle;
+  final String? currentRoute;
 
   OverlayEntry? _currentHighlightEntry;
 
@@ -19,6 +20,7 @@ class AgentCommandExecutor {
     required this.overlayContext,
     this.pageId,
     this.pageTitle,
+    this.currentRoute,
   });
 
   void handleMessage(Map<String, dynamic> message) {
@@ -69,7 +71,11 @@ class AgentCommandExecutor {
       return;
     }
 
-    final key = AgentElementRegistry.get(elementKey);
+    if (currentRoute == null) {
+      debugPrint('[cmd_highlight] no currentRoute, skipping');
+      return;
+    }
+    final key = AgentElementRegistry.get(currentRoute!, elementKey);
     if (key == null) {
       debugPrint('[cmd_highlight] no registered key for "$elementKey"');
       return;
@@ -83,7 +89,7 @@ class AgentCommandExecutor {
     _currentHighlightEntry?.remove();
     _currentHighlightEntry = null;
 
-    final overlay = Overlay.of(overlayContext);
+    final overlay = Overlay.of(overlayContext, rootOverlay: true);
     late OverlayEntry entry;
     entry = OverlayEntry(
       builder: (_) => _HighlightBorderOverlay(
@@ -106,7 +112,8 @@ class AgentCommandExecutor {
     final isSensitive = payload['is_sensitive'] as bool? ?? false;
     if (elementKey == null) return;
 
-    final controller = AgentElementRegistry.getController(elementKey);
+    if (currentRoute == null) return;
+    final controller = AgentElementRegistry.getController(currentRoute!, elementKey);
     if (controller == null) return;
 
     final displayValue = isSensitive ? _redactValue(value) : value;
@@ -128,7 +135,8 @@ class AgentCommandExecutor {
     final isDeterministic = payload['is_deterministic'] as bool? ?? true;
     if (elementKey == null || isDeterministic) return;
 
-    final key = AgentElementRegistry.get(elementKey);
+    if (currentRoute == null) return;
+    final key = AgentElementRegistry.get(currentRoute!, elementKey);
     if (key == null) return;
 
     final context = key.currentContext;

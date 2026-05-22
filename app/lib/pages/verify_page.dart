@@ -20,14 +20,15 @@ class VerifyPage extends ConsumerStatefulWidget {
 }
 
 class _VerifyPageState extends ConsumerState<VerifyPage> {
+  static const _route = AppRoutes.verify;
   final _phoneController = TextEditingController();
   final _codeController = TextEditingController();
   final _codeFocusNode = FocusNode();
 
-  final _phoneKey = AgentElementRegistry.register('input_phone');
-  final _sendBtnKey = AgentElementRegistry.register('btn_send_code');
-  final _codeKey = AgentElementRegistry.register('input_verify_code');
-  final _loginBtnKey = AgentElementRegistry.register('btn_verify_login');
+  final _phoneKey = AgentElementRegistry.register(_route, 'input_phone');
+  final _sendBtnKey = AgentElementRegistry.register(_route, 'btn_send_code');
+  final _codeKey = AgentElementRegistry.register(_route, 'input_verify_code');
+  final _loginBtnKey = AgentElementRegistry.register(_route, 'btn_verify_login');
 
   int _countdown = 0;
   Timer? _timer;
@@ -49,8 +50,8 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
   @override
   void initState() {
     super.initState();
-    AgentElementRegistry.registerController('input_phone', _phoneController);
-    AgentElementRegistry.registerController('input_verify_code', _codeController);
+    AgentElementRegistry.registerController(_route, 'input_phone', _phoneController);
+    AgentElementRegistry.registerController(_route, 'input_verify_code', _codeController);
     _phoneController.addListener(() => setState(() {}));
     _codeController.addListener(() => setState(() {}));
   }
@@ -60,8 +61,9 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
     _timer?.cancel();
     _smsArriveTimer?.cancel();
     _smsAutoCloseTimer?.cancel();
-    AgentElementRegistry.unregister('input_phone');
-    AgentElementRegistry.unregister('input_verify_code');
+    AgentElementRegistry.unregister(_route, 'input_phone');
+    AgentElementRegistry.unregister(_route, 'input_verify_code');
+    AgentElementRegistry.unregisterPage(_route);
     _phoneController.dispose();
     _codeController.dispose();
     _codeFocusNode.dispose();

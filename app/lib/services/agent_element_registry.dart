@@ -1,24 +1,32 @@
 import 'package:flutter/material.dart';
 
 class AgentElementRegistry {
-  static final Map<String, GlobalKey> _keys = {};
-  static final Map<String, TextEditingController> _controllers = {};
+  static final Map<String, Map<String, GlobalKey>> _keys = {};
+  static final Map<String, Map<String, TextEditingController>> _controllers = {};
 
-  static GlobalKey register(String elementKey) {
-    _keys[elementKey] ??= GlobalKey();
-    return _keys[elementKey]!;
+  static GlobalKey register(String route, String elementKey) {
+    final pageMap = _keys.putIfAbsent(route, () => {});
+    return pageMap.putIfAbsent(elementKey, () => GlobalKey());
   }
 
-  static GlobalKey? get(String elementKey) => _keys[elementKey];
+  static GlobalKey? get(String route, String elementKey) =>
+      _keys[route]?[elementKey];
 
-  static void unregister(String elementKey) {
-    _keys.remove(elementKey);
-    _controllers.remove(elementKey);
+  static void registerController(String route, String elementKey, TextEditingController controller) {
+    final pageMap = _controllers.putIfAbsent(route, () => {});
+    pageMap[elementKey] = controller;
   }
 
-  static void registerController(String elementKey, TextEditingController controller) {
-    _controllers[elementKey] = controller;
+  static TextEditingController? getController(String route, String elementKey) =>
+      _controllers[route]?[elementKey];
+
+  static void unregister(String route, String elementKey) {
+    _keys[route]?.remove(elementKey);
+    _controllers[route]?.remove(elementKey);
   }
 
-  static TextEditingController? getController(String elementKey) => _controllers[elementKey];
+  static void unregisterPage(String route) {
+    _keys.remove(route);
+    _controllers.remove(route);
+  }
 }

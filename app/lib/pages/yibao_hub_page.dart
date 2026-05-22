@@ -6,14 +6,13 @@ import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 import '../services/agent_element_registry.dart';
 
-final _cardYibaoJiaofeiKey = AgentElementRegistry.register('card_yibao_jiaofei_entry');
-final _cardYibaoQueryKey = AgentElementRegistry.register('card_yibao_query_entry');
-
 class YibaoHubPage extends StatelessWidget {
   const YibaoHubPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final cardYibaoJiaofeiKey = AgentElementRegistry.register(AppRoutes.yibaoHub, 'card_yibao_jiaofei_entry');
+    final cardYibaoQueryKey = AgentElementRegistry.register(AppRoutes.yibaoHub, 'card_yibao_query_entry');
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -30,7 +29,7 @@ class YibaoHubPage extends StatelessWidget {
             padding: const EdgeInsets.all(Spacing.md),
             children: [
               KeyedSubtree(
-                key: _cardYibaoJiaofeiKey,
+                key: cardYibaoJiaofeiKey,
                 child: _HubCard(
                   icon: Icons.medical_services,
                   iconColor: AppColors.elderPrimary,
@@ -42,7 +41,7 @@ class YibaoHubPage extends StatelessWidget {
               ),
               const SizedBox(height: Spacing.md),
               KeyedSubtree(
-                key: _cardYibaoQueryKey,
+                key: cardYibaoQueryKey,
                 child: _HubCard(
                   icon: Icons.search,
                   iconColor: AppColors.elderPrimary,

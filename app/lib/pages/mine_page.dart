@@ -10,8 +10,6 @@ import '../widgets/persistent_banner.dart';
 import '../widgets/press_scale_wrapper.dart';
 import '../services/agent_element_registry.dart';
 
-final _btnGoLoginKey = AgentElementRegistry.register('btn_go_login');
-
 class MinePage extends ConsumerWidget {
   const MinePage({super.key});
 
@@ -106,6 +104,7 @@ class _LoginPrompt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final btnGoLoginKey = AgentElementRegistry.register(AppRoutes.my, 'btn_go_login');
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -139,7 +138,7 @@ class _LoginPrompt extends StatelessWidget {
           ),
           const SizedBox(height: Spacing.xl),
           KeyedSubtree(
-            key: _btnGoLoginKey,
+            key: btnGoLoginKey,
             child: PressScaleWrapper(
             pressedScale: 0.96,
             onTap: () => context.go(AppRoutes.login),

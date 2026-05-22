@@ -15,9 +15,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  static const _route = AppRoutes.login;
   final _phoneController = TextEditingController();
-  final _loginBtnKey = AgentElementRegistry.register('btn_login');
-  final _agreeCheckboxKey = AgentElementRegistry.register('chk_agree_terms');
+  final _loginBtnKey = AgentElementRegistry.register(_route, 'btn_login');
+  final _agreeCheckboxKey = AgentElementRegistry.register(_route, 'chk_agree_terms');
   bool _agreed = false;
 
   @override
@@ -29,6 +30,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void dispose() {
     _phoneController.dispose();
+    AgentElementRegistry.unregisterPage(_route);
     super.dispose();
   }
 

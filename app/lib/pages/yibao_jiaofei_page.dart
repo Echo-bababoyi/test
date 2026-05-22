@@ -25,6 +25,7 @@ class YibaoJiaofeiPage extends StatefulWidget {
 }
 
 class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBindingObserver {
+  static const _route = AppRoutes.yibaoJiaofei;
   static const _pageId = 'yibao_jiaofei';
   static const _pageTitle = '医保缴费';
   Timer? _saveTimer;
@@ -41,14 +42,14 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
   bool _idFocused = false;
   bool _dailiIdFocused = false;
 
-  final _targetKey = AgentElementRegistry.register('select_jiaofei_duixiang');
-  final _xianzhongKey = AgentElementRegistry.register('select_jiaofei_xianzhong');
-  final _yearKey = AgentElementRegistry.register('select_jiaofei_niandu');
-  final _dangciKey = AgentElementRegistry.register('select_jiaofei_dangci');
-  final _idKey = AgentElementRegistry.register('input_id_card');
-  final _dailiNameKey = AgentElementRegistry.register('input_daili_name');
-  final _dailiIdKey = AgentElementRegistry.register('input_daili_idcard');
-  final _submitKey = AgentElementRegistry.register('btn_go_payment');
+  final _targetKey = AgentElementRegistry.register(_route, 'select_jiaofei_duixiang');
+  final _xianzhongKey = AgentElementRegistry.register(_route, 'select_jiaofei_xianzhong');
+  final _yearKey = AgentElementRegistry.register(_route, 'select_jiaofei_niandu');
+  final _dangciKey = AgentElementRegistry.register(_route, 'select_jiaofei_dangci');
+  final _idKey = AgentElementRegistry.register(_route, 'input_id_card');
+  final _dailiNameKey = AgentElementRegistry.register(_route, 'input_daili_name');
+  final _dailiIdKey = AgentElementRegistry.register(_route, 'input_daili_idcard');
+  final _submitKey = AgentElementRegistry.register(_route, 'btn_go_payment');
 
   static const _persons = ['本人', '配偶', '子女'];
   static const _xianzhongs = ['城乡居民医保', '灵活就业人员医保'];
@@ -96,8 +97,8 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     DraftService.clearCompleted(_pageId);
-    AgentElementRegistry.registerController('input_id_card', _idController);
-    AgentElementRegistry.registerController('input_daili_idcard', _dailiIdController);
+    AgentElementRegistry.registerController(_route, 'input_id_card', _idController);
+    AgentElementRegistry.registerController(_route, 'input_daili_idcard', _dailiIdController);
     _idController.addListener(() {
       setState(() {});
       _scheduleAutoSave();
@@ -131,8 +132,9 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
     _saveTimer?.cancel();
     if (!DraftService.isCompleted(_pageId)) _flushAutoSave();
     WidgetsBinding.instance.removeObserver(this);
-    AgentElementRegistry.unregister('input_id_card');
-    AgentElementRegistry.unregister('input_daili_idcard');
+    AgentElementRegistry.unregister(_route, 'input_id_card');
+    AgentElementRegistry.unregister(_route, 'input_daili_idcard');
+    AgentElementRegistry.unregisterPage(_route);
     _idController.dispose();
     _idFocus.dispose();
     _dailiNameController.dispose();

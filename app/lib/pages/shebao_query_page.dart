@@ -122,7 +122,7 @@ class ShebaoQueryPage extends StatelessWidget {
                         icon: Icons.person_outline,
                         status: '正常参保',
                         basicInfoKey: AgentElementRegistry.register(
-                            'btn_yanglao_jibenxinxi'),
+                            AppRoutes.shebaoQuery, 'btn_yanglao_jibenxinxi'),
                         onBasicInfoTap: () =>
                             context.push(AppRoutes.pensionQuery),
                       ),

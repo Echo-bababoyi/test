@@ -24,11 +24,18 @@ class YibaoQueryPage extends StatefulWidget {
 }
 
 class _YibaoQueryPageState extends State<YibaoQueryPage> {
+  static const _route = AppRoutes.yibaoQuery;
   bool _hasResult = false;
   static const _mockBalance = '12560';
 
-  final _queryKey = AgentElementRegistry.register('btn_query');
-  final _resultKey = AgentElementRegistry.register('result_yibao_amount');
+  final _queryKey = AgentElementRegistry.register(_route, 'btn_query');
+  final _resultKey = AgentElementRegistry.register(_route, 'result_yibao_amount');
+
+  @override
+  void dispose() {
+    AgentElementRegistry.unregisterPage(_route);
+    super.dispose();
+  }
 
   void _doQuery() {
     setState(() => _hasResult = true);

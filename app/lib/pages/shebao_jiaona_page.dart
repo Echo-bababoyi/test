@@ -128,7 +128,7 @@ class _HomeSubPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _ServiceIcon(
-                      key: AgentElementRegistry.register('btn_wo_wei_ziji_jiao'),
+                      key: AgentElementRegistry.register(AppRoutes.shebaoJiaona, 'btn_wo_wei_ziji_jiao'),
                       icon: Icons.volunteer_activism,
                       color: AppColors.elderPrimary,
                       label: '我为自己缴',

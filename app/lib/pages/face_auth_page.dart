@@ -26,10 +26,17 @@ class FaceAuthPage extends ConsumerStatefulWidget {
 
 class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
   static const _kDemoMode = bool.fromEnvironment('DEMO_MODE');
+  static const _route = AppRoutes.faceAuth;
   _TopState _top = _kDemoMode ? _TopState.authenticating : _TopState.prepare;
 
-  final _faceBtnKey = AgentElementRegistry.register('btn_face_login');
-  final _otherBtnKey = AgentElementRegistry.register('btn_other_auth');
+  final _faceBtnKey = AgentElementRegistry.register(_route, 'btn_face_login');
+  final _otherBtnKey = AgentElementRegistry.register(_route, 'btn_other_auth');
+
+  @override
+  void dispose() {
+    AgentElementRegistry.unregisterPage(_route);
+    super.dispose();
+  }
 
   void _exitToLogin() {
     if (mounted) context.pop();

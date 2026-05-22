@@ -4,8 +4,6 @@ import '../router.dart';
 import '../services/agent_element_registry.dart';
 import 'press_scale_wrapper.dart';
 
-final _tabMyKey = AgentElementRegistry.register('tab_my');
-
 const _kOrange = Color(0xFFFF6D00);
 
 class ElderBottomNav extends StatelessWidget {
@@ -14,6 +12,8 @@ class ElderBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final route = GoRouterState.of(context).matchedLocation;
+    final tabMyKey = AgentElementRegistry.register(route, 'tab_my');
     return BottomAppBar(
       color: Colors.white,
       elevation: 8,
@@ -29,7 +29,7 @@ class ElderBottomNav extends StatelessWidget {
               onTap: () => context.go(AppRoutes.elderHome),
             ),
             KeyedSubtree(
-              key: _tabMyKey,
+              key: tabMyKey,
               child: _NavItem(
                 icon: currentIndex == 2 ? Icons.person : Icons.person_outline,
                 label: '我的',
