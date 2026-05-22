@@ -84,7 +84,8 @@ class SystemDialog extends StatelessWidget {
   }) {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // 阻塞行为
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.15),
       builder: (_) => SystemDialog(
         title: title,
         message: message,

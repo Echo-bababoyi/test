@@ -26,9 +26,10 @@ class InAppOverlay extends StatelessWidget {
   }) {
     return showModalBottomSheet<T>(
       context: context,
-      isDismissible: true,   // 点蒙层可关闭（非阻塞）
+      isDismissible: false,
       enableDrag: true,      // 手势下滑可关闭
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.15),
       builder: (_) => InAppOverlay(child: child),
     );
   }
