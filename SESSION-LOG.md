@@ -4,6 +4,41 @@
 
 ---
 
+## 2026-05-22（会话 17）
+
+**主要工作**：
+
+1. **高亮框窗口缩放修复**（commit `5355d01`）：坐标计算从 `localToGlobal + size` 改为 `getTransformTo(null) + transformRect`，根治高亮框在浏览器缩放后位置偏移的问题
+2. **聊天框支持上下拖动**（commit `f0f94c0`）：补全 `_bubbleY` 读写，聊天框不再仅限左右移动
+3. **多步引导机制阶段 1**（commit `b614a9f`）：后端新增 `cmd_wait_user` + 前端 `step_completed`，代理引导从"一次性执行完"改为逐步引导循环；login_face / login_verify 两个场景 prompt 改造完成
+4. **聊天框智能避让高亮区域**（commit `d03861d` + `17daae7` + `649435f`）：监听高亮元素坐标自动上下避让，加入 AnimatedPositioned 平滑过渡 + 脉冲形变落定动效，修复跨页坐标保留问题
+5. **step_completed 防抖**（commit `0fd5ed5`）：300ms 防抖合并 clicked_highlight + page_changed 两类事件，避免 LLM 收到重复触发信号
+6. **登录引导真实流程对齐**（commit `1c11fdd`）：input_phone 字段注册高亮 key + 输入完成检测、条款浮层与摄像头授权弹窗注册为可高亮元素、login_face prompt 步骤重排
+7. **弹窗蒙版修复**（commit `6ca173b`）：蒙版不透明度降至 15%，聊天框在弹窗出现时不被遮挡
+8. **活体检测 TTS 提示**（commit `3178870`）：眨眼/转头阶段加入语音提示，引导老年用户完成活体动作
+
+**团队参与**：frontend（主力）/ backend / PM（文档）/ lead 全员
+
+**关键决策**：
+- **多步引导分阶段推进**：阶段 1 先打通 login 场景（流程最复杂），其余场景后续类推；避免一次性改造失控
+- **step_completed 取代 clicked_highlight + page_changed 双信号**：两类信号合并统一，后端逻辑更简洁
+- **聊天框避让采用 PhoneFrame-local 坐标**：避免 FittedBox 缩放导致的坐标系混用
+- **3080 端口缓存白屏改用 3081**：开发阶段绕过浏览器缓存，不作代码层修复
+
+**遗留问题**：
+- 多步引导阶段 2 未完成（医保缴费/养老金查询等场景 prompt 尚未多步改造）
+- LLM response.content 仍不空（DeepSeek 仍输出思考过程，会话 15 遗留）
+- pop 返回时 executor 失效（会话 15 遗留）
+- 草稿重复追加 — `_checkPageDraft` 反复执行（会话 15 遗留）
+- 人脸验证真机测试仍未进行（#37 🧪，会话 9 遗留）
+
+**当前状态**：
+- 10 个 commit，工作树干净，未 push
+- login 场景多步引导可端到端测试
+- 下次会话恢复点：① 测试 login 多步引导端到端 ② 其余场景 prompt 多步改造 ③ 修复 LLM response.content / pop 返回 executor 失效 ④ 真机测试
+
+---
+
 ## 2026-05-19（会话 9）
 
 **主要工作**：

@@ -4,6 +4,53 @@
 
 ---
 
+### 2026-05-22（会话 17）— 多步引导机制阶段 1 + 聊天框重构 + 高亮跟随缩放 + 活体检测 TTS
+
+#### 高亮框修复
+
+**`5355d01` fix: 高亮框跟随窗口缩放（getTransformTo + transformRect 替代 localToGlobal & size）**
+- 坐标计算从 `localToGlobal + size` 改为 `getTransformTo(null) + transformRect`，根治浏览器窗口缩放后高亮框位置偏移的问题
+
+#### 聊天框重构
+
+**`f0f94c0` fix: 聊天框支持上下拖动（补全 _bubbleY 读写）**
+- 补全聊天框垂直位置 `_bubbleY` 的读写逻辑，支持上下自由拖动（原来仅支持左右）
+
+**`d03861d` feat: 聊天框智能避让高亮区域（监听 currentHighlightKey + PhoneFrame-local 坐标避让）**
+- 聊天框监听 `currentHighlightKey` 变化，计算高亮元素在 PhoneFrame 内坐标，自动向上或向下避让
+
+**`17daae7` fix: 聊天框跨页位置保留 + AnimatedPositioned 平滑移动 + 落定脉冲形变**
+- 页面跳转后聊天框保留上次拖动位置，拖动/避让移动改用 `AnimatedPositioned` 平滑过渡，落定时脉冲形变动效
+
+**`649435f` fix: 聊天框跨页位置重置（onDismiss 不再清 currentHighlightKey）**
+- 修复 onDismiss 回调错误清除 `currentHighlightKey` 导致跨页后聊天框坐标被重置的问题
+
+#### 多步引导机制阶段 1（核心）
+
+**`b614a9f` feat: 多步引导机制阶段 1（cmd_wait_user + step_completed + login 场景 prompt 改造）**
+- 后端新增 `cmd_wait_user` 工具 + 前端 `step_completed` 消息，实现"LLM 发出指令 → 等用户操作 → 感知页面变化 → 继续下一步"的循环机制
+- login_face / login_verify 两个场景 prompt 改造为多步模式，代理引导从"一次性执行完"变为逐步引导
+
+**`0fd5ed5` fix: step_completed 300ms 防抖（合并 clicked_highlight + page_changed）**
+- `clicked_highlight` 和 `page_changed` 事件合并进 `step_completed` 防抖队列，避免 LLM 收到重复触发信号
+
+**`1c11fdd` feat: 登录引导真实流程对齐（input_phone 输入完成检测 + 浮层/系统弹窗 key 注册 + prompt 重排）**
+- 登录页 `input_phone` 字段注册高亮 key + 输入完成后发送 `step_completed`
+- 条款浮层 + 浏览器摄像头授权弹窗注册为可高亮元素
+- login_face prompt 步骤顺序重排，与实际 UI 流程对齐
+
+#### 弹窗修复
+
+**`6ca173b` fix: 弹窗蒙版淡化至 15%（聊天框不再被遮挡）**
+- 系统对话框蒙版不透明度降至 15%，聊天框在弹窗出现时不再被遮盖
+
+#### 活体检测 TTS
+
+**`3178870` feat: 活体检测加眨眼/转头 TTS 提示**
+- `face_auth_page`：眨眼检测（S5）和转头检测（S7）阶段加入 TTS 语音提示，引导老年用户完成活体动作
+
+---
+
 ### 2026-05-19（会话 9）— 前端交互全面收尾 + 人脸验证 MediaPipe 真检测
 
 #### 人脸验证真检测（核心）

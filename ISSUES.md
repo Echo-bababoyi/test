@@ -49,6 +49,17 @@
 | 41 | 标准版底部"我的"Tab 误跳长辈版修复（1 行） | frontend | ✅ |
 | 42 | 登录页交互优化（条款 checkbox 勾选 + 跳过条款浮层 + 字号适老化 + 删装饰区） | frontend / PM | ✅ |
 | 43 | 人脸验证 MediaPipe 真检测实现（本地化资源 + 摄像头接入 + 状态机 S0-S9 + 异常 E1-E4 + FACE_AUTH_DESIGN.md v1.0） | frontend / PM | ✅ |
+| 44 | 高亮框不跟随窗口缩放（getTransformTo + transformRect 修复） | frontend | ✅ |
+| 45 | 聊天框只能左右拖动（补全 _bubbleY 读写） | frontend | ✅ |
+| 46 | LLM 一次执行完就结束（多步引导阶段 1：cmd_wait_user + step_completed，login 场景） | frontend / backend | ✅ |
+| 47 | 聊天框智能避让高亮区域（PhoneFrame-local 坐标 + AnimatedPositioned） | frontend | ✅ |
+| 48 | 登录引导缺 input_phone 步骤（输入完成检测 + 弹窗 key 注册 + prompt 重排） | frontend / backend | ✅ |
+| 49 | 弹窗蒙版遮挡聊天框（蒙版降至 15%） | frontend | ✅ |
+| 50 | 活体检测无 TTS 提示（眨眼/转头阶段加语音引导） | frontend | ✅ |
+| 51 | 3080 端口浏览器缓存白屏 | — | 🐛 |
+| 52 | LLM response.content 仍不空（DeepSeek 输出思考过程） | backend | 🔧 |
+| 53 | pop 返回时 executor 失效（unbindPage 清掉 executor） | frontend | 🐛 |
+| 54 | 草稿重复追加（_checkPageDraft 反复执行重复插入 draft_prompt 卡） | frontend | 🐛 |
 
 ---
 
@@ -227,3 +238,69 @@
 **设计文档**：`docs/FACE_AUTH_DESIGN.md` v1.0
 
 **依赖**：需要有摄像头的设备 + HTTPS 或 localhost 环境
+
+---
+
+### #44–#50 本次会话（2026-05-22，会话 17）
+
+**#44 高亮框不跟随窗口缩放**
+
+浏览器窗口大小变化后高亮框位置不更新，偏离目标元素。将坐标计算从 `localToGlobal + size` 改为 `getTransformTo(null) + transformRect`，根治 FittedBox 缩放导致的坐标系不同步问题。完成时间：2026-05-22（commit `5355d01`）
+
+**#45 聊天框只能左右拖动**
+
+聊天框 `_bubbleY` 读写逻辑缺失，导致垂直方向无法拖动。补全读写后支持上下自由拖动。完成时间：2026-05-22（commit `f0f94c0`）
+
+**#46 LLM 一次执行完就结束（多步引导）**
+
+代理缺少"等用户操作 → 感知页面变化 → 继续下一步"的循环机制，LLM 发出所有指令后直接结束。阶段 1 实现：后端新增 `cmd_wait_user` 工具，前端新增 `step_completed` 消息，login_face / login_verify 两个场景 prompt 改造为多步模式。其余场景（医保缴费/养老金查询）留待阶段 2。完成时间（阶段 1）：2026-05-22（commit `b614a9f` + `0fd5ed5`）
+
+**#47 聊天框智能避让高亮区域**
+
+高亮框弹出时聊天框覆盖其上方，影响用户看清被引导的元素。聊天框监听 `currentHighlightKey` 变化，以 PhoneFrame-local 坐标计算高亮位置，自动上/下移位避让。加入 `AnimatedPositioned` 平滑过渡 + 落定脉冲形变动效，修复跨页后坐标被重置的问题。完成时间：2026-05-22（commit `d03861d` + `17daae7` + `649435f`）
+
+**#48 登录引导缺 input_phone 步骤**
+
+login_face 场景缺少"输入手机号"引导步骤，且条款浮层/摄像头授权弹窗未注册为可高亮元素。补充 `input_phone` 字段高亮 key 注册 + 输入完成 `step_completed` 检测、浮层与弹窗 key 注册、login_face prompt 步骤重排。完成时间：2026-05-22（commit `1c11fdd`）
+
+**#49 弹窗蒙版遮挡聊天框**
+
+系统弹窗弹出时全屏蒙版将聊天框完全遮盖，用户无法看到代理提示。将蒙版不透明度降至 15%，聊天框重新可见。完成时间：2026-05-22（commit `6ca173b`）
+
+**#50 活体检测无 TTS 提示**
+
+`face_auth_page` 眨眼（S5）和转头（S7）阶段缺少语音引导，老年用户不清楚该做什么动作。加入 TTS 语音提示，与文字提示同步播放。完成时间：2026-05-22（commit `3178870`）
+
+---
+
+### #51 3080 端口浏览器缓存白屏
+
+**背景**：开发调试时浏览器缓存旧版 JS/Dart 文件，导致 3080 端口偶发白屏无法正常加载页面。
+
+**临时方案**：改用 3081 端口绕过缓存，不作代码层修复。需要在每次代码变更后注意端口切换。
+
+**状态**：🐛（已知问题，开发阶段接受现状）
+
+---
+
+### #52 LLM response.content 仍不空（DeepSeek 输出思考过程）
+
+**背景**：DeepSeek-V3 在流式输出时 `response.content` 字段仍包含思考过程文本（会话 15 遗留），导致代理气泡可能出现多余内容。
+
+**状态**：🔧（待修复）
+
+---
+
+### #53 pop 返回时 executor 失效
+
+**背景**：用户按浏览器返回键时，`unbindPage` 清掉当前页面的 `executor`，导致后续代理指令无法执行（会话 15 遗留）。
+
+**状态**：🐛（待修复）
+
+---
+
+### #54 草稿重复追加
+
+**背景**：`_checkPageDraft` 每次页面刷新/状态变化时反复执行，向聊天框重复插入 `draft_prompt` 卡片（会话 15 遗留）。
+
+**状态**：🐛（待修复）

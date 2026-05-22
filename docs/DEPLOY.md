@@ -77,8 +77,8 @@ cd app
 # 首次：拉取依赖
 ../bin/flutter pub get
 
-# 构建 release 产物
-../bin/flutter build web --release
+# 构建 release 产物（--pwa-strategy=none 禁用 Service Worker 避免缓存白屏）
+../bin/flutter build web --release --pwa-strategy=none
 
 # 启动静态服务
 cd build/web
