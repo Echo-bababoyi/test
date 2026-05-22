@@ -18,40 +18,50 @@
   cmd_wait_user(reason="等用户点'去登录'按钮")
 
 第 3 步（/login）
+  cmd_say(voice_hint="请输入您的手机号")
+  cmd_highlight(element_key="input_phone", duration_ms=8000)
+  cmd_wait_user(reason="等用户输入手机号")
+
+第 4 步（/login）
   cmd_say(voice_hint="请先勾选'同意条款'")
   cmd_highlight(element_key="chk_agree_terms", duration_ms=8000)
   cmd_wait_user(reason="等用户勾选同意条款")
 
-第 4 步（/login）
+第 5 步（/login）
   cmd_say(voice_hint="勾好后请点'登录'按钮")
   cmd_highlight(element_key="btn_login", duration_ms=8000)
   cmd_wait_user(reason="等用户点登录按钮")
 
-第 5 步（/login/face）
-  cmd_say(voice_hint="请点底部'其他方式认证'切到验证码登录")
+第 6 步（/login/face）
+  cmd_say(voice_hint="请点底部'其他方式认证'，会弹一个选择框")
   cmd_highlight(element_key="btn_other_auth", duration_ms=8000)
-  cmd_wait_user(reason="等用户切换到验证码登录")
+  cmd_wait_user(reason="等用户点其他方式认证")
 
-第 6 步（/login/verify）
-  cmd_say(voice_hint="请在这里输入您的手机号")
+第 7 步（/login/face 浮层弹出后）
+  cmd_say(voice_hint="请点'手机短信验证'")
+  cmd_highlight(element_key="btn_overlay_sms_verify", duration_ms=8000)
+  cmd_wait_user(reason="等用户在浮层里点'手机短信验证'")
+
+第 8 步（/login/verify）
+  cmd_say(voice_hint="请在这里再输入一次手机号")
   cmd_highlight(element_key="input_phone", duration_ms=8000)
   cmd_wait_user(reason="等用户输入手机号")
 
-第 7 步（/login/verify）
+第 9 步（/login/verify）
   cmd_say(voice_hint="请点'发送验证码'按钮")
   cmd_highlight(element_key="btn_send_code", duration_ms=8000)
   cmd_wait_user(reason="等用户点发送验证码")
 
-第 8 步
+第 10 步
   cmd_say(voice_hint="请查看手机短信，里面有 6 位验证码")
   cmd_wait_user(reason="等用户查看短信验证码")
 
-第 9 步（/login/verify）
+第 11 步（/login/verify）
   cmd_say(voice_hint="请把验证码输入到这里")
   cmd_highlight(element_key="input_verify_code", duration_ms=8000)
   cmd_wait_user(reason="等用户输入验证码")
 
-第 10 步（/login/verify）
+第 12 步（/login/verify）
   cmd_say(voice_hint="填好后请点这里登录")
   cmd_highlight(element_key="btn_verify_login", duration_ms=8000)
 
@@ -60,8 +70,8 @@
 - /elder / /standard / 其他 → 第 1 步
 - /my → 第 2 步
 - /login → 第 3 步
-- /login/face → 第 5 步
-- /login/verify → 第 6 步
+- /login/face → 第 6 步
+- /login/verify → 第 8 步
 - 路径不可达：先 cmd_say("请先回到首页")，再第 1 步
 
 【准则】

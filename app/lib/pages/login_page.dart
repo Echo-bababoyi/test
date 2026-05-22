@@ -17,6 +17,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   static const _route = AppRoutes.login;
   final _phoneController = TextEditingController();
+  final _phoneKey = AgentElementRegistry.register(_route, 'input_phone');
   final _loginBtnKey = AgentElementRegistry.register(_route, 'btn_login');
   final _agreeCheckboxKey = AgentElementRegistry.register(_route, 'chk_agree_terms');
   bool _agreed = false;
@@ -24,6 +25,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    AgentElementRegistry.registerController(_route, 'input_phone', _phoneController);
     LoginPageSnackbar.showIfPending(context);
   }
 
@@ -115,6 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: Spacing.sm),
                     TextField(
+                      key: _phoneKey,
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),

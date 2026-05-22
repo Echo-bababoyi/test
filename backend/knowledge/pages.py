@@ -85,6 +85,8 @@ PAGES: dict[str, PageSpec] = {
         description='输入手机号 / 勾选条款 / 点"登录"按钮进入刷脸认证页。'
                     '验证码登录入口在 /login/face 页的"其他方式认证"按钮',
         elements=(
+            ElementSpec(key='input_phone', kind='input', label='手机号/用户名/身份证',
+                        description='登录身份输入框，请填手机号'),
             ElementSpec(key='chk_agree_terms', kind='checkbox', label='同意条款',
                         description='勾选表示同意《用户服务协议》和《隐私政策》'),
             ElementSpec(key='btn_login', kind='button', label='登录',
@@ -104,6 +106,12 @@ PAGES: dict[str, PageSpec] = {
                         description='点击后弹出摄像头授权浮层'),
             ElementSpec(key='btn_other_auth', kind='button', label='其他方式认证',
                         description='切换到验证码登录页（/login/verify）'),
+            ElementSpec(key='btn_overlay_sms_verify', kind='button', label='手机短信验证',
+                        description='"其他认证方式"浮层里的选项，点了跳 /login/verify'),
+            ElementSpec(key='btn_face_request_agree', kind='button', label='同意并继续',
+                        description='请求刷脸认证浮层里的同意按钮，点了弹系统摄像头权限弹窗'),
+            ElementSpec(key='btn_camera_permission_allow', kind='button', label='使用应用时允许',
+                        description='系统摄像头权限弹窗里的允许按钮，点了进入活体检测'),
         ),
         transitions=(
             Transition('/login/verify', via_element='btn_other_auth',

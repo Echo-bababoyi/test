@@ -6,6 +6,7 @@ import 'agent_command_executor.dart';
 import 'audio_player.dart';
 import 'chat_history.dart';
 import 'log_service.dart';
+import 'agent_element_registry.dart';
 import 'ws_client.dart';
 
 String _generateSessionId() {
@@ -23,7 +24,9 @@ String _generateSessionId() {
 
 class AgentSession {
   static final instance = AgentSession._();
-  AgentSession._();
+  AgentSession._() {
+    currentHighlightKey.addListener(_onHighlightChangedForInput);
+  }
 
   // WS 会话状态（跨页保持）
   String? _sessionId;
@@ -68,6 +71,17 @@ class AgentSession {
 
   double bubbleX = -1;
   double bubbleY = -1;
+
+  static final Map<String, bool Function(String)> _inputValidators = {
+    'input_phone': (t) => t.length == 11 && t.startsWith('1') && int.tryParse(t) != null,
+    'input_verify_code': (t) => t.length == 6 && int.tryParse(t) != null,
+  };
+  static const _inputDebounceDuration = Duration(milliseconds: 2000);
+
+  String? _watchedInputKey;
+  TextEditingController? _watchedController;
+  VoidCallback? _watchedListener;
+  Timer? _watchedDebounceTimer;
 
   bool _animateNextOpen = false;
   bool consumeAnimateOpenFlag() {
@@ -186,6 +200,63 @@ class AgentSession {
     currentHighlightKey.value = elementKey;
   }
 
+  void _onHighlightChangedForInput() {
+    final key = currentHighlightKey.value;
+    if (key == null) {
+      _unwatchInput();
+    } else {
+      _watchInputIfApplicable(key);
+    }
+  }
+
+  void _watchInputIfApplicable(String elementKey) {
+    _unwatchInput();
+    final validator = _inputValidators[elementKey];
+    if (validator == null) return;
+
+    final route = _currentPath;
+    if (route == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controller = AgentElementRegistry.getController(route, elementKey);
+      if (controller == null) return;
+
+      _watchedInputKey = elementKey;
+      _watchedController = controller;
+      _watchedListener = () {
+        _onWatchedInputChanged(elementKey, controller.text, validator);
+      };
+      controller.addListener(_watchedListener!);
+      _onWatchedInputChanged(elementKey, controller.text, validator);
+    });
+  }
+
+  void _onWatchedInputChanged(
+    String key,
+    String text,
+    bool Function(String) validator,
+  ) {
+    _watchedDebounceTimer?.cancel();
+    _watchedDebounceTimer = null;
+    if (!validator(text)) return;
+    _watchedDebounceTimer = Timer(_inputDebounceDuration, () {
+      if (!_isGuiding) return;
+      if (currentHighlightKey.value != key) return;
+      sendStepCompleted(lastAction: 'input_complete', elementKey: key);
+    });
+  }
+
+  void _unwatchInput() {
+    _watchedDebounceTimer?.cancel();
+    _watchedDebounceTimer = null;
+    if (_watchedController != null && _watchedListener != null) {
+      _watchedController!.removeListener(_watchedListener!);
+    }
+    _watchedController = null;
+    _watchedListener = null;
+    _watchedInputKey = null;
+  }
+
   void sendStepCompleted({
     required String lastAction,
     String? elementKey,
@@ -264,11 +335,13 @@ class AgentSession {
 
       case 'task_done':
         _isGuiding = false;
+        _unwatchInput();
         currentHighlightKey.value = null;
         LogService.saveFromTaskDone(payload);
 
       case 'agent_error':
         _isGuiding = false;
+        _unwatchInput();
         currentHighlightKey.value = null;
         final code = payload['error_code'] as String?;
         final errText = code == 'asr_unclear'
@@ -278,6 +351,7 @@ class AgentSession {
 
       case 'agent_out_of_scope':
         _isGuiding = false;
+        _unwatchInput();
         currentHighlightKey.value = null;
         final hint = payload['voice_hint'] as String? ?? '浙里办没有这个服务';
         items.add({'role': 'agent', 'text': hint});

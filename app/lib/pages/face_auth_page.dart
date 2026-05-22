@@ -31,6 +31,9 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
 
   final _faceBtnKey = AgentElementRegistry.register(_route, 'btn_face_login');
   final _otherBtnKey = AgentElementRegistry.register(_route, 'btn_other_auth');
+  final _smsVerifyKey = AgentElementRegistry.register(_route, 'btn_overlay_sms_verify');
+  final _faceRequestAgreeKey = AgentElementRegistry.register(_route, 'btn_face_request_agree');
+  final _cameraPermissionKey = AgentElementRegistry.register(_route, 'btn_camera_permission_allow');
 
   @override
   void dispose() {
@@ -132,6 +135,7 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
     InAppOverlay.show<void>(
       context,
       child: _FaceAuthRequestContent(
+        agreeKey: _faceRequestAgreeKey,
         onAgree: () {
           Navigator.of(context).pop();
           SystemDialog.show(
@@ -140,6 +144,7 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
             message: '用于进行刷脸身份验证',
             confirmLabel: '使用应用时允许',
             denyLabel: '禁止',
+            confirmKey: _cameraPermissionKey,
             onConfirm: () =>
                 setState(() => _top = _TopState.authenticating),
             onDeny: () =>
@@ -155,6 +160,7 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
     InAppOverlay.show<void>(
       context,
       child: _OtherAuthContent(
+        smsKey: _smsVerifyKey,
         onSmsVerify: () {
           Navigator.of(context).pop();
           context.push(AppRoutes.verify);
@@ -1199,8 +1205,13 @@ class _PermissionDeniedView extends StatelessWidget {
 class _FaceAuthRequestContent extends StatelessWidget {
   final VoidCallback onAgree;
   final VoidCallback onExit;
+  final GlobalKey? agreeKey;
 
-  const _FaceAuthRequestContent({required this.onAgree, required this.onExit});
+  const _FaceAuthRequestContent({
+    required this.onAgree,
+    required this.onExit,
+    this.agreeKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1258,6 +1269,7 @@ class _FaceAuthRequestContent extends StatelessWidget {
             const SizedBox(width: Spacing.md),
             Expanded(
               child: FilledButton(
+                key: agreeKey,
                 onPressed: onAgree,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.elderPrimary,
@@ -1281,8 +1293,13 @@ class _FaceAuthRequestContent extends StatelessWidget {
 class _OtherAuthContent extends StatelessWidget {
   final VoidCallback onSmsVerify;
   final VoidCallback onCancel;
+  final GlobalKey? smsKey;
 
-  const _OtherAuthContent({required this.onSmsVerify, required this.onCancel});
+  const _OtherAuthContent({
+    required this.onSmsVerify,
+    required this.onCancel,
+    this.smsKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1312,6 +1329,7 @@ class _OtherAuthContent extends StatelessWidget {
         ),
         const Divider(height: 1),
         ListTile(
+          key: smsKey,
           contentPadding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.md),
           leading: const Icon(Icons.email_outlined, size: 32, color: AppColors.elderPrimary),
           title: const Text('手机短信验证',

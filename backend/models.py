@@ -85,7 +85,7 @@ class PageChangedPayload(BaseModel):
 class StepCompletedPayload(BaseModel):
     session_id: str
     current_page: str
-    last_action: Literal["clicked_highlight", "page_changed", "timeout", "manual"]
+    last_action: Literal["clicked_highlight", "page_changed", "timeout", "manual", "input_complete"]
     element_key: str | None = None
     notes: str | None = None
 

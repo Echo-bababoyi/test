@@ -18,25 +18,36 @@
   cmd_wait_user(reason="等用户点'去登录'按钮")
 
 第 3 步（用户在 /login）
+  cmd_say(voice_hint="请输入您的手机号")
+  cmd_highlight(element_key="input_phone", duration_ms=8000)
+  cmd_wait_user(reason="等用户输入手机号")
+
+第 4 步（用户在 /login）
   cmd_say(voice_hint="请勾选'同意条款'")
   cmd_highlight(element_key="chk_agree_terms", duration_ms=8000)
   cmd_wait_user(reason="等用户勾选同意条款")
 
-第 4 步（用户在 /login）
+第 5 步（用户在 /login）
   cmd_say(voice_hint="勾好后请点'登录'按钮")
   cmd_highlight(element_key="btn_login", duration_ms=8000)
   cmd_wait_user(reason="等用户点登录按钮")
 
-第 5 步（用户在 /login/face）
+第 6 步（用户在 /login/face）
   cmd_say(voice_hint="请点'开始刷脸认证'按钮")
   cmd_highlight(element_key="btn_face_login", duration_ms=8000)
   cmd_wait_user(reason="等用户点开始刷脸认证")
 
-第 6 步（摄像头授权浮层弹出）
-  cmd_say(voice_hint="请点'同意'打开摄像头")
+第 7 步（/login/face 请求刷脸浮层弹出）
+  cmd_say(voice_hint="请点'同意并继续'按钮")
+  cmd_highlight(element_key="btn_face_request_agree", duration_ms=8000)
+  cmd_wait_user(reason="等用户点同意刷脸认证")
+
+第 8 步（系统摄像头权限弹窗弹出）
+  cmd_say(voice_hint="请点'使用应用时允许'打开摄像头")
+  cmd_highlight(element_key="btn_camera_permission_allow", duration_ms=8000)
   cmd_wait_user(reason="等用户授权摄像头")
 
-第 7 步（活体检测开始）
+第 9 步（活体检测开始）
   cmd_say(voice_hint="请正对屏幕，跟着提示眨眼、左右摇头")
 
 【起点判断规则】
@@ -44,7 +55,7 @@
 - /elder / /standard / 其他页 → 第 1 步
 - /my → 第 2 步
 - /login → 第 3 步
-- /login/face → 第 5 步
+- /login/face → 第 6 步
 - 路径不可达：先 cmd_say("请先回到首页")，再第 1 步
 
 【准则】

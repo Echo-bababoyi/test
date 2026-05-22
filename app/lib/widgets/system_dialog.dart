@@ -11,6 +11,7 @@ class SystemDialog extends StatelessWidget {
   final String denyLabel;
   final VoidCallback? onConfirm;
   final VoidCallback? onDeny;
+  final GlobalKey? confirmKey;
 
   const SystemDialog({
     super.key,
@@ -20,6 +21,7 @@ class SystemDialog extends StatelessWidget {
     this.denyLabel = '拒绝',
     this.onConfirm,
     this.onDeny,
+    this.confirmKey,
   });
 
   @override
@@ -52,6 +54,7 @@ class SystemDialog extends StatelessWidget {
                   child: Text(denyLabel),
                 ),
                 TextButton(
+                  key: confirmKey,
                   onPressed: () {
                     Navigator.of(context).pop();
                     onConfirm?.call();
@@ -77,6 +80,7 @@ class SystemDialog extends StatelessWidget {
     String denyLabel = '拒绝',
     VoidCallback? onConfirm,
     VoidCallback? onDeny,
+    GlobalKey? confirmKey,
   }) {
     return showDialog<void>(
       context: context,
@@ -88,6 +92,7 @@ class SystemDialog extends StatelessWidget {
         denyLabel: denyLabel,
         onConfirm: onConfirm,
         onDeny: onDeny,
+        confirmKey: confirmKey,
       ),
     );
   }
