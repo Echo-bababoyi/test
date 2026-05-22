@@ -66,6 +66,9 @@ class AgentSession {
 
   final ValueNotifier<String?> currentHighlightKey = ValueNotifier<String?>(null);
 
+  double bubbleX = -1;
+  double bubbleY = -1;
+
   bool _animateNextOpen = false;
   bool consumeAnimateOpenFlag() {
     final v = _animateNextOpen;

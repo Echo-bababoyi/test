@@ -42,11 +42,17 @@ class _AgentFabState extends ConsumerState<AgentFab> {
   bool _fabHovering = false;
   bool _initialized = false;
 
-  // 气泡窗位置（可拖动标题栏）
-  double _bubbleX = -1;
-  double _bubbleY = 9999;
-
   final GlobalKey _stackKey = GlobalKey();
+
+  double get _bubbleX => AgentSession.instance.bubbleX;
+  double get _bubbleY => AgentSession.instance.bubbleY;
+  void _setBubblePos({double? x, double? y}) {
+    if (x != null) AgentSession.instance.bubbleX = x;
+    if (y != null) AgentSession.instance.bubbleY = y;
+  }
+
+  bool _bubbleDragging = false;
+  Key _bubbleArriveKey = UniqueKey();
 
   static const double _fabSize = _kFabSize;
   static const double _peekOffset = 18.0;
@@ -72,6 +78,7 @@ class _AgentFabState extends ConsumerState<AgentFab> {
 
   void _onHighlightChanged() {
     if (!mounted || !_initialized) return;
+    if (_bubbleDragging) return;
     final key = AgentSession.instance.currentHighlightKey.value;
 
     if (key == null) {
@@ -80,8 +87,11 @@ class _AgentFabState extends ConsumerState<AgentFab> {
       final box = ctx.findRenderObject() as RenderBox?;
       if (box == null || !box.attached) return;
       setState(() {
-        _bubbleX = box.size.width - _bubbleW - 12;
-        _bubbleY = box.size.height - _bubbleH - 10;
+        _setBubblePos(
+          x: box.size.width - _bubbleW - 12,
+          y: box.size.height - _bubbleH - 10,
+        );
+        _bubbleArriveKey = UniqueKey();
       });
       return;
     }
@@ -101,7 +111,10 @@ class _AgentFabState extends ConsumerState<AgentFab> {
       final offset = targetBox.localToGlobal(Offset.zero, ancestor: agentBox);
       final highlightLocal = offset & targetBox.size;
       final newY = _pickBubbleY(highlightLocal, agentBox.size.height);
-      setState(() => _bubbleY = newY);
+      setState(() {
+        _setBubblePos(y: newY);
+        _bubbleArriveKey = UniqueKey();
+      });
     });
   }
 
@@ -161,11 +174,13 @@ class _AgentFabState extends ConsumerState<AgentFab> {
       final maxH = constraints.maxHeight;
 
       if (!_initialized && maxW > 0 && maxH > 0) {
+        final needsBubbleDefault = AgentSession.instance.bubbleX < 0;
         if (_kDemoMode) {
           _fabX = maxW - _peekOffset;
           _fabY = maxH * 0.55;
-          _bubbleX = maxW - _bubbleW - 12;
-          _bubbleY = maxH - _bubbleH - 10;
+          if (needsBubbleDefault) {
+            _setBubblePos(x: maxW - _bubbleW - 12, y: maxH - _bubbleH - 10);
+          }
           _initialized = true;
         } else {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -173,8 +188,9 @@ class _AgentFabState extends ConsumerState<AgentFab> {
               setState(() {
                 _fabX = maxW - _peekOffset;
                 _fabY = maxH * 0.55;
-                _bubbleX = maxW - _bubbleW - 12;
-                _bubbleY = maxH - _bubbleH - 10;
+                if (needsBubbleDefault) {
+                  _setBubblePos(x: maxW - _bubbleW - 12, y: maxH - _bubbleH - 10);
+                }
                 _initialized = true;
               });
             }
@@ -194,22 +210,43 @@ class _AgentFabState extends ConsumerState<AgentFab> {
         children: [
           // ── 气泡聊天窗 ──────────────────────────────────────
           if (AgentSession.instance.panelOpen && _initialized)
-            Positioned(
+            AnimatedPositioned(
+              duration: _bubbleDragging
+                  ? Duration.zero
+                  : const Duration(milliseconds: 320),
+              curve: Curves.easeOutBack,
               left: _bubbleX.clamp(0.0, maxW - _bubbleW),
               top: _bubbleY.clamp(0.0, maxH - _bubbleH),
-              child: _BubbleWindow(
-                width: _bubbleW,
-                height: _bubbleH,
-                currentPath: widget.currentPath,
-                primary: primary,
-                onClose: _closePanel,
-                onNewMessage: _onNewMessage,
-                onDragUpdate: (dx, dy) {
-                  setState(() {
-                    _bubbleX = (_bubbleX + dx).clamp(0.0, maxW - _bubbleW);
-                    _bubbleY = (_bubbleY + dy).clamp(0.0, maxH - _bubbleH);
-                  });
-                },
+              width: _bubbleW,
+              height: _bubbleH,
+              child: TweenAnimationBuilder<double>(
+                key: _bubbleArriveKey,
+                tween: Tween(begin: 0.97, end: 1.0),
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                builder: (_, scale, child) => Transform.scale(
+                  scale: scale,
+                  alignment: Alignment.center,
+                  child: child,
+                ),
+                child: _BubbleWindow(
+                  width: _bubbleW,
+                  height: _bubbleH,
+                  currentPath: widget.currentPath,
+                  primary: primary,
+                  onClose: _closePanel,
+                  onNewMessage: _onNewMessage,
+                  onDragStart: () => setState(() => _bubbleDragging = true),
+                  onDragEnd: () => setState(() => _bubbleDragging = false),
+                  onDragUpdate: (dx, dy) {
+                    setState(() {
+                      _setBubblePos(
+                        x: (_bubbleX + dx).clamp(0.0, maxW - _bubbleW),
+                        y: (_bubbleY + dy).clamp(0.0, maxH - _bubbleH),
+                      );
+                    });
+                  },
+                ),
               ),
             ),
 
@@ -418,6 +455,8 @@ class _BubbleWindow extends StatefulWidget {
   final VoidCallback onClose;
   final VoidCallback onNewMessage;
   final void Function(double dx, double dy) onDragUpdate;
+  final VoidCallback? onDragStart;
+  final VoidCallback? onDragEnd;
 
   const _BubbleWindow({
     required this.width,
@@ -427,6 +466,8 @@ class _BubbleWindow extends StatefulWidget {
     required this.onClose,
     required this.onNewMessage,
     required this.onDragUpdate,
+    this.onDragStart,
+    this.onDragEnd,
   });
 
   @override
@@ -621,6 +662,9 @@ class _BubbleWindowState extends State<_BubbleWindow>
                 children: [
                   // 标题栏（可拖动）
                   GestureDetector(
+                    onPanStart: (_) => widget.onDragStart?.call(),
+                    onPanEnd: (_) => widget.onDragEnd?.call(),
+                    onPanCancel: () => widget.onDragEnd?.call(),
                     onPanUpdate: (d) => widget.onDragUpdate(d.delta.dx, d.delta.dy),
                     child: Container(
                       height: 52,
