@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'agent_element_registry.dart';
 import 'draft_service.dart';
 import 'agent_settings_service.dart';
+import 'agent_session.dart';
 
 class AgentCommandExecutor {
   final GoRouter router;
@@ -94,6 +95,7 @@ class AgentCommandExecutor {
     entry = OverlayEntry(
       builder: (_) => _HighlightBorderOverlay(
         targetKey: key,
+        elementKey: elementKey,
         onDismiss: () {
           if (entry.mounted) entry.remove();
           if (identical(_currentHighlightEntry, entry)) {
@@ -158,8 +160,13 @@ class AgentCommandExecutor {
 class _HighlightBorderOverlay extends StatefulWidget {
   final GlobalKey targetKey;
   final VoidCallback onDismiss;
+  final String elementKey;
 
-  const _HighlightBorderOverlay({required this.targetKey, required this.onDismiss});
+  const _HighlightBorderOverlay({
+    required this.targetKey,
+    required this.onDismiss,
+    required this.elementKey,
+  });
 
   @override
   State<_HighlightBorderOverlay> createState() => _HighlightBorderOverlayState();
@@ -201,6 +208,10 @@ class _HighlightBorderOverlayState extends State<_HighlightBorderOverlay>
   void _onPointerDown(PointerDownEvent event) {
     final rect = _computeTargetRect();
     if (rect != null && rect.contains(event.position)) {
+      AgentSession.instance.sendStepCompleted(
+        lastAction: 'clicked_highlight',
+        elementKey: widget.elementKey,
+      );
       widget.onDismiss();
     }
   }

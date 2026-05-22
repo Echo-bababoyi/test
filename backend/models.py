@@ -12,6 +12,7 @@ class InboundMessageType(str, Enum):
     query_result_ready = "query_result_ready"
     text_input = "text_input"
     page_changed = "page_changed"
+    step_completed = "step_completed"
 
 
 class OutboundMessageType(str, Enum):
@@ -81,6 +82,14 @@ class PageChangedPayload(BaseModel):
     current_page: str
 
 
+class StepCompletedPayload(BaseModel):
+    session_id: str
+    current_page: str
+    last_action: Literal["clicked_highlight", "page_changed", "timeout", "manual"]
+    element_key: str | None = None
+    notes: str | None = None
+
+
 INBOUND_PAYLOAD_MAP: dict[str, type] = {
     InboundMessageType.agent_wake: AgentWakePayload,
     InboundMessageType.audio_chunk: AudioChunkPayload,
@@ -90,6 +99,7 @@ INBOUND_PAYLOAD_MAP: dict[str, type] = {
     InboundMessageType.query_result_ready: QueryResultReadyPayload,
     InboundMessageType.text_input: TextInputPayload,
     InboundMessageType.page_changed: PageChangedPayload,
+    InboundMessageType.step_completed: StepCompletedPayload,
 }
 
 

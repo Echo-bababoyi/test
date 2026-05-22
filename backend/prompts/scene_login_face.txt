@@ -10,25 +10,31 @@
 第 1 步（用户在 /elder 或 /standard 或其他非登录页）
   cmd_say(voice_hint="请点屏幕底部的'我的'按钮")
   cmd_highlight(element_key="tab_my", duration_ms=8000)
+  cmd_wait_user(reason="等用户点底部'我的'按钮")
 
 第 2 步（用户在 /my 且未登录）
   cmd_say(voice_hint="请点橙色的'去登录'按钮")
   cmd_highlight(element_key="btn_go_login", duration_ms=8000)
+  cmd_wait_user(reason="等用户点'去登录'按钮")
 
 第 3 步（用户在 /login）
   cmd_say(voice_hint="请勾选'同意条款'")
   cmd_highlight(element_key="chk_agree_terms", duration_ms=8000)
+  cmd_wait_user(reason="等用户勾选同意条款")
 
 第 4 步（用户在 /login）
   cmd_say(voice_hint="勾好后请点'登录'按钮")
   cmd_highlight(element_key="btn_login", duration_ms=8000)
+  cmd_wait_user(reason="等用户点登录按钮")
 
 第 5 步（用户在 /login/face）
   cmd_say(voice_hint="请点'开始刷脸认证'按钮")
   cmd_highlight(element_key="btn_face_login", duration_ms=8000)
+  cmd_wait_user(reason="等用户点开始刷脸认证")
 
 第 6 步（摄像头授权浮层弹出）
   cmd_say(voice_hint="请点'同意'打开摄像头")
+  cmd_wait_user(reason="等用户授权摄像头")
 
 第 7 步（活体检测开始）
   cmd_say(voice_hint="请正对屏幕，跟着提示眨眼、左右摇头")

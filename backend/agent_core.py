@@ -14,14 +14,15 @@ from backend.tools.fill_field import fill_field_normal, fill_field_sensitive
 from backend.tools.press_button import cmd_press_button
 from backend.tools.read_sms import read_sms
 from backend.tools.say import cmd_say
+from backend.tools.wait_user import cmd_wait_user
 
 logger = logging.getLogger(__name__)
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
 
 SCENE_TOOLS = {
-    "login_face":    [cmd_highlight, cmd_say],
-    "login_verify":  [cmd_highlight, cmd_say],
+    "login_face":    [cmd_highlight, cmd_say, cmd_wait_user],
+    "login_verify":  [cmd_highlight, cmd_say, cmd_wait_user],
     "yibao_jiaofei": [cmd_navigate, cmd_highlight, cmd_say,
                       fill_field_normal, fill_field_sensitive],
     "pension_query": [cmd_navigate, cmd_highlight, cmd_say,
@@ -32,13 +33,13 @@ SCENE_TOOLS = {
 
 # read_sms 为 AGENT_SPEC.md §5 能力矩阵预留（L2/L3 代读短信），当前五个场景的 SCENE_TOOLS 均未挂载，三道 AND 取交集后不会被实际调用；新增短信相关场景时需在对应 SCENE_TOOLS 列表中加入。
 _LEVEL_TOOLS: dict[str, set[str]] = {
-    "guide": {"cmd_highlight", "cmd_say"},
+    "guide": {"cmd_highlight", "cmd_say", "cmd_wait_user"},
     "semi":  {"cmd_navigate", "cmd_highlight", "cmd_say",
               "fill_field_normal", "cmd_press_button",
-              "read_sms", "fill_field_sensitive"},
+              "read_sms", "fill_field_sensitive", "cmd_wait_user"},
     "full":  {"cmd_navigate", "cmd_highlight", "cmd_say",
               "fill_field_normal", "cmd_press_button",
-              "read_sms", "fill_field_sensitive"},
+              "read_sms", "fill_field_sensitive", "cmd_wait_user"},
 }
 
 
@@ -130,6 +131,9 @@ _EXECUTOR_PREFIX = """\
 【其他规则】
 - 必须通过调用工具来执行操作，绝不允许仅用文字描述你会做什么
 - 每步执行后等待用户操作，不要一次性把所有 tool 调完
+- 每一个引导步骤（一组让用户做一件事的 cmd_say / cmd_highlight / cmd_navigate / fill_field_* 组合）的最后一个 tool 必须是 cmd_wait_user，调用后会暂停等待用户实际操作。
+- 任务全部完成、不再需要用户操作时，不要调 cmd_wait_user，直接 return 场景剧本的【完成回复】。
+- cmd_navigate 是代理代跳，跳完通常会立刻接 cmd_say + cmd_highlight + cmd_wait_user，整组算一个 step（不要在 cmd_navigate 后单独 cmd_wait_user）。
 
 以下是你要完成的具体任务：
 """
@@ -263,6 +267,8 @@ class AgentCore:
         # Pending query results forwarded from ws_handler
         self._query_result: dict | None = None
         self._query_event: asyncio.Event = asyncio.Event()
+        self._step_event: asyncio.Event = asyncio.Event()
+        self._step_payload: dict | None = None
 
         self._classifier = Agent(
             model=DeepSeek(id="deepseek-chat", max_tokens=256, temperature=0.3),
@@ -372,6 +378,23 @@ class AgentCore:
             response = await self._executor.arun(input_msg)
             last_content = response.content or ""
             stopped_tool = self._get_stopped_tool(response)
+
+            if stopped_tool == "cmd_wait_user":
+                await self._push_tool_results(response, skip_stopped="cmd_wait_user")
+                self._step_event.clear()
+                try:
+                    await asyncio.wait_for(self._step_event.wait(), timeout=180.0)
+                except asyncio.TimeoutError:
+                    logger.info("session=%s step wait timeout, ending guide", self.session_id)
+                    return SCENE_DONE_SUMMARY.get(scene_id) or "引导超时"
+                payload = self._step_payload or {}
+                input_msg = (
+                    f"用户已完成上一步（动作={payload.get('last_action', 'manual')}，"
+                    f"当前页面={payload.get('current_page', '')}，"
+                    f"点击元素={payload.get('element_key') or 'N/A'}），"
+                    f"请按场景剧本继续下一步。完成时不要再调 cmd_wait_user。"
+                )
+                continue
 
             if stopped_tool in _SENSITIVE_TOOLS:
                 await self._push_tool_results(response, skip_stopped=stopped_tool)
@@ -576,3 +599,8 @@ class AgentCore:
             logger.warning("session=%s permission wait timed out", self.session_id)
             return False
         return self._permission_granted
+
+    def resolve_step(self, payload: dict) -> None:
+        """Called by ws_handler when step_completed arrives from frontend."""
+        self._step_payload = payload
+        self._step_event.set()

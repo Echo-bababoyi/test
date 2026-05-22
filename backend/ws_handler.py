@@ -98,6 +98,7 @@ class WSHandler:
                 InboundMessageType.query_result_ready: self._on_query_result_ready,
                 InboundMessageType.text_input: self._on_text_input,
                 InboundMessageType.page_changed: self._on_page_changed,
+                InboundMessageType.step_completed: self._on_step_completed,
             }.get(msg_type)
 
             if handler:
@@ -132,6 +133,13 @@ class WSHandler:
         logger.info("session=%s page_changed → %s", self.session_id, payload.current_page)
         if self._agent_core:
             self._agent_core.set_current_page(payload.current_page)
+
+    async def _on_step_completed(self, payload):
+        logger.info("session=%s step_completed action=%s page=%s key=%s",
+                    self.session_id, payload.last_action, payload.current_page, payload.element_key)
+        if self._agent_core:
+            self._agent_core.set_current_page(payload.current_page)
+            self._agent_core.resolve_step(payload.model_dump())
 
     async def _on_text_input(self, payload):
         """直接文本输入（跳过 ASR，用于演示/测试）"""

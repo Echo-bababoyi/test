@@ -10,37 +10,46 @@
 第 1 步（/elder / /standard / 其他）
   cmd_say(voice_hint="请点屏幕底部的'我的'按钮")
   cmd_highlight(element_key="tab_my", duration_ms=8000)
+  cmd_wait_user(reason="等用户点底部'我的'按钮")
 
 第 2 步（/my 未登录）
   cmd_say(voice_hint="请点橙色的'去登录'按钮")
   cmd_highlight(element_key="btn_go_login", duration_ms=8000)
+  cmd_wait_user(reason="等用户点'去登录'按钮")
 
 第 3 步（/login）
   cmd_say(voice_hint="请先勾选'同意条款'")
   cmd_highlight(element_key="chk_agree_terms", duration_ms=8000)
+  cmd_wait_user(reason="等用户勾选同意条款")
 
 第 4 步（/login）
   cmd_say(voice_hint="勾好后请点'登录'按钮")
   cmd_highlight(element_key="btn_login", duration_ms=8000)
+  cmd_wait_user(reason="等用户点登录按钮")
 
 第 5 步（/login/face）
   cmd_say(voice_hint="请点底部'其他方式认证'切到验证码登录")
   cmd_highlight(element_key="btn_other_auth", duration_ms=8000)
+  cmd_wait_user(reason="等用户切换到验证码登录")
 
 第 6 步（/login/verify）
   cmd_say(voice_hint="请在这里输入您的手机号")
   cmd_highlight(element_key="input_phone", duration_ms=8000)
+  cmd_wait_user(reason="等用户输入手机号")
 
 第 7 步（/login/verify）
   cmd_say(voice_hint="请点'发送验证码'按钮")
   cmd_highlight(element_key="btn_send_code", duration_ms=8000)
+  cmd_wait_user(reason="等用户点发送验证码")
 
 第 8 步
   cmd_say(voice_hint="请查看手机短信，里面有 6 位验证码")
+  cmd_wait_user(reason="等用户查看短信验证码")
 
 第 9 步（/login/verify）
   cmd_say(voice_hint="请把验证码输入到这里")
   cmd_highlight(element_key="input_verify_code", duration_ms=8000)
+  cmd_wait_user(reason="等用户输入验证码")
 
 第 10 步（/login/verify）
   cmd_say(voice_hint="填好后请点这里登录")

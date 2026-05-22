@@ -61,6 +61,9 @@ class AgentSession {
     _uiSignal.add(null);
   }
 
+  bool _isGuiding = false;
+  bool get isGuiding => _isGuiding;
+
   bool _animateNextOpen = false;
   bool consumeAnimateOpenFlag() {
     final v = _animateNextOpen;
@@ -79,6 +82,7 @@ class AgentSession {
     _pageToken = token;
     _router = router;
     _overlayContext = overlayContext;
+    final oldPath = _currentPath;
     _currentPath = currentPath;
     _currentPageId = pageId;
     _currentPageTitle = pageTitle;
@@ -90,6 +94,9 @@ class AgentSession {
       currentRoute: _currentPath,
     );
     debugPrint('[AgentSession] bindPage path=$currentPath pageId=$pageId');
+    if (_isGuiding && _currentPath != oldPath) {
+      sendStepCompleted(lastAction: 'page_changed');
+    }
     if (_sessionId != null && WsClient.instance.isConnected) {
       WsClient.instance.send('page_changed', {
         'session_id': _sessionId,
@@ -170,10 +177,28 @@ class AgentSession {
     });
   }
 
+  void sendStepCompleted({
+    required String lastAction,
+    String? elementKey,
+    String? notes,
+  }) {
+    if (!_isGuiding) return;
+    WsClient.instance.send('step_completed', {
+      'session_id': _sessionId,
+      'current_page': _currentPath ?? '',
+      'last_action': lastAction,
+      'element_key': elementKey,
+      'notes': notes,
+    });
+  }
+
   void _dispatch(Map<String, dynamic> msg) {
     final type = msg['type'] as String?;
     if (type != null && type.startsWith('cmd_')) {
       _executor?.handleMessage(msg);
+      if (type == 'cmd_say' || type == 'cmd_highlight') {
+        _isGuiding = true;
+      }
       if (type == 'cmd_say') {
         final payload = msg['payload'] as Map<String, dynamic>? ?? {};
         final voiceHint = payload['voice_hint'] as String?;
@@ -229,9 +254,11 @@ class AgentSession {
         items.add({'type': 'choice', 'text': text, 'options': opts});
 
       case 'task_done':
+        _isGuiding = false;
         LogService.saveFromTaskDone(payload);
 
       case 'agent_error':
+        _isGuiding = false;
         final code = payload['error_code'] as String?;
         final errText = code == 'asr_unclear'
             ? '没听清，请再说一次'
@@ -239,6 +266,7 @@ class AgentSession {
         items.add({'role': 'agent', 'text': errText});
 
       case 'agent_out_of_scope':
+        _isGuiding = false;
         final hint = payload['voice_hint'] as String? ?? '浙里办没有这个服务';
         items.add({'role': 'agent', 'text': hint});
     }
