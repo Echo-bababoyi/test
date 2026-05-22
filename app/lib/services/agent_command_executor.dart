@@ -103,7 +103,6 @@ class AgentCommandExecutor {
           if (identical(_currentHighlightEntry, entry)) {
             _currentHighlightEntry = null;
           }
-          AgentSession.instance.notifyHighlight(null);
         },
       ),
     );
