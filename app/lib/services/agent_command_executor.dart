@@ -90,6 +90,8 @@ class AgentCommandExecutor {
     _currentHighlightEntry?.remove();
     _currentHighlightEntry = null;
 
+    AgentSession.instance.notifyHighlight(elementKey);
+
     final overlay = Overlay.of(overlayContext, rootOverlay: true);
     late OverlayEntry entry;
     entry = OverlayEntry(
@@ -101,6 +103,7 @@ class AgentCommandExecutor {
           if (identical(_currentHighlightEntry, entry)) {
             _currentHighlightEntry = null;
           }
+          AgentSession.instance.notifyHighlight(null);
         },
       ),
     );

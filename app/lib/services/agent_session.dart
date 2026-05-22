@@ -64,6 +64,8 @@ class AgentSession {
   bool _isGuiding = false;
   bool get isGuiding => _isGuiding;
 
+  final ValueNotifier<String?> currentHighlightKey = ValueNotifier<String?>(null);
+
   bool _animateNextOpen = false;
   bool consumeAnimateOpenFlag() {
     final v = _animateNextOpen;
@@ -177,6 +179,10 @@ class AgentSession {
     });
   }
 
+  void notifyHighlight(String? elementKey) {
+    currentHighlightKey.value = elementKey;
+  }
+
   void sendStepCompleted({
     required String lastAction,
     String? elementKey,
@@ -255,10 +261,12 @@ class AgentSession {
 
       case 'task_done':
         _isGuiding = false;
+        currentHighlightKey.value = null;
         LogService.saveFromTaskDone(payload);
 
       case 'agent_error':
         _isGuiding = false;
+        currentHighlightKey.value = null;
         final code = payload['error_code'] as String?;
         final errText = code == 'asr_unclear'
             ? '没听清，请再说一次'
@@ -267,6 +275,7 @@ class AgentSession {
 
       case 'agent_out_of_scope':
         _isGuiding = false;
+        currentHighlightKey.value = null;
         final hint = payload['voice_hint'] as String? ?? '浙里办没有这个服务';
         items.add({'role': 'agent', 'text': hint});
     }

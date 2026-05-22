@@ -9,6 +9,7 @@ import '../theme/design_tokens.dart';
 import '../services/agent_session.dart';
 import '../services/audio_player.dart';
 import '../services/auth_state.dart';
+import '../services/agent_element_registry.dart';
 import '../services/agent_settings_service.dart';
 import '../services/chat_history.dart';
 import '../services/draft_service.dart';
@@ -45,6 +46,8 @@ class _AgentFabState extends ConsumerState<AgentFab> {
   double _bubbleX = -1;
   double _bubbleY = 9999;
 
+  final GlobalKey _stackKey = GlobalKey();
+
   static const double _fabSize = _kFabSize;
   static const double _peekOffset = 18.0;
   static const double _bubbleW = 300.0;
@@ -67,12 +70,60 @@ class _AgentFabState extends ConsumerState<AgentFab> {
     });
   }
 
+  void _onHighlightChanged() {
+    if (!mounted || !_initialized) return;
+    final key = AgentSession.instance.currentHighlightKey.value;
+
+    if (key == null) {
+      final ctx = _stackKey.currentContext;
+      if (ctx == null) return;
+      final box = ctx.findRenderObject() as RenderBox?;
+      if (box == null || !box.attached) return;
+      setState(() {
+        _bubbleX = box.size.width - _bubbleW - 12;
+        _bubbleY = box.size.height - _bubbleH - 10;
+      });
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final route = widget.currentPath;
+      if (route == null) return;
+      final targetGlobalKey = AgentElementRegistry.get(route, key);
+      final targetCtx = targetGlobalKey?.currentContext;
+      final agentCtx = _stackKey.currentContext;
+      if (targetCtx == null || agentCtx == null) return;
+      final targetBox = targetCtx.findRenderObject() as RenderBox?;
+      final agentBox = agentCtx.findRenderObject() as RenderBox?;
+      if (targetBox == null || agentBox == null
+          || !targetBox.attached || !agentBox.attached) return;
+      final offset = targetBox.localToGlobal(Offset.zero, ancestor: agentBox);
+      final highlightLocal = offset & targetBox.size;
+      final newY = _pickBubbleY(highlightLocal, agentBox.size.height);
+      setState(() => _bubbleY = newY);
+    });
+  }
+
+  double _pickBubbleY(Rect h, double maxH) {
+    const margin = 12.0;
+    final clearAbove = h.top - margin;
+    final clearBelow = maxH - h.bottom - margin;
+    final preferTop = h.center.dy > maxH / 2;
+    if (preferTop && clearAbove >= _bubbleH) return margin;
+    if (!preferTop && clearBelow >= _bubbleH) return maxH - _bubbleH - margin;
+    if (clearAbove >= _bubbleH) return margin;
+    if (clearBelow >= _bubbleH) return maxH - _bubbleH - margin;
+    return clearAbove > clearBelow ? margin : (maxH - _bubbleH - margin).clamp(margin, maxH);
+  }
+
   @override
   void initState() {
     super.initState();
     _uiSub = AgentSession.instance.uiSignal.listen((_) {
       if (mounted) setState(() {});
     });
+    AgentSession.instance.currentHighlightKey.addListener(_onHighlightChanged);
     if (_kDemoMode) {
       AgentSession.instance.setPanelOpen(true);
     }
@@ -93,6 +144,7 @@ class _AgentFabState extends ConsumerState<AgentFab> {
 
   @override
   void dispose() {
+    AgentSession.instance.currentHighlightKey.removeListener(_onHighlightChanged);
     _uiSub?.cancel();
     AgentSession.instance.unbindPage(this);
     super.dispose();
@@ -137,6 +189,7 @@ class _AgentFabState extends ConsumerState<AgentFab> {
               : _fabX;
 
       return Stack(
+        key: _stackKey,
         clipBehavior: Clip.none,
         children: [
           // ── 气泡聊天窗 ──────────────────────────────────────
