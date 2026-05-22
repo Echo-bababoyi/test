@@ -12,6 +12,8 @@ class AgentCommandExecutor {
   final String? pageId;
   final String? pageTitle;
 
+  OverlayEntry? _currentHighlightEntry;
+
   AgentCommandExecutor({
     required this.router,
     required this.overlayContext,
@@ -62,7 +64,6 @@ class AgentCommandExecutor {
 
   void _onHighlight(Map<String, dynamic> payload) {
     final elementKey = payload['element_key'] as String?;
-    final durationMs = payload['duration_ms'] as int? ?? 2000;
     if (elementKey == null) {
       debugPrint('[cmd_highlight] missing element_key');
       return;
@@ -74,28 +75,29 @@ class AgentCommandExecutor {
       return;
     }
 
-    final renderBox = key.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) {
+    if (key.currentContext == null) {
       debugPrint('[cmd_highlight] key "$elementKey" has no mounted context (page not on top?)');
       return;
     }
 
-    final offset = renderBox.localToGlobal(Offset.zero);
-    final size = renderBox.size;
-    final rect = offset & size;
+    _currentHighlightEntry?.remove();
+    _currentHighlightEntry = null;
 
     final overlay = Overlay.of(overlayContext);
     late OverlayEntry entry;
     entry = OverlayEntry(
-      builder: (_) => _HighlightOverlay(
-        rect: rect,
-        onRemove: () => entry.remove(),
+      builder: (_) => _HighlightBorderOverlay(
+        targetKey: key,
+        onDismiss: () {
+          if (entry.mounted) entry.remove();
+          if (identical(_currentHighlightEntry, entry)) {
+            _currentHighlightEntry = null;
+          }
+        },
       ),
     );
     overlay.insert(entry);
-    Future.delayed(Duration(milliseconds: durationMs), () {
-      if (entry.mounted) entry.remove();
-    });
+    _currentHighlightEntry = entry;
   }
 
   Future<void> _onFillField(Map<String, dynamic> payload) async {
@@ -145,19 +147,21 @@ class AgentCommandExecutor {
   }
 }
 
-class _HighlightOverlay extends StatefulWidget {
-  final Rect rect;
-  final VoidCallback onRemove;
+class _HighlightBorderOverlay extends StatefulWidget {
+  final GlobalKey targetKey;
+  final VoidCallback onDismiss;
 
-  const _HighlightOverlay({required this.rect, required this.onRemove});
+  const _HighlightBorderOverlay({required this.targetKey, required this.onDismiss});
 
   @override
-  State<_HighlightOverlay> createState() => _HighlightOverlayState();
+  State<_HighlightBorderOverlay> createState() => _HighlightBorderOverlayState();
 }
 
-class _HighlightOverlayState extends State<_HighlightOverlay> with SingleTickerProviderStateMixin {
+class _HighlightBorderOverlayState extends State<_HighlightBorderOverlay>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnim;
+  bool _dismissScheduled = false;
 
   @override
   void initState() {
@@ -177,56 +181,65 @@ class _HighlightOverlayState extends State<_HighlightOverlay> with SingleTickerP
     super.dispose();
   }
 
+  Rect? _computeTargetRect() {
+    final ctx = widget.targetKey.currentContext;
+    if (ctx == null) return null;
+    final rb = ctx.findRenderObject() as RenderBox?;
+    if (rb == null || !rb.attached) return null;
+    return rb.localToGlobal(Offset.zero) & rb.size;
+  }
+
+  void _onPointerDown(PointerDownEvent event) {
+    final rect = _computeTargetRect();
+    if (rect != null && rect.contains(event.position)) {
+      widget.onDismiss();
+    }
+  }
+
+  void _scheduleAutoDismiss() {
+    if (_dismissScheduled) return;
+    _dismissScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onDismiss();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Stack(
-        children: [
-          CustomPaint(
-            size: MediaQuery.of(context).size,
-            painter: _HolePainter(rect: widget.rect),
-          ),
-          AnimatedBuilder(
+    return Positioned.fill(
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: _onPointerDown,
+        child: IgnorePointer(
+          child: AnimatedBuilder(
             animation: _pulseAnim,
             builder: (_, __) {
-              return Positioned(
-                left: widget.rect.left - _pulseAnim.value,
-                top: widget.rect.top - _pulseAnim.value,
-                width: widget.rect.width + _pulseAnim.value * 2,
-                height: widget.rect.height + _pulseAnim.value * 2,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFFF6D00), width: 3),
-                    borderRadius: BorderRadius.circular(4 + _pulseAnim.value),
+              final rect = _computeTargetRect();
+              if (rect == null) {
+                _scheduleAutoDismiss();
+                return const SizedBox.expand();
+              }
+              final v = _pulseAnim.value;
+              return Stack(
+                children: [
+                  Positioned(
+                    left: rect.left - v,
+                    top: rect.top - v,
+                    width: rect.width + v * 2,
+                    height: rect.height + v * 2,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFFFF6D00), width: 3),
+                        borderRadius: BorderRadius.circular(4 + v),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               );
             },
           ),
-        ],
+        ),
       ),
     );
   }
-}
-
-class _HolePainter extends CustomPainter {
-  final Rect rect;
-  _HolePainter({required this.rect});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = const Color(0x88000000);
-    final full = Rect.fromLTWH(0, 0, size.width, size.height);
-    canvas.drawPath(
-      Path.combine(
-        PathOperation.difference,
-        Path()..addRect(full),
-        Path()..addRRect(RRect.fromRectAndRadius(rect, const Radius.circular(4))),
-      ),
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_HolePainter old) => old.rect != rect;
 }

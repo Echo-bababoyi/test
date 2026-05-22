@@ -403,7 +403,10 @@ class _BubbleWindowState extends State<_BubbleWindow>
       _animCtrl.value = 1.0;
     }
     _uiSub = AgentSession.instance.uiSignal.listen((_) {
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {});
+        _scrollToBottom();
+      }
     });
     if (_kDemoMode) {
       _initDemoData();
