@@ -4,6 +4,32 @@
 
 ---
 
+## 2026-05-25（会话 18）
+
+**主要工作**：
+
+1. **文档治理**：删除 COMMITS.md（git log 为权威来源，手抄镜像维护成本高且容易断档）；补登 ISSUES #55-#59（Sessions 13/14 遗漏条目）；SESSION-LOG 补齐会话 13/14/15；CLAUDE.md 日期更新；确立三文档机制（ISSUES / SESSION-LOG / CLAUDE.md）
+2. **验证码登录 L2 破例代填**：前端新增 `sms_code_generated` WS 消息回传随机验证码；后端场景豁免机制（`_SCENE_FORCE_TOOLS`）让 login_verify 在登录前获得 L2 工具权限；授权卡 `permission_request: read_sms` 一事一授；prompt 改为 12 步多步引导，含拒绝回退路径
+3. **医保缴费全委托代填**：新增 `applier` 机制（`AgentElementRegistry` 值应用器回调），解决 `DropdownButtonFormField` 无 `TextEditingController` 时代填下拉框的问题；医保缴费 prompt 3 步重写；支持家属路径
+4. **养老金查询全委托改造**：prompt 2 步重写（navigate + 高亮查询按钮）；去掉 `cmd_press_button`（`ElevatedButton` 上静默失效），改为高亮引导用户亲手点；查询结果高亮 bug 修复（broadcast 按场景取 key，pension + yibao_query 同修）
+5. **三遗留 bug 修复**：#52 `_strip_thinking` 过滤 `<think>` 块；#53 `build` 内幂等补绑 executor；#54 草稿 `pageId` 去重
+
+**团队参与**：PM（需求分析 / 文档）/ frontend / backend（主力）/ lead
+
+**关键决策**：
+- **COMMITS.md 删除，三文档机制确立**：ISSUES + SESSION-LOG + CLAUDE.md 分工清晰，commit 记录以 git log 为权威
+- **验证码登录登录前破例提权 L2**：采用场景豁免 `_SCENE_FORCE_TOOLS`，安全性由 `_SENSITIVE_TOOLS` 授权卡保证，不影响其他场景权限
+- **下拉框代填用 applier 回调**：DropdownButtonFormField 无 TextEditingController，applier 是更通用的代填抽象（为医保等有下拉字段的场景铺路）
+- **养老金查询去掉 cmd_press_button**：ElevatedButton 上 cmd_press_button 静默失效，改为高亮引导用户亲手点，符合"确定性操作止步"原则
+
+**当前状态**：
+- 5 个 commit 已推送 GitHub
+- 6 场景 prompt 全部完成多步改造（login_face / login_verify / yibao_jiaofei / pension_query / yibao_query）
+- 遗留 bug #52/#53/#54 已修，标为 🧪 待真机验证
+- 下次会话恢复点：① 真机测试（人脸验证 #37 + 验证码 #60 + 医保 #61 + 养老金 #62）② N2 云服务器部署 ③ N5 Prompt 调优 ④ N6 答辩准备
+
+---
+
 ## 2026-05-22（会话 17）
 
 **主要工作**：

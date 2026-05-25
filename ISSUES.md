@@ -57,14 +57,18 @@
 | 49 | 弹窗蒙版遮挡聊天框（蒙版降至 15%） | frontend | ✅ |
 | 50 | 活体检测无 TTS 提示（眨眼/转头阶段加语音引导） | frontend | ✅ |
 | 51 | 3080 端口浏览器缓存白屏 | — | 🐛 |
-| 52 | LLM response.content 仍不空（DeepSeek 输出思考过程） | backend | 🔧 |
-| 53 | pop 返回时 executor 失效（unbindPage 清掉 executor） | frontend | 🐛 |
-| 54 | 草稿重复追加（_checkPageDraft 反复执行重复插入 draft_prompt 卡） | frontend | 🐛 |
+| 52 | LLM response.content 仍不空（DeepSeek 输出思考过程） | backend | 🧪 |
+| 53 | pop 返回时 executor 失效（unbindPage 清掉 executor） | frontend | 🧪 |
+| 54 | 草稿重复追加（_checkPageDraft 反复执行重复插入 draft_prompt 卡） | frontend | 🧪 |
 | 55 | AGENT_SPEC v1.1 三级信任模型对齐（§3.3 重写 + 能力矩阵 + 权限矩阵） | PM / architect | ✅ |
 | 56 | 响应延迟优化 11s→1s（关遥测 + DeepSeek 参数调优 + OOS 合并 + 去 TTS 阻塞） | backend | ✅ |
 | 57 | AgentFab 聊天记录跨开关/跨页面持久化（ChatHistory 内存单例） | frontend | ✅ |
 | 58 | ModeNotifier F5 刷新后模式不丢失（localStorage 持久化） | frontend | ✅ |
 | 59 | 登录分支选择弹窗（模糊意图弹两按钮，agent_choice_request 消息类型） | frontend / backend | ✅ |
+| 60 | 验证码登录 L2 破例代填（sms_code_generated + 场景豁免 + 授权卡 + 12 步 prompt） | frontend / backend | 🧪 |
+| 61 | 医保缴费全委托代填（applier 机制 + 下拉框代填 + 3 步 prompt + 家属路径） | frontend / backend | 🧪 |
+| 62 | 养老金查询全委托改造（2 步 prompt + 高亮引导用户点查询） | frontend / backend | 🧪 |
+| 63 | 查询结果高亮 bug 修复（broadcast 按场景取 key，pension + yibao_query 同修） | frontend | 🧪 |
 
 ---
 
@@ -292,7 +296,9 @@ login_face 场景缺少"输入手机号"引导步骤，且条款浮层/摄像头
 
 **背景**：DeepSeek-V3 在流式输出时 `response.content` 字段仍包含思考过程文本（会话 15 遗留），导致代理气泡可能出现多余内容。
 
-**状态**：🔧（待修复）
+**修复**：新增 `_strip_thinking()` 函数，正则过滤 `<think>...</think>` 块，返回前裁剪干净。完成时间：2026-05-25（会话 18）
+
+**状态**：🧪（已实现待真机验证）
 
 ---
 
@@ -300,7 +306,9 @@ login_face 场景缺少"输入手机号"引导步骤，且条款浮层/摄像头
 
 **背景**：用户按浏览器返回键时，`unbindPage` 清掉当前页面的 `executor`，导致后续代理指令无法执行（会话 15 遗留）。
 
-**状态**：🐛（待修复）
+**修复**：在 `build()` 内幂等补绑 executor，页面重建时自动重新注册，不依赖 `initState` 时序。完成时间：2026-05-25（会话 18）
+
+**状态**：🧪（已实现待真机验证）
 
 ---
 
@@ -308,7 +316,9 @@ login_face 场景缺少"输入手机号"引导步骤，且条款浮层/摄像头
 
 **背景**：`_checkPageDraft` 每次页面刷新/状态变化时反复执行，向聊天框重复插入 `draft_prompt` 卡片（会话 15 遗留）。
 
-**状态**：🐛（待修复）
+**修复**：草稿插入时以 `pageId` 作去重 key，同一页面草稿只插入一次。完成时间：2026-05-25（会话 18）
+
+**状态**：🧪（已实现待真机验证）
 
 ---
 
@@ -335,3 +345,31 @@ PM × architect 联合起草三级权限方案 v0.6（6 项决策拍板），随
 **#59 登录分支选择弹窗**
 
 用户说"帮我登录"等模糊意图时，代理过去直接进入刷脸引导，未给用户选择权。新增 `login_choose` 意图分支：弹出两按钮（"刷脸登录"/"验证码登录"）让用户选；明确说具体方式则直接进场景。后端新增 `agent_choice_request` 消息类型，前端渲染选择卡片。完成时间：2026-05-21（commit `a9332ba`）
+
+---
+
+### #60–#63 本次会话（2026-05-25，会话 18）
+
+**#60 验证码登录 L2 破例代填**
+
+验证码登录场景需要代理在用户未完成登录时代填敏感字段（验证码），而三级权限默认在登录前仅有 L0/L1 工具。解决方案：① 前端新增 `sms_code_generated` WS 消息，点击"获取验证码"后将随机 mock 验证码回传后端上下文；② 后端新增 `_SCENE_FORCE_TOOLS` 场景豁免机制，`login_verify` 场景强制获得 L2 工具权限；③ 授权卡 `permission_request: read_sms` 一事一授保证安全性；④ prompt 改为 12 步多步引导，含用户拒绝授权的回退路径（代理停止代填，引导用户自行输入）。完成时间：2026-05-25（会话 18）
+
+**状态**：🧪（已实现待真机验证）
+
+**#61 医保缴费全委托代填 + applier 机制**
+
+医保缴费页含 `DropdownButtonFormField` 下拉字段（缴费对象、缴费年度），无 `TextEditingController`，原有 `cmd_fill_field` 通过 controller 代填的方式失效。新增 `applier` 机制：`AgentElementRegistry` 支持注册值应用器回调（`ValueChanged<String>`），代填时调用回调触发 `setState`，而非写 controller。医保缴费 prompt 3 步重写（navigate → 依次代填字段 → 高亮去支付），支持家属路径（代填"家属"后额外提示输入姓名）。完成时间：2026-05-25（会话 18）
+
+**状态**：🧪（已实现待真机验证）
+
+**#62 养老金查询全委托改造**
+
+养老金查询场景原 prompt 过于冗长且含 `cmd_press_button` 指令（`ElevatedButton` 上静默失效）。重写为 2 步：① navigate 到养老金查询页 + cmd_say 说明；② cmd_highlight 查询按钮 + cmd_say 引导用户亲手点。去掉所有 `cmd_press_button`，符合"确定性操作止步"原则。完成时间：2026-05-25（会话 18）
+
+**状态**：🧪（已实现待真机验证）
+
+**#63 查询结果高亮 bug 修复**
+
+broadcast 流广播模式下，多个场景（pension_query / yibao_query）共用同一 `currentHighlightKey` provider，导致高亮信号按错场景取 key、目标元素找不到。修复：广播时携带场景标识，订阅方按当前页面路由筛选，pension 和 yibao_query 同步修复。完成时间：2026-05-25（会话 18）
+
+**状态**：🧪（已实现待真机验证）
