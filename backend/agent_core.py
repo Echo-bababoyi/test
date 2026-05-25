@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import re
 import uuid
 from pathlib import Path
 from typing import Callable, Coroutine, Any
@@ -20,6 +21,14 @@ from backend.tools.wait_user import cmd_wait_user
 logger = logging.getLogger(__name__)
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
+
+_THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+
+
+def _strip_thinking(text: str) -> str:
+    if not text:
+        return text
+    return _THINK_RE.sub("", text).strip()
 
 SCENE_TOOLS = {
     "login_face":    [cmd_highlight, cmd_say, cmd_wait_user],
@@ -343,7 +352,7 @@ class AgentCore:
             }
 
         rph_response = await self._rephraser.arun(intent_summary)
-        confirm_text = (rph_response.content or intent_summary).strip()
+        confirm_text = _strip_thinking(rph_response.content or intent_summary)
 
         return {
             "scene_id": scene_id,
@@ -362,7 +371,7 @@ class AgentCore:
             telemetry=False,
         )
         response = await agent.arun(user_input)
-        return (response.content or "抱歉，这个功能暂时帮不到您").strip()
+        return _strip_thinking(response.content or "抱歉，这个功能暂时帮不到您")
 
     async def execute_task(self, intent_summary: str) -> str:
         """Execute the task for the classified scene with HITL loop for sensitive tools."""
@@ -399,7 +408,7 @@ class AgentCore:
             logger.info("session=%s execute_task scene=%s trust=%s input=%r",
                         self.session_id, scene_id, self.trust_level, input_msg)
             response = await self._executor.arun(input_msg)
-            last_content = response.content or ""
+            last_content = _strip_thinking(response.content or "")
             stopped_tool = self._get_stopped_tool(response)
 
             if stopped_tool == "cmd_wait_user":
@@ -490,7 +499,7 @@ class AgentCore:
             telemetry=False,
         )
         response = await agent.arun(prompt)
-        return (response.content or result_text).strip()
+        return _strip_thinking(response.content or result_text)
 
     async def _push_tool_results(self, response, skip_stopped: str | None = None) -> None:
         """Forward current-round tool call results to the frontend as cmd_* WebSocket messages."""

@@ -37,6 +37,7 @@ class AgentSession {
 
   // 当前绑定的页面上下文（每次跳页由 AgentFab 重新绑定）
   Object? _pageToken;
+  Object? get boundToken => _pageToken;
   GoRouter? _router;
   BuildContext? _overlayContext;
   String? _currentPath;

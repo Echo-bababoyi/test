@@ -165,6 +165,23 @@ class _AgentFabState extends ConsumerState<AgentFab> {
 
   @override
   Widget build(BuildContext context) {
+    if ((ModalRoute.of(context)?.isCurrent ?? true) &&
+        !identical(AgentSession.instance.boundToken, this)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
+        if (identical(AgentSession.instance.boundToken, this)) return;
+        final meta = metaForRoute(widget.currentPath ?? '');
+        AgentSession.instance.bindPage(
+          token: this,
+          router: GoRouter.of(context),
+          overlayContext: context,
+          currentPath: widget.currentPath,
+          pageId: meta?.pageId,
+          pageTitle: meta?.pageTitle,
+        );
+      });
+    }
     final mode = ref.watch(modeProvider);
     final primary = mode == AppMode.elder
         ? AppColors.elderPrimary
@@ -584,6 +601,7 @@ class _BubbleWindowState extends State<_BubbleWindow>
     if (meta == null) return;
     final draft = await DraftService.checkDraft(meta.pageId);
     if (!mounted || draft == null) return;
+    if (_items.any((e) => e['type'] == 'draft_prompt' && e['pageId'] == meta.pageId)) return;
     setState(() => _items.add({
       'type': 'draft_prompt', 'draft': draft,
       'pageId': meta.pageId, 'pageTitle': meta.pageTitle,
