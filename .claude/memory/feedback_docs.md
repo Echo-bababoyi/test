@@ -1,24 +1,24 @@
 ---
-name: 四文档机制
-description: 项目文档体系 — ISSUES + COMMITS + SESSION-LOG + CLAUDE.md 四文档分工 + 会话恢复流程
+name: 三文档机制
+description: 项目文档体系 — ISSUES + SESSION-LOG + CLAUDE.md 三文档分工 + 会话恢复流程
 type: feedback
 ---
 
-## 四文档机制
+## 三文档机制
 
-项目根目录维护 4 个核心文档，各有明确分工，不重叠不替代：
+项目根目录维护 3 个核心文档，各有明确分工，不重叠不替代：
 
 | 文档 | 记录单位 | 核心问题 | 位置 |
 |------|---------|---------|------|
 | ISSUES.md | 问题/需求 | 有哪些问题？解决了没？ | 项目根 |
-| COMMITS.md | git commit | 每次提交改了什么？ | 项目根 |
 | SESSION-LOG.md | 对话会话 | 这次对话做了什么？ | 项目根 |
 | CLAUDE.md | 项目整体 | 项目当前是什么状态？ | 项目根 |
 
-**Why**：image-search 项目实践证明，四文档各管一面，上下文恢复效率远高于"什么都往一个文档塞"。ISSUES 跟踪长期问题，COMMITS 永久归档改动，SESSION-LOG 恢复会话上下文，CLAUDE.md 给新会话提供起点。
+COMMITS.md 已于会话 18（2026-05-25）删除——git log 才是 commit 记录的权威来源，手抄镜像维护成本高且容易断档。
+
+**Why**：ISSUES 跟踪长期问题，SESSION-LOG 恢复会话上下文，CLAUDE.md 给新会话提供起点。commit 历史直接用 git log 查询。
 
 **How to apply**：
-- 每次 commit 后更新 COMMITS.md（hash + 标题 + 改动要点）
 - 会话结束时更新 SESSION-LOG.md（工作/决策/踩坑/状态）
 - 问题状态变化时更新 ISSUES.md
 - 架构/配置变化时更新 CLAUDE.md
@@ -56,11 +56,3 @@ type: feedback
 - ...
 ```
 
-## COMMITS.md 格式
-
-按时间倒序，每条：
-```markdown
-### <hash-short> <标题>
-- 改动要点 1
-- 改动要点 2
-```

@@ -4,6 +4,13 @@ description: 所有血的教训按时间倒序 — 做决策前翻一下，避�
 type: feedback
 ---
 
+## 2026-05-22 · team-lead 跳过 architect review 自己审查代码
+
+team-lead 在活体检测 TTS 改动（commit 3178870）中，自己看了 diff 就直接提交了，没派 architect review。用户发现后纠正。
+
+**根因**：改动只有 15 行，team-lead 觉得"太简单不用走流程"。
+**规则**：无论改动大小，**所有代码改动必须经 architect review 后才能提交**。team-lead 不能自己审查代码——这是 architect 的职责。简单不是跳步的理由（同 2026-05-20 教训）。
+
 ## 2026-05-20 · 跳过用户确认 + 跳过 architect review diff
 
 team-lead 收到 PM 决策和 architect 方案后，没有汇报给用户确认就直接派 frontend 实施；frontend 改完后也没派 architect review 实际 diff 就直接 commit 了。违反功能增强 6 步中的第 3 步（汇报+用户确认）和第 5 步（architect review diff）。

@@ -60,6 +60,11 @@
 | 52 | LLM response.content 仍不空（DeepSeek 输出思考过程） | backend | 🔧 |
 | 53 | pop 返回时 executor 失效（unbindPage 清掉 executor） | frontend | 🐛 |
 | 54 | 草稿重复追加（_checkPageDraft 反复执行重复插入 draft_prompt 卡） | frontend | 🐛 |
+| 55 | AGENT_SPEC v1.1 三级信任模型对齐（§3.3 重写 + 能力矩阵 + 权限矩阵） | PM / architect | ✅ |
+| 56 | 响应延迟优化 11s→1s（关遥测 + DeepSeek 参数调优 + OOS 合并 + 去 TTS 阻塞） | backend | ✅ |
+| 57 | AgentFab 聊天记录跨开关/跨页面持久化（ChatHistory 内存单例） | frontend | ✅ |
+| 58 | ModeNotifier F5 刷新后模式不丢失（localStorage 持久化） | frontend | ✅ |
+| 59 | 登录分支选择弹窗（模糊意图弹两按钮，agent_choice_request 消息类型） | frontend / backend | ✅ |
 
 ---
 
@@ -304,3 +309,29 @@ login_face 场景缺少"输入手机号"引导步骤，且条款浮层/摄像头
 **背景**：`_checkPageDraft` 每次页面刷新/状态变化时反复执行，向聊天框重复插入 `draft_prompt` 卡片（会话 15 遗留）。
 
 **状态**：🐛（待修复）
+
+---
+
+### #55–#59 本次补录（Sessions 13/14，2026-05-20～2026-05-21）
+
+> 以下条目为事后补登，工作在会话 13/14 已实际完成，因文档疏漏未及时记录。
+
+**#55 AGENT_SPEC v1.1 三级信任模型对齐**
+
+PM × architect 联合起草三级权限方案 v0.6（6 项决策拍板），随后更新 `docs/AGENT_SPEC.md` v1.0 → v1.1：§3.3 重写为三级信任模型 + 任务级一次性授权；§5 能力矩阵更新（引导级不可跳页 + 密码硬底线）；§5.2 新增权限矩阵对照；§6.1 登录场景统一 L1 + 三道 AND 机制；§7.4 首次主动询问机制。完成时间：2026-05-20（commits `68d8ebe`→`9d09441`→`66b6cb3`→`fdcf19d`）
+
+**#56 响应延迟优化 11s→1s**
+
+实测 OOS 路径延迟 11.2s，排查后多头优化：① 5 处 Agent 构造加 `telemetry=False` 关闭 agno 遥测；② DeepSeek 参数调优（分类 max_tokens=256/temperature=0.3，执行 1024/0.5）；③ `intent_classify` prompt 新增 `reply_text` 字段，OOS 路径省掉第二次 LLM 调用；④ OOS + scene 分支去掉同步 TTS 阻塞。实测 OOS 降至 1.0s，scene 确认降至 1.65s。完成时间：2026-05-21（commit `e8f0b7f`）
+
+**#57 AgentFab 聊天记录跨开关/跨页面持久化**
+
+新增 `ChatHistory` 内存单例，`_items` 指向共享列表。关闭聊天窗重开不丢历史，跨页面保留对话记录；F5 刷新清空（内存级持久化，不写 IndexedDB）。完成时间：2026-05-21（commit `97e94c2`）
+
+**#58 ModeNotifier F5 刷新后模式不丢失**
+
+刷新长辈版页面后 AgentFab 颜色恢复默认蓝色（标准版），因 ModeNotifier 状态未持久化。改为从 `localStorage` 读写 mode，F5 后保留长辈版橙色。完成时间：2026-05-21（commit `24e4fce`）
+
+**#59 登录分支选择弹窗**
+
+用户说"帮我登录"等模糊意图时，代理过去直接进入刷脸引导，未给用户选择权。新增 `login_choose` 意图分支：弹出两按钮（"刷脸登录"/"验证码登录"）让用户选；明确说具体方式则直接进场景。后端新增 `agent_choice_request` 消息类型，前端渲染选择卡片。完成时间：2026-05-21（commit `a9332ba`）

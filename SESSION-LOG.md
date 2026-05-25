@@ -39,6 +39,84 @@
 
 ---
 
+## 2026-05-21（会话 15）
+
+**主要工作**：
+
+1. **代理引导机制大重构**（commit `bea2330`）：新建 `AgentSession` 全局单例，WS 连接不随页面切换断开，面板状态全局化；后端新增 `knowledge/pages.py`（10 页页面知识库 + BFS 路径查找 + 启动校验）；5 个 scene prompt 三段式重写（标准流程写死 + LLM 仅选起点 + 环境信息自动注入）；前端新增 5 个 element_key 注册；`cmd_say` 成为唯一发声入气泡渠道，其他 cmd_* 纯 UI 操作；产出 `docs/AGENT_KNOWLEDGE_DESIGN.md` v2.0（1006 行）
+2. **voice_hint 死参数清理**（commit `cb85ee0`）：从 5 个工具签名、4 个 Payload 模型、ws_handler 构造处及 5 个 scene prompt 中移除 `voice_hint` 死参数，修正 `_EXECUTOR_PREFIX` 矛盾描述
+3. **聊天框自动滚动 + 高亮机制重设计**（commit `60ac92a`）：修复代理发言后不自动滚到底部；高亮机制去蒙版（改为边框突出），点击高亮区消失，`AgentElementRegistry` 实时追踪元素位置
+4. **AgentElementRegistry 按 route 分区注册**（commit `d2debc3`）：注册改为按页面路由分区，避免跨页 key 冲突；`rootOverlay` 修复高亮框位置偏移
+
+**团队参与**：frontend（主力）/ backend / PM（文档）/ lead
+
+**关键决策**：
+- **AgentSession 全局单例**：跨页 session 让代理在用户跳页后可继续引导，是多步引导机制的核心基础设施
+- **页面知识库 BFS**：后端可自主规划跨页导航路径，不再依赖 prompt 硬编码跳转
+- **cmd_say 唯一发声**：职责清晰化，其他工具不再有 voice_hint 副作用
+
+**遗留问题**：
+- LLM response.content 仍不空（DeepSeek 思考过程泄漏，#52）
+- pop 返回时 executor 失效（#53）
+- 草稿重复追加（#54）
+
+**当前状态**：
+- 引导机制大重构完成，跨页 session 可用
+- 下次会话恢复点：验证多步引导端到端 → 修复 #52/#53/#54 遗留 Bug
+
+---
+
+## 2026-05-21（会话 14）
+
+**主要工作**：
+
+1. **load_dotenv 路径修复**（commit `8dcbb4b`）：`load_dotenv()` 无参时在 CWD 找 .env，从项目根启动时找不到 `backend/.env`，导致 API key 为空。改为相对 `main.py` 路径加载，修复 `DEEPSEEK_API_KEY` 读不到的问题
+2. **响应延迟优化 11s→1s**（commit `e8f0b7f`）：关闭 agno 遥测 + DeepSeek 参数调优 + OOS 合并 + 去 TTS 阻塞，OOS 路径 11.2s → 1.0s（详见 #56）
+3. **AgentFab 聊天记录持久化**（commit `97e94c2`）：新增 ChatHistory 单例，关闭重开不丢历史（详见 #57）
+4. **ModeNotifier localStorage 持久化**（commit `24e4fce`）：F5 刷新后长辈版模式不再丢失（详见 #58）
+5. **登录分支选择弹窗**（commit `a9332ba`）：模糊登录意图弹两按钮让用户选（详见 #59）
+6. **DEPLOY.md 从零 clone 到跑通完整补全**（commit `d6df16c`）：补全 9 项缺失步骤
+7. **gitignore 防御性加固**（commit `ccd5145`）：显式忽略 .venv/venv/env/.pytest_cache
+
+**团队参与**：frontend / backend（主力）/ PM / lead
+
+**关键决策**：
+- **响应优先级调整**：遥测和 TTS 阻塞是主要瓶颈，去掉后性能提升显著（11x）
+- **持久化策略**：聊天记录内存持久化（关闭不丢）；模式 localStorage 持久化（F5 不丢）
+
+**当前状态**：
+- 性能、持久化、登录体验三项优化完成
+- 下次会话恢复点：代理引导机制重构（会话 15）
+
+---
+
+## 2026-05-20（会话 13）
+
+**主要工作**：
+
+1. **三级权限方案 v0.6 设计定稿**（commit `68d8ebe`）：PM × architect 联合稿，6 项决策全部拍板（信任分级 L0/L1/L2、密码硬底线、任务级一次性授权等）
+2. **三级权限全链路实现**（commits `b88ee3e`→`9d09441`）：
+   - 后端：`say` 工具 + `trust_level` 模型 + 场景×级别工具集 + `execute_task` 权限分级 + 密码硬拒 + ws_handler 透传
+   - prompt：登录场景纯引导模式 + 医保缴费去 mock 数据
+   - 前端：AgentSettingsService 设置服务 + cmd_say 渲染 + 权限卡组件 + fab 参数传递 + 首次弹卡 + 设置页三卡 + 未登录灰显
+3. **AGENT_SPEC v1.1 对齐**（commit `66b6cb3`）：§3.3 三级信任模型重写 + 能力矩阵 + 权限矩阵新增（详见 #55）
+4. **三级权限审查修正**（commit `fdcf19d`）：read_sms 注释 + prompt 兜底规则 + 弹卡 flag 提前 3 处修正
+5. **DEPLOY.md 全面修订**（commit `64bd793`）：端口/环境变量/路由表/MediaPipe 资源说明全量对齐实际
+6. **WS 连接 3 处修复**（commit `f5ad852`）：动态 host 推导（解决跨机访问问题）+ 订阅时序 + 单例残留清理
+
+**团队参与**：PM（主力）/ architect / frontend / backend / lead
+
+**关键决策**：
+- **三级信任模型**：L0 纯引导（无需授权）/ L1 需实时确认 / L2 密码级硬拒，成为小浙代理的核心安全机制
+- **密码硬底线**：无论任何 trust_level，密码相关字段代理一律不填，前端白名单双重保障
+- **cmd_say 统一发声**：cmd_say 成为唯一发声+气泡渠道，其他 cmd_* 纯 UI 操作（为会话 15 重构铺路）
+
+**当前状态**：
+- 三级权限全链路已实现，AGENT_SPEC v1.1 定稿
+- 下次会话恢复点：性能优化（会话 14）→ 引导机制大重构（会话 15）
+
+---
+
 ## 2026-05-19（会话 9）
 
 **主要工作**：
@@ -254,7 +332,7 @@
 **主要工作**：
 - 从 image-search 项目的 `.claude/skills/` 学习项目管理经验（project-documentation + team-management）
 - 将经验沉淀到 `.claude/memory/`：更新 `feedback_team_mode.md`（补充派活纪律、成员约束），新建 `feedback_project_documentation.md`（四文档机制）
-- 建立四文档体系：ISSUES.md / COMMITS.md / SESSION-LOG.md / CLAUDE.md（均在项目根）
+- 建立四文档体系：ISSUES.md / SESSION-LOG.md / CLAUDE.md（均在项目根）
 - 清理不需要的文件：删除 `project_tech_decisions.md`、`feedback_working_style.md`（内容已在 CLAUDE.md 中覆盖）；删除整个 `.claude/skills/` 目录和 `skills-lock.json`
 
 **关键决策**：
