@@ -13,6 +13,7 @@ class InboundMessageType(str, Enum):
     text_input = "text_input"
     page_changed = "page_changed"
     step_completed = "step_completed"
+    sms_code_generated = "sms_code_generated"
 
 
 class OutboundMessageType(str, Enum):
@@ -90,6 +91,11 @@ class StepCompletedPayload(BaseModel):
     notes: str | None = None
 
 
+class SmsCodeGeneratedPayload(BaseModel):
+    session_id: str
+    code: str
+
+
 INBOUND_PAYLOAD_MAP: dict[str, type] = {
     InboundMessageType.agent_wake: AgentWakePayload,
     InboundMessageType.audio_chunk: AudioChunkPayload,
@@ -100,6 +106,7 @@ INBOUND_PAYLOAD_MAP: dict[str, type] = {
     InboundMessageType.text_input: TextInputPayload,
     InboundMessageType.page_changed: PageChangedPayload,
     InboundMessageType.step_completed: StepCompletedPayload,
+    InboundMessageType.sms_code_generated: SmsCodeGeneratedPayload,
 }
 
 

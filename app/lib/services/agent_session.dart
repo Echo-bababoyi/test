@@ -272,6 +272,14 @@ class AgentSession {
     });
   }
 
+  void sendSmsCode(String code) {
+    if (!isActive) return;
+    WsClient.instance.send('sms_code_generated', {
+      'session_id': _sessionId,
+      'code': code,
+    });
+  }
+
   void _dispatch(Map<String, dynamic> msg) {
     final type = msg['type'] as String?;
     if (type != null && type.startsWith('cmd_')) {

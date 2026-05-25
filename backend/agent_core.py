@@ -7,6 +7,7 @@ from typing import Callable, Coroutine, Any
 
 from agno.agent import Agent
 from agno.models.deepseek import DeepSeek
+from agno.tools import tool
 
 from backend.tools.navigate import cmd_navigate
 from backend.tools.highlight import cmd_highlight
@@ -22,7 +23,7 @@ _PROMPTS_DIR = Path(__file__).parent / "prompts"
 
 SCENE_TOOLS = {
     "login_face":    [cmd_highlight, cmd_say, cmd_wait_user],
-    "login_verify":  [cmd_highlight, cmd_say, cmd_wait_user],
+    "login_verify":  [cmd_highlight, cmd_say, cmd_wait_user, read_sms, fill_field_normal],
     "yibao_jiaofei": [cmd_navigate, cmd_highlight, cmd_say,
                       fill_field_normal, fill_field_sensitive],
     "pension_query": [cmd_navigate, cmd_highlight, cmd_say,
@@ -31,7 +32,7 @@ SCENE_TOOLS = {
                       fill_field_normal, cmd_press_button],
 }
 
-# read_sms 为 AGENT_SPEC.md §5 能力矩阵预留（L2/L3 代读短信），当前五个场景的 SCENE_TOOLS 均未挂载，三道 AND 取交集后不会被实际调用；新增短信相关场景时需在对应 SCENE_TOOLS 列表中加入。
+# read_sms / fill_field_normal 已挂载于 login_verify（见 SCENE_TOOLS + _SCENE_FORCE_TOOLS），即便用户处于 guide 级也强制可用；安全性由 _SENSITIVE_TOOLS 每次调用必弹授权卡保证。其余场景未挂 read_sms。
 _LEVEL_TOOLS: dict[str, set[str]] = {
     "guide": {"cmd_highlight", "cmd_say", "cmd_wait_user"},
     "semi":  {"cmd_navigate", "cmd_highlight", "cmd_say",
@@ -43,11 +44,23 @@ _LEVEL_TOOLS: dict[str, set[str]] = {
 }
 
 
+_SCENE_FORCE_TOOLS = {"login_verify": {"read_sms", "fill_field_normal"}}
+
+
+def _make_session_read_sms(get_code):
+    @tool(stop_after_tool_call=True)
+    def read_sms() -> dict:
+        """读取短信验证码（需用户授权）"""
+        return {"code": get_code() or ""}
+    return read_sms
+
+
 def get_scene_tools(scene_id: str, trust_level: str) -> list:
-    """场景集 ∩ 用户级别集；级别非法时兜底 guide（最保守）。"""
+    """场景集 ∩ 用户级别集；级别非法时兜底 guide（最保守）。强制工具不受级别限制。"""
     scene_max = SCENE_TOOLS.get(scene_id, [cmd_navigate, cmd_highlight])
     user_max = _LEVEL_TOOLS.get(trust_level, _LEVEL_TOOLS["guide"])
-    return [t for t in scene_max if t.name in user_max]
+    forced = _SCENE_FORCE_TOOLS.get(scene_id, set())
+    return [t for t in scene_max if t.name in user_max or t.name in forced]
 
 
 SCENE_PROMPTS = {
@@ -93,7 +106,7 @@ _PERMISSION_META = {
     "read_sms": {
         "permission_type": "read_sms",
         "field_label": "短信验证码",
-        "description": "小浙需要读取您的短信验证码，是否授权？",
+        "description": "小浙帮您读取短信验证码并填好，可以吗？",
     },
 }
 
@@ -264,6 +277,7 @@ class AgentCore:
         self.trust_level: str = trust_level
         self.current_page: str = current_page
         self._task_sensitive_authorized: bool = False
+        self._sms_code: str | None = None
         # Pending query results forwarded from ws_handler
         self._query_result: dict | None = None
         self._query_event: asyncio.Event = asyncio.Event()
@@ -294,6 +308,10 @@ class AgentCore:
     def set_current_page(self, page: str) -> None:
         self.current_page = page
         logger.info("session=%s current_page set to %s", self.session_id, page)
+
+    def set_sms_code(self, code: str) -> None:
+        self._sms_code = code
+        logger.info("session=%s sms_code stored", self.session_id)
 
     async def process_text(self, text: str) -> dict:
         """Classify intent and return rephrase for confirmation."""
@@ -361,6 +379,11 @@ class AgentCore:
         else:
             instructions = _load_scene_prompt(scene_id)
         tools = get_scene_tools(scene_id, self.trust_level)
+        tools = [
+            _make_session_read_sms(lambda: self._sms_code)
+                if getattr(t, "name", None) == "read_sms" else t
+            for t in tools
+        ]
         self._executor = Agent(
             model=DeepSeek(id="deepseek-chat", max_tokens=1024, temperature=0.5),
             session_id=self.session_id,

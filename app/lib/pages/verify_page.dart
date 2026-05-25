@@ -9,6 +9,7 @@ import '../router.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../services/agent_element_registry.dart';
+import '../services/agent_session.dart';
 import '../services/log_service.dart';
 import '../widgets/sms_notification.dart';
 
@@ -84,6 +85,7 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
     });
     final code = (Random().nextInt(900000) + 100000).toString();
     setState(() => _mockCode = code);
+    AgentSession.instance.sendSmsCode(code);
 
     _smsArriveTimer?.cancel();
     _smsAutoCloseTimer?.cancel();

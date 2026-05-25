@@ -99,6 +99,7 @@ class WSHandler:
                 InboundMessageType.text_input: self._on_text_input,
                 InboundMessageType.page_changed: self._on_page_changed,
                 InboundMessageType.step_completed: self._on_step_completed,
+                InboundMessageType.sms_code_generated: self._on_sms_code_generated,
             }.get(msg_type)
 
             if handler:
@@ -140,6 +141,11 @@ class WSHandler:
         if self._agent_core:
             self._agent_core.set_current_page(payload.current_page)
             self._agent_core.resolve_step(payload.model_dump())
+
+    async def _on_sms_code_generated(self, payload):
+        logger.info("session=%s sms_code_generated received", self.session_id)
+        if self._agent_core:
+            self._agent_core.set_sms_code(payload.code)
 
     async def _on_text_input(self, payload):
         """直接文本输入（跳过 ASR，用于演示/测试）"""
