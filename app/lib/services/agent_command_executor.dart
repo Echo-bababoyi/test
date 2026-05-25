@@ -118,7 +118,11 @@ class AgentCommandExecutor {
 
     if (currentRoute == null) return;
     final controller = AgentElementRegistry.getController(currentRoute!, elementKey);
-    if (controller == null) return;
+    if (controller == null) {
+      final applier = AgentElementRegistry.getApplier(currentRoute!, elementKey);
+      if (applier != null) applier(value);
+      return;
+    }
 
     final displayValue = isSensitive ? _redactValue(value) : value;
     controller.clear();

@@ -99,6 +99,24 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
     DraftService.clearCompleted(_pageId);
     AgentElementRegistry.registerController(_route, 'input_id_card', _idController);
     AgentElementRegistry.registerController(_route, 'input_daili_idcard', _dailiIdController);
+    AgentElementRegistry.registerController(_route, 'input_daili_name', _dailiNameController);
+    AgentElementRegistry.registerApplier(_route, 'select_jiaofei_duixiang', (v) {
+      final m = _persons.firstWhere((p) => v.contains(p) || p.contains(v), orElse: () => '');
+      if (m.isNotEmpty) { setState(() => _targetPerson = m); _scheduleAutoSave(); }
+    });
+    AgentElementRegistry.registerApplier(_route, 'select_jiaofei_xianzhong', (v) {
+      final m = _xianzhongs.firstWhere((x) => v.contains(x) || x.contains(v), orElse: () => '');
+      if (m.isNotEmpty) _onXianzhongChanged(m);
+    });
+    AgentElementRegistry.registerApplier(_route, 'select_jiaofei_niandu', (v) {
+      final m = _years.firstWhere((y) => y.contains(v) || v.contains(y.replaceAll('年度', '')), orElse: () => '');
+      if (m.isNotEmpty) { setState(() => _year = m); _scheduleAutoSave(); }
+    });
+    AgentElementRegistry.registerApplier(_route, 'select_jiaofei_dangci', (v) {
+      final opts = _xianzhong == null ? const <_JiaofeiDangci>[] : (_dangciOptions[_xianzhong] ?? const <_JiaofeiDangci>[]);
+      final hit = opts.where((d) => v.contains(d.label) || d.label.contains(v));
+      if (hit.isNotEmpty) { setState(() => _dangci = hit.first); _scheduleAutoSave(); }
+    });
     _idController.addListener(() {
       setState(() {});
       _scheduleAutoSave();

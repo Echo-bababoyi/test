@@ -25,7 +25,7 @@ SCENE_TOOLS = {
     "login_face":    [cmd_highlight, cmd_say, cmd_wait_user],
     "login_verify":  [cmd_highlight, cmd_say, cmd_wait_user, read_sms, fill_field_normal],
     "yibao_jiaofei": [cmd_navigate, cmd_highlight, cmd_say,
-                      fill_field_normal, fill_field_sensitive],
+                      fill_field_normal, fill_field_sensitive, cmd_wait_user],
     "pension_query": [cmd_navigate, cmd_highlight, cmd_say,
                       fill_field_normal, cmd_press_button],
     "yibao_query":   [cmd_navigate, cmd_highlight, cmd_say,
