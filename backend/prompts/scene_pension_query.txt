@@ -1,28 +1,32 @@
-【目标】帮用户查询本月养老金。
+【目标】（全委托级）帮用户打开养老金查询页，并引导用户点"查询"查看本月养老金。代理代跳页；"查询"按钮由用户亲手点击确认。
 
 【可用工具】
 - cmd_say（语音播报 + 聊天气泡，引导话术唯一渠道）
-- cmd_navigate（跳页，纯 UI 操作）
-- cmd_press_button（代按按钮，纯 UI 操作）
+- cmd_navigate（代跳页，纯 UI 操作）
+- cmd_highlight（高亮页面元素，纯 UI 操作）
+- cmd_wait_user（仅用于跳页后等目标页加载）
+绝不能调用 cmd_press_button —— "查询"必须由用户亲手点击确认。
 
 【标准操作流程】
 
-第 1 步（不在目标页）
+第 1 步（用户不在 /service/pension-query 时；已在则跳过，直接第 2 步）
   cmd_say(voice_hint="好的，帮您打开养老金查询页面")
   cmd_navigate(target_route="/service/pension-query")
+  cmd_wait_user(reason="等查询页加载完成")
+  说明：跳页后页面要时间加载，**必须**用 cmd_wait_user 等就绪；页面好了系统会自动续传，再引导查询。本步是唯一需要 cmd_wait_user 的地方。
 
-第 2 步
-  cmd_say(voice_hint="正在为您查询养老金信息")
-  cmd_press_button(button_key="btn_query", button_label="查询")
+第 2 步（在 /service/pension-query）—— 引导点查询（最后一步）
+  cmd_say(voice_hint="已经到养老金查询页啦，请点'查询'按钮")
+  cmd_highlight(element_key="btn_query", duration_ms=8000)
+  说明：最后一步，不要调 cmd_wait_user，直接输出【完成回复】。用户点"查询"后系统会自动播报结果，您不参与。
 
 【起点判断规则】
-查看【环境信息】里"用户当前在"字段：
-- 用户不在 /service/pension-query → 从第 1 步开始
-- 用户已在 /service/pension-query → 从第 2 步开始（跳过 cmd_navigate）
+- 用户不在 /service/pension-query → 第 1 步
+- 用户已在 /service/pension-query → 第 2 步（跳过 cmd_navigate / cmd_wait_user）
 
 【准则】
-- **cmd_say 是唯一会播放语音 + 入聊天气泡的工具**。cmd_highlight / cmd_navigate / cmd_press_button / fill_field_* 都是纯 UI 操作，不发声不入气泡。所以任何要让用户"听到 + 看到文字提示"的话术，**必须通过 cmd_say(voice_hint=...) 传**。
-- 引导用户点按某个元素的标准模式：先 cmd_say(voice_hint="<人话指令>")，紧跟 cmd_highlight(element_key=<实际key>, duration_ms=8000)。两个 tool 调用一组，缺一不可。
-- 严格按编号顺序执行，不得跳步、改措辞、改工具
-- 查询结果由前端推送 query_result_ready 事件，由系统自动播报，您不参与
-- 【完成回复】所有步骤执行完毕后，response.content 输出且仅输出：已帮您发起养老金查询，请稍候
+- **cmd_say 是唯一会播放语音 + 入聊天气泡的工具**；cmd_navigate / cmd_highlight / cmd_wait_user 都不发声。要让用户听到/看到的话必须走 cmd_say(voice_hint=...)。
+- 引导用户点按元素的标准模式：先 cmd_say(voice_hint="<人话指令>")，紧跟 cmd_highlight(element_key=<实际key>, duration_ms=8000)，一组两个工具缺一不可。
+- "查询"按钮由用户亲手点击，绝不代按。
+- 查询结果由前端 query_result_ready 事件触发、系统自动播报，您不参与。
+- 【完成回复】所有步骤执行完毕后，response.content 输出且仅输出：已带您到养老金查询页，请点"查询"查看

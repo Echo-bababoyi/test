@@ -25,6 +25,11 @@ from backend.models import (
 
 logger = logging.getLogger(__name__)
 
+_SCENE_RESULT_KEY = {
+    "pension_query": "result_pension_amount",
+    "yibao_query": "result_yibao_amount",
+}
+
 
 class SessionState(str, Enum):
     idle = "idle"
@@ -234,12 +239,15 @@ class WSHandler:
                 requires_confirmation=False,
                 confirmation_timeout_ms=None,
             ).model_dump())
-            await self.send("cmd_highlight", CmdHighlightPayload(
-                element_key="result_area",
-                highlight_color="#FF6D00",
-                pulse=True,
-                duration_ms=5000,
-            ).model_dump())
+            scene_id = self._pending_intent.get("scene_id", "") if self._pending_intent else ""
+            result_key = _SCENE_RESULT_KEY.get(scene_id)
+            if result_key:
+                await self.send("cmd_highlight", CmdHighlightPayload(
+                    element_key=result_key,
+                    highlight_color="#FF6D00",
+                    pulse=True,
+                    duration_ms=5000,
+                ).model_dump())
             await self._push_task_done(
                 scene=self._pending_intent.get("scene_id", "") if self._pending_intent else "",
                 summary=summary_text,

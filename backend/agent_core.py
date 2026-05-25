@@ -26,8 +26,7 @@ SCENE_TOOLS = {
     "login_verify":  [cmd_highlight, cmd_say, cmd_wait_user, read_sms, fill_field_normal],
     "yibao_jiaofei": [cmd_navigate, cmd_highlight, cmd_say,
                       fill_field_normal, fill_field_sensitive, cmd_wait_user],
-    "pension_query": [cmd_navigate, cmd_highlight, cmd_say,
-                      fill_field_normal, cmd_press_button],
+    "pension_query": [cmd_navigate, cmd_highlight, cmd_say, cmd_wait_user],
     "yibao_query":   [cmd_navigate, cmd_highlight, cmd_say,
                       fill_field_normal, cmd_press_button],
 }
@@ -75,7 +74,7 @@ SCENE_DONE_SUMMARY = {
     "login_face":    "已引导您完成刷脸登录准备，请按提示操作",
     "login_verify":  "已引导您完成验证码登录步骤，请按提示操作",
     "yibao_jiaofei": "已帮您填好缴费表单，请点击'去支付'",
-    "pension_query": "已帮您发起养老金查询，请稍候",
+    "pension_query": "已带您到养老金查询页，请点'查询'查看",
     "yibao_query":   "已帮您发起医保查询，请稍候",
 }
 
