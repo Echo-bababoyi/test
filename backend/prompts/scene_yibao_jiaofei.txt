@@ -12,9 +12,9 @@
 
 【字段取值规范】value 必须用下列精确选项之一，按用户意图选：
 - 缴费对象 select_jiaofei_duixiang：本人 / 配偶 / 子女
-- 险种 select_jiaofei_xianzhong：城乡居民医保 / 灵活就业人员医保（未指定默认"城乡居民医保"）
-- 缴费年度 select_jiaofei_niandu：2024年度 / 2025年度 / 2026年度（未指定默认"2026年度"）
-- 缴费档次 select_jiaofei_dangci：第一档 / 第二档 / 第三档（仅"城乡居民医保"有；未指定默认"第一档"）；"灵活就业人员医保"用"月缴标准"
+- 险种 select_jiaofei_xianzhong：城乡居民医保 / 灵活就业人员医保（**须 cmd_ask_user 问用户，无默认值**）
+- 缴费年度 select_jiaofei_niandu：2024年度 / 2025年度 / 2026年度（**须 cmd_ask_user 问用户，无默认值**）
+- 缴费档次 select_jiaofei_dangci：城乡居民医保→第一档/第二档/第三档（**须 cmd_ask_user 问用户**）；灵活就业人员医保→唯一"月缴标准"（无需问，直接填）
 - 身份证号 input_id_card：用户提供的真实 18 位身份证号
 - （缴费对象为"配偶/子女"时）被缴费人姓名 input_daili_name、被缴费人证件号 input_daili_idcard：用户提供的真实值
 
@@ -26,23 +26,24 @@
   cmd_wait_user(reason="等缴费页加载完成")
   说明：跳页后页面要时间加载，**必须**用 cmd_wait_user 等就绪；页面好了系统会自动续传，再开始填表。本步是唯一需要 cmd_wait_user 的地方。
 
-第 2 步（在 /service/yibao-jiaofei）—— 先问必要信息，再按页面顺序把整张表填满
+第 2 步（在 /service/yibao-jiaofei）—— 逐项询问并代填，一次只做一项，问完必须等用户回答再继续
 
-【只需向用户问这几项；其余一律用默认值代填、绝不询问】
-  - 缴费对象（用户没明确才问）：cmd_ask_user(question="请问是帮您本人缴费，还是帮家人缴？", options=["本人","配偶","子女"])
-  - 险种 / 缴费年度 / 缴费档次：用户没指定就用默认值直接代填，不要问。
+【铁律】缴费对象 / 险种 / 缴费年度 / 缴费档次 这四项，必须先用 cmd_ask_user 拿到用户的选择，才能 fill 对应字段。绝不允许用默认值代替询问、绝不允许没问就 fill、绝不允许一轮里把多个 fill 一起发。仅当用户最初那句话已明确说出某项时，该项可不再问、直接用其原话的值 fill。
 
-【代填顺序——四个下拉框必须全部填，缺一项"去支付"不会点亮】
-  fill_field_normal(field_key="select_jiaofei_duixiang", field_label="缴费对象", value=<缴费对象回答>)
-  fill_field_normal(field_key="select_jiaofei_xianzhong", field_label="险种", value=<用户指定 / 默认"城乡居民医保">)
-  fill_field_normal(field_key="select_jiaofei_niandu", field_label="缴费年度", value=<用户指定 / 默认"2026年度">)
-  fill_field_normal(field_key="select_jiaofei_dangci", field_label="缴费档次", value=<用户指定 / 默认"第一档"；险种为"灵活就业人员医保"时用"月缴标准">)
-  （仅当缴费对象不是"本人"时，补被缴费人信息——先姓名后证件号：）
-  cmd_ask_user(question="请告诉我被缴费人的姓名", options=[]) → fill_field_normal(field_key="input_daili_name", field_label="被缴费人姓名", value=<姓名>)
-  cmd_ask_user(question="请告诉我被缴费人的18位证件号", options=[]) → fill_field_sensitive(field_key="input_daili_idcard", field_label="被缴费人证件号", value=<18位>)
-  最后（下拉框都填好后代填本人身份证）：
-  fill_field_sensitive(field_key="input_id_card", field_label="身份证号", value="@档案")
-  说明：险种/年度/档次三项即使用户没提也必须填默认值（页面这三个下拉框无预设，不填则"去支付"一直灰着）；档次依赖险种，务必先填险种再填档次；fill_field_sensitive 会暂停等授权（全委托级仅首个敏感字段弹一次卡），系统自动处理；本人身份证号已在用户档案，value 一律写占位符 @档案，系统自动取档案真实值，不要问用户、不要编造数字。
+(a) 缴费对象：cmd_ask_user(question="请问是帮您本人缴费，还是帮家人缴？", options=["本人","配偶","子女"])
+    拿到回答 → fill_field_normal(field_key="select_jiaofei_duixiang", field_label="缴费对象", value=<回答>)
+(b) 险种：cmd_ask_user(question="您要缴哪种医保？城乡居民医保按年缴，灵活就业人员医保按月缴", options=["城乡居民医保","灵活就业人员医保"])
+    拿到回答 → fill_field_normal(field_key="select_jiaofei_xianzhong", field_label="险种", value=<回答>)
+(c) 缴费年度：cmd_ask_user(question="缴哪一年的医保？", options=["2024年度","2025年度","2026年度"])
+    拿到回答 → fill_field_normal(field_key="select_jiaofei_niandu", field_label="缴费年度", value=<回答>)
+(d) 缴费档次：
+    - 险种=城乡居民医保：cmd_ask_user(question="选哪个缴费档次？第一档380元、第二档660元、第三档980元", options=["第一档","第二档","第三档"]) → fill_field_normal(field_key="select_jiaofei_dangci", field_label="缴费档次", value=<回答>)
+    - 险种=灵活就业人员医保：唯一"月缴标准"，无需询问 → fill_field_normal(field_key="select_jiaofei_dangci", field_label="缴费档次", value="月缴标准")
+(e) （仅当缴费对象不是"本人"）被缴费人信息——先姓名后证件号：
+    cmd_ask_user(question="请告诉我被缴费人的姓名", options=[]) → fill_field_normal(field_key="input_daili_name", field_label="被缴费人姓名", value=<姓名>)
+    cmd_ask_user(question="请告诉我被缴费人的18位证件号", options=[]) → fill_field_sensitive(field_key="input_daili_idcard", field_label="被缴费人证件号", value=<18位>)
+(f) 本人身份证号（已在用户档案，无需询问）：fill_field_sensitive(field_key="input_id_card", field_label="身份证号", value="@档案")
+    说明：先填险种再填档次（档次选项依赖险种）；身份证 value 一律写 @档案，系统自动取真实值，不问不编造；fill_field_sensitive 会暂停等授权（全委托级首个敏感字段弹一次卡）。
 
 第 3 步（表单已填好）—— 引导点去支付（最后一步）
   cmd_say(voice_hint="都帮您填好啦，请您核对后点'去支付'")

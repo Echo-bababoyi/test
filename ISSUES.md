@@ -69,6 +69,14 @@
 | 61 | 医保缴费全委托代填（applier 机制 + 下拉框代填 + 3 步 prompt + 家属路径） | frontend / backend | 🧪 |
 | 62 | 养老金查询全委托改造（2 步 prompt + 高亮引导用户点查询） | frontend / backend | 🧪 |
 | 63 | 查询结果高亮 bug 修复（broadcast 按场景取 key，pension + yibao_query 同修） | frontend | 🧪 |
+| 64 | trust 传播机制（trust_changed 消息 + 后端 set_trust_level + env block 按真实工具集过滤） | frontend / backend | ✅ |
+| 65 | 信任选择卡登录后不弹（动画时序竞态 + firstChoiceShown 卡死） | frontend | ✅ |
+| 66 | cmd_ask_user 场景内问答工具（HITL 暂停 + 回答路由回执行器 + 60s 超时只裹 arun） | backend | ✅ |
+| 67 | 用户档案预填（UserProfileService + @档案占位符 + 身份证免打字） | frontend / backend | ✅ |
+| 68 | 医保缴费 prompt 重写（选择卡逐项问→填交错 + 删默认值矛盾） | backend | 🧪 |
+| 69 | 授权卡文案不明确（只说"敏感信息"未说具体字段名） | frontend | 🔧 |
+| 70 | 医保缴费页下拉框有预设值（应为空） | frontend | 🔧 |
+| 71 | 点"去支付"跳转后聊天面板消失 | frontend | 🐛 |
 
 ---
 
@@ -373,3 +381,59 @@ PM × architect 联合起草三级权限方案 v0.6（6 项决策拍板），随
 broadcast 流广播模式下，多个场景（pension_query / yibao_query）共用同一 `currentHighlightKey` provider，导致高亮信号按错场景取 key、目标元素找不到。修复：广播时携带场景标识，订阅方按当前页面路由筛选，pension 和 yibao_query 同步修复。完成时间：2026-05-25（会话 18）
 
 **状态**：🧪（已实现待真机验证）
+
+---
+
+### #64–#68 本次会话（2026-05-26，会话 19）
+
+**#64 trust 传播机制**
+
+登录后 trust 级别无法同步到已有 WS session（agent_wake 一次性写死）。新增 `trust_changed` 消息类型（models + ws_handler + agent_core），前端 3 处发送（elder_home 信任卡选择后 / agent_settings_page 设置页 / agent_session ensureSession 复用分支）。附带 env block 按 `get_scene_tools(scene_id, trust_level)` 真实工具集过滤，guide 级禁调 cmd_navigate 不再 400。完成时间：2026-05-26
+
+**#65 信任选择卡登录后不弹**
+
+根因：登录页淡出动画期间 ElderHome 的 isCurrent=false，一次性判定错过弹卡时机；次要：firstChoiceShown 弹前置 true 导致卡死。修复：ref.listen(loginProvider) 触发逐帧轮询 isCurrent（240 帧上限）；firstChoiceShown 改为选择成功后才持久化 + _trustSheetShowing 防重入。完成时间：2026-05-26
+
+**#66 cmd_ask_user 场景内问答工具**
+
+医保缴费代理问"本人/家人"后用户回答被当新意图分类（out_of_scope）。新增 `cmd_ask_user` HITL 工具（stop_after_tool_call），执行器发 agent_choice_request / agent_reply 后 await _answer_event；ws_handler process_asr_text 开头判 is_awaiting_answer 路由回执行器。附带 60s 超时改为只裹 LLM arun，人工等待不被误杀。完成时间：2026-05-26
+
+**#67 用户档案预填**
+
+登录后手机号+身份证号存 localStorage（UserProfileService），代理代填身份证时用 `value="@档案"` 占位符，前端 _onFillField 按 field_key 从档案取真实值替换。真实身份证不经 LLM。完成时间：2026-05-26
+
+**#68 医保缴费 prompt 重写**
+
+多轮迭代：① 新增 cmd_ask_user 选择卡收集缴费对象 ② 4 下拉框全填（页面无预设） ③ 删字段取值规范"默认值"矛盾措辞 ④ 改问→填交错结构 + 铁律。完成时间：2026-05-26
+
+**状态**：🧪
+
+---
+
+### #69 授权卡文案不明确
+
+**背景**：fill_field_sensitive 弹授权卡时只显示"想帮您填写敏感信息"，未说明具体是什么字段（如"身份证号"）。
+
+**目标**：授权卡文案带上具体字段名，如"小浙想帮您填写【身份证号】"。
+
+**状态**：🔧
+
+---
+
+### #70 医保缴费页下拉框有预设值
+
+**背景**：进入医保缴费页时，4 个下拉框已显示预设值（城乡居民医保/2026年度/第一档等），应为空。
+
+**目标**：页面初始状态所有下拉框为空，等代理代填或用户手选。
+
+**状态**：🔧
+
+---
+
+### #71 点"去支付"跳转后聊天面板消失
+
+**背景**：医保缴费流程完成后，用户按引导点"去支付"跳转到下一页面时，聊天面板消失。下一页面并非密码输入页，面板不该关闭。
+
+**目标**：跳转后聊天面板保持显示。
+
+**状态**：🐛
