@@ -17,6 +17,7 @@ from backend.tools.press_button import cmd_press_button
 from backend.tools.read_sms import read_sms
 from backend.tools.say import cmd_say
 from backend.tools.wait_user import cmd_wait_user
+from backend.tools.ask_user import cmd_ask_user
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ def _strip_thinking(text: str) -> str:
 SCENE_TOOLS = {
     "login_face":    [cmd_highlight, cmd_say, cmd_wait_user],
     "login_verify":  [cmd_highlight, cmd_say, cmd_wait_user, read_sms, fill_field_normal],
-    "yibao_jiaofei": [cmd_navigate, cmd_highlight, cmd_say,
+    "yibao_jiaofei": [cmd_navigate, cmd_highlight, cmd_say, cmd_ask_user,
                       fill_field_normal, fill_field_sensitive, cmd_wait_user],
     "pension_query": [cmd_navigate, cmd_highlight, cmd_say, cmd_wait_user],
     "yibao_query":   [cmd_navigate, cmd_highlight, cmd_say,
@@ -42,13 +43,13 @@ SCENE_TOOLS = {
 
 # read_sms / fill_field_normal 已挂载于 login_verify（见 SCENE_TOOLS + _SCENE_FORCE_TOOLS），即便用户处于 guide 级也强制可用；安全性由 _SENSITIVE_TOOLS 每次调用必弹授权卡保证。其余场景未挂 read_sms。
 _LEVEL_TOOLS: dict[str, set[str]] = {
-    "guide": {"cmd_highlight", "cmd_say", "cmd_wait_user"},
+    "guide": {"cmd_highlight", "cmd_say", "cmd_wait_user", "cmd_ask_user"},
     "semi":  {"cmd_navigate", "cmd_highlight", "cmd_say",
               "fill_field_normal", "cmd_press_button",
-              "read_sms", "fill_field_sensitive", "cmd_wait_user"},
+              "read_sms", "fill_field_sensitive", "cmd_wait_user", "cmd_ask_user"},
     "full":  {"cmd_navigate", "cmd_highlight", "cmd_say",
               "fill_field_normal", "cmd_press_button",
-              "read_sms", "fill_field_sensitive", "cmd_wait_user"},
+              "read_sms", "fill_field_sensitive", "cmd_wait_user", "cmd_ask_user"},
 }
 
 
@@ -188,13 +189,13 @@ SCENE_TARGET_ROUTE = {
 }
 
 
-def _build_executor_prompt(scene_id: str, current_page: str) -> str:
+def _build_executor_prompt(scene_id: str, current_page: str, trust_level: str) -> str:
     base = (_PROMPTS_DIR / SCENE_PROMPTS[scene_id]).read_text(encoding='utf-8')
-    env_block = _render_environment_section(scene_id, current_page)
+    env_block = _render_environment_section(scene_id, current_page, trust_level)
     return _EXECUTOR_PREFIX + base + '\n\n' + env_block
 
 
-def _render_environment_section(scene_id: str, current_page: str) -> str:
+def _render_environment_section(scene_id: str, current_page: str, trust_level: str) -> str:
     from backend.knowledge.pages import PAGES, page_by_route, find_path
     target_route = SCENE_TARGET_ROUTE.get(scene_id, '')
     target = page_by_route(target_route)
@@ -232,12 +233,15 @@ def _render_environment_section(scene_id: str, current_page: str) -> str:
                 lines.append(f'  第{i}跳：{t.user_guidance}（到达 {t.to_route}）')
         else:
             lines.append('')
-            scene_tools = SCENE_TOOLS.get(scene_id, [])
-            has_navigate = any(getattr(t, 'name', '') == 'cmd_navigate' for t in scene_tools)
-            if has_navigate:
+            available = {getattr(t, 'name', '') for t in get_scene_tools(scene_id, trust_level)}
+            if 'cmd_navigate' in available:
                 lines.append(f'导航路径：可通过 cmd_navigate 直接跳转到目标页 {target_route}')
             else:
-                lines.append('导航路径：当前位置不可达目标页（可能用户在偏远页面）')
+                lines.append(
+                    f'导航路径：你当前是引导级、没有跳页权限。'
+                    f'【重要】禁止调用 cmd_navigate（你没有这个工具）。'
+                    f'请用 cmd_say 引导用户自己打开「{target.title}」。'
+                )
 
     return '\n'.join(lines)
 
@@ -292,6 +296,9 @@ class AgentCore:
         self._step_event: asyncio.Event = asyncio.Event()
         self._step_payload: dict | None = None
         self._step_debounce_task: asyncio.Task | None = None
+        self._answer_event: asyncio.Event = asyncio.Event()
+        self._answer_text: str | None = None
+        self._awaiting_answer: bool = False
 
         self._classifier = Agent(
             model=DeepSeek(id="deepseek-chat", max_tokens=256, temperature=0.3),
@@ -316,6 +323,10 @@ class AgentCore:
     def set_current_page(self, page: str) -> None:
         self.current_page = page
         logger.info("session=%s current_page set to %s", self.session_id, page)
+
+    def set_trust_level(self, level: str) -> None:
+        self.trust_level = level
+        logger.info("session=%s trust_level → %s", self.session_id, level)
 
     def set_sms_code(self, code: str) -> None:
         self._sms_code = code
@@ -383,7 +394,7 @@ class AgentCore:
         self._task_sensitive_authorized = False
 
         if scene_id in SCENE_PROMPTS:
-            instructions = _build_executor_prompt(scene_id, self.current_page)
+            instructions = _build_executor_prompt(scene_id, self.current_page, self.trust_level)
         else:
             instructions = _load_scene_prompt(scene_id)
         tools = get_scene_tools(scene_id, self.trust_level)
@@ -407,7 +418,7 @@ class AgentCore:
         while True:
             logger.info("session=%s execute_task scene=%s trust=%s input=%r",
                         self.session_id, scene_id, self.trust_level, input_msg)
-            response = await self._executor.arun(input_msg)
+            response = await asyncio.wait_for(self._executor.arun(input_msg), timeout=60.0)
             last_content = _strip_thinking(response.content or "")
             stopped_tool = self._get_stopped_tool(response)
 
@@ -426,6 +437,36 @@ class AgentCore:
                     f"点击元素={payload.get('element_key') or 'N/A'}），"
                     f"请按场景剧本继续下一步。完成时不要再调 cmd_wait_user。"
                 )
+                continue
+
+            if stopped_tool == "cmd_ask_user":
+                await self._push_tool_results(response, skip_stopped="cmd_ask_user")
+                question, options = self._get_ask_payload(response)
+                self._answer_text = None
+                self._answer_event.clear()
+                self._awaiting_answer = True
+                if options:
+                    await self._send_fn("agent_choice_request", {
+                        "text": question,
+                        "options": [{"value": o, "label": o} for o in options],
+                    })
+                else:
+                    await self._send_fn("agent_reply", {
+                        "text": question,
+                        "tts_audio_base64": None,
+                        "tts_format": "mp3",
+                        "requires_confirmation": False,
+                        "confirmation_timeout_ms": None,
+                    })
+                try:
+                    await asyncio.wait_for(self._answer_event.wait(), timeout=180.0)
+                except asyncio.TimeoutError:
+                    self._awaiting_answer = False
+                    logger.info("session=%s ask_user wait timeout", self.session_id)
+                    return SCENE_DONE_SUMMARY.get(scene_id) or "等待回答超时"
+                self._awaiting_answer = False
+                answer = self._answer_text or ""
+                input_msg = f"用户回答：{answer}。请据此继续当前流程的下一步，不要重复提问。"
                 continue
 
             if stopped_tool in _SENSITIVE_TOOLS:
@@ -587,6 +628,31 @@ class AgentCore:
                     return ""
         return ""
 
+    def _get_ask_payload(self, response) -> tuple[str, list]:
+        """从 cmd_ask_user 的停止工具结果里取出 question / options。"""
+        import ast
+        for msg in (response.messages or []):
+            if getattr(msg, "from_history", False):
+                continue
+            if msg.role != "tool":
+                continue
+            if not getattr(msg, "stop_after_tool_call", False):
+                continue
+            if getattr(msg, "tool_name", None) != "cmd_ask_user":
+                continue
+            content = msg.content
+            if isinstance(content, dict):
+                d = content
+            elif isinstance(content, str):
+                try:
+                    d = ast.literal_eval(content)
+                except Exception:
+                    d = {}
+            else:
+                d = {}
+            return (d.get("question", "") or "", d.get("options", []) or [])
+        return ("", [])
+
     def _get_stopped_tool(self, response) -> str | None:
         """Return the tool_name of the message that caused stop_after_tool_call, or None.
 
@@ -642,6 +708,15 @@ class AgentCore:
         if self._step_debounce_task is not None and not self._step_debounce_task.done():
             self._step_debounce_task.cancel()
         self._step_debounce_task = asyncio.create_task(self._delayed_set_step_event())
+
+    @property
+    def is_awaiting_answer(self) -> bool:
+        return self._awaiting_answer
+
+    def resolve_answer(self, text: str) -> None:
+        """ws_handler 在执行器等待回答期间，把用户输入喂回执行器。"""
+        self._answer_text = text
+        self._answer_event.set()
 
     async def _delayed_set_step_event(self) -> None:
         try:

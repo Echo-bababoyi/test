@@ -65,7 +65,7 @@
 | 57 | AgentFab 聊天记录跨开关/跨页面持久化（ChatHistory 内存单例） | frontend | ✅ |
 | 58 | ModeNotifier F5 刷新后模式不丢失（localStorage 持久化） | frontend | ✅ |
 | 59 | 登录分支选择弹窗（模糊意图弹两按钮，agent_choice_request 消息类型） | frontend / backend | ✅ |
-| 60 | 验证码登录 L2 破例代填（sms_code_generated + 场景豁免 + 授权卡 + 12 步 prompt） | frontend / backend | 🧪 |
+| 60 | 验证码登录 L2 破例代填（sms_code_generated + 场景豁免 + 授权卡 + 12 步 prompt） | frontend / backend | ✅ |
 | 61 | 医保缴费全委托代填（applier 机制 + 下拉框代填 + 3 步 prompt + 家属路径） | frontend / backend | 🧪 |
 | 62 | 养老金查询全委托改造（2 步 prompt + 高亮引导用户点查询） | frontend / backend | 🧪 |
 | 63 | 查询结果高亮 bug 修复（broadcast 按场景取 key，pension + yibao_query 同修） | frontend | 🧪 |

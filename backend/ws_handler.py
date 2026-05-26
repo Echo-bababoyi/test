@@ -105,6 +105,7 @@ class WSHandler:
                 InboundMessageType.page_changed: self._on_page_changed,
                 InboundMessageType.step_completed: self._on_step_completed,
                 InboundMessageType.sms_code_generated: self._on_sms_code_generated,
+                InboundMessageType.trust_changed: self._on_trust_changed,
             }.get(msg_type)
 
             if handler:
@@ -151,6 +152,11 @@ class WSHandler:
         logger.info("session=%s sms_code_generated received", self.session_id)
         if self._agent_core:
             self._agent_core.set_sms_code(payload.code)
+
+    async def _on_trust_changed(self, payload):
+        logger.info("session=%s trust_changed → %s", self.session_id, payload.trust_level)
+        if self._agent_core:
+            self._agent_core.set_trust_level(payload.trust_level)
 
     async def _on_text_input(self, payload):
         """直接文本输入（跳过 ASR，用于演示/测试）"""
@@ -260,6 +266,10 @@ class WSHandler:
         """Called when final ASR transcript is ready."""
         if not self._agent_core:
             return
+        if self._agent_core.is_awaiting_answer:
+            logger.info("session=%s route reply to executor: %r", self.session_id, text)
+            self._agent_core.resolve_answer(text)
+            return
         try:
             await self.send("agent_thinking", AgentThinkingPayload(
                 hint_text="小浙正在想…",
@@ -329,9 +339,7 @@ class WSHandler:
     async def _run_execute(self, intent_summary: str) -> None:
         try:
             try:
-                summary = await asyncio.wait_for(
-                    self._agent_core.execute_task(intent_summary), timeout=60.0
-                )
+                summary = await self._agent_core.execute_task(intent_summary)
             except asyncio.TimeoutError:
                 logger.error("session=%s execute_task timeout", self.session_id)
                 self.state = SessionState.idle

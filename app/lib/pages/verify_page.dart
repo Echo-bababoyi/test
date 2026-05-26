@@ -10,6 +10,7 @@ import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../services/agent_element_registry.dart';
 import '../services/agent_session.dart';
+import '../services/user_profile_service.dart';
 import '../services/log_service.dart';
 import '../widgets/sms_notification.dart';
 
@@ -128,6 +129,10 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
       _showSms = false;
     });
     ref.read(loginProvider.notifier).login('用户');
+    UserProfileService.instance.setProfile(
+      phone: phone,
+      idCard: '330102194505061234',
+    );
     LogService.saveManual(
       scene: 'otp_login',
       summary: '通过验证码登录（手机号尾号 ${phone.length >= 4 ? phone.substring(phone.length - 4) : phone}）',

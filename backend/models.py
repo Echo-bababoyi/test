@@ -14,6 +14,7 @@ class InboundMessageType(str, Enum):
     page_changed = "page_changed"
     step_completed = "step_completed"
     sms_code_generated = "sms_code_generated"
+    trust_changed = "trust_changed"
 
 
 class OutboundMessageType(str, Enum):
@@ -96,6 +97,11 @@ class SmsCodeGeneratedPayload(BaseModel):
     code: str
 
 
+class TrustChangedPayload(BaseModel):
+    session_id: str
+    trust_level: Literal["guide", "semi", "full"]
+
+
 INBOUND_PAYLOAD_MAP: dict[str, type] = {
     InboundMessageType.agent_wake: AgentWakePayload,
     InboundMessageType.audio_chunk: AudioChunkPayload,
@@ -107,6 +113,7 @@ INBOUND_PAYLOAD_MAP: dict[str, type] = {
     InboundMessageType.page_changed: PageChangedPayload,
     InboundMessageType.step_completed: StepCompletedPayload,
     InboundMessageType.sms_code_generated: SmsCodeGeneratedPayload,
+    InboundMessageType.trust_changed: TrustChangedPayload,
 }
 
 

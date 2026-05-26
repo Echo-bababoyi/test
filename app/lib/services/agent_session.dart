@@ -137,6 +137,7 @@ class AgentSession {
   Future<void> ensureSession({required String trustLevel}) async {
     if (isActive) {
       debugPrint('[AgentSession] reuse session=$_sessionId');
+      sendTrustChanged(trustLevel);
       _uiSignal.add(null);
       return;
     }
@@ -278,6 +279,14 @@ class AgentSession {
     WsClient.instance.send('sms_code_generated', {
       'session_id': _sessionId,
       'code': code,
+    });
+  }
+
+  void sendTrustChanged(String level) {
+    if (!isActive) return;
+    WsClient.instance.send('trust_changed', {
+      'session_id': _sessionId,
+      'trust_level': level,
     });
   }
 

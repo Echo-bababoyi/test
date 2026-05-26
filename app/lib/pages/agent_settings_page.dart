@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/state/app_state.dart';
 import '../router.dart';
+import '../services/agent_session.dart';
 import '../services/agent_settings_service.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
@@ -41,6 +42,7 @@ class _AgentSettingsPageState extends ConsumerState<AgentSettingsPage> {
 
   void _applyTrust(String level, String title) {
     setState(() => _svc.trustLevel = level);
+    AgentSession.instance.sendTrustChanged(level);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('已切换到「$title」'),

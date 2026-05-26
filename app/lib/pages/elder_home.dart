@@ -10,6 +10,7 @@ import '../widgets/elder_bottom_nav.dart';
 import '../widgets/login_guard.dart';
 import '../widgets/press_scale_wrapper.dart';
 import '../services/agent_element_registry.dart';
+import '../services/agent_session.dart';
 import '../services/agent_settings_service.dart';
 import '../widgets/trust_level_cards.dart';
 
@@ -32,6 +33,8 @@ class ElderHome extends ConsumerStatefulWidget {
 class _ElderHomeState extends ConsumerState<ElderHome>
     with SingleTickerProviderStateMixin {
   late final TabController _tab = TabController(length: 3, vsync: this);
+  bool _trustChoicePending = false;
+  bool _trustSheetShowing = false;
 
   @override
   void initState() {
@@ -39,14 +42,35 @@ class _ElderHomeState extends ConsumerState<ElderHome>
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowFirstTrustChoice());
   }
 
+  void _scheduleTrustChoice() {
+    if (_trustChoicePending) return;
+    _trustChoicePending = true;
+    _pollTrustChoice(0);
+  }
+
+  void _pollTrustChoice(int attempt) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !ref.read(loginProvider).isLoggedIn) {
+        _trustChoicePending = false;
+        return;
+      }
+      if (ModalRoute.of(context)?.isCurrent ?? false) {
+        _trustChoicePending = false;
+        _maybeShowFirstTrustChoice();
+      } else if (attempt < 240) {
+        _pollTrustChoice(attempt + 1);
+      } else {
+        _trustChoicePending = false;
+      }
+    });
+  }
+
   Future<void> _maybeShowFirstTrustChoice() async {
-    if (!mounted) return;
-    final isLoggedIn = ref.read(loginProvider).isLoggedIn;
-    if (!isLoggedIn) return;
+    if (!mounted || _trustSheetShowing) return;
+    if (!ref.read(loginProvider).isLoggedIn) return;
     if (AgentSettingsService.instance.firstChoiceShown) return;
 
-    AgentSettingsService.instance.firstChoiceShown = true;
-
+    _trustSheetShowing = true;
     final picked = await showModalBottomSheet<String?>(
       context: context,
       isScrollControlled: true,
@@ -55,9 +79,12 @@ class _ElderHomeState extends ConsumerState<ElderHome>
       backgroundColor: Colors.transparent,
       builder: (_) => const _FirstTrustChoiceSheet(),
     );
+    _trustSheetShowing = false;
 
     if (picked != null && mounted) {
+      AgentSettingsService.instance.firstChoiceShown = true;
       AgentSettingsService.instance.trustLevel = picked;
+      AgentSession.instance.sendTrustChanged(picked);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('已设为「${_trustTitleFor(picked)}」'),
@@ -85,6 +112,11 @@ class _ElderHomeState extends ConsumerState<ElderHome>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<LoginState>(loginProvider, (prev, next) {
+      if (next.isLoggedIn && !(prev?.isLoggedIn ?? false)) {
+        _scheduleTrustChoice();
+      }
+    });
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(

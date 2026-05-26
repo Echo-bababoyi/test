@@ -6,6 +6,7 @@ import 'agent_element_registry.dart';
 import 'draft_service.dart';
 import 'agent_settings_service.dart';
 import 'agent_session.dart';
+import 'user_profile_service.dart';
 
 class AgentCommandExecutor {
   final GoRouter router;
@@ -112,9 +113,15 @@ class AgentCommandExecutor {
 
   Future<void> _onFillField(Map<String, dynamic> payload) async {
     final elementKey = payload['field_key'] as String?;
-    final value = payload['value'] as String? ?? '';
+    var value = payload['value'] as String? ?? '';
     final isSensitive = payload['is_sensitive'] as bool? ?? false;
     if (elementKey == null) return;
+
+    if (value == '@档案') {
+      final pv = UserProfileService.instance.valueForField(elementKey);
+      if (pv == null || pv.isEmpty) return;
+      value = pv;
+    }
 
     if (currentRoute == null) return;
     final controller = AgentElementRegistry.getController(currentRoute!, elementKey);

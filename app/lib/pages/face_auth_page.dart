@@ -10,6 +10,7 @@ import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/in_app_overlay.dart';
 import '../widgets/system_dialog.dart';
+import '../services/user_profile_service.dart';
 import '../widgets/camera_view.dart';
 import '../services/agent_element_registry.dart';
 import '../services/camera_service.dart';
@@ -50,6 +51,10 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
 
   void _onAllSuccess() {
     ref.read(loginProvider.notifier).login('用户');
+    UserProfileService.instance.setProfile(
+      phone: '13800138000',
+      idCard: '330102194505061234',
+    );
     LogService.saveManual(
       scene: 'face_login',
       summary: '通过刷脸验证完成登录',

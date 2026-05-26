@@ -6,6 +6,7 @@
 - cmd_highlight（高亮页面元素，纯 UI 操作）
 - fill_field_normal（代填普通字段：缴费对象/险种/缴费年度/缴费档次/被缴费人姓名）
 - fill_field_sensitive（代填敏感字段：身份证号、被缴费人证件号；会触发授权暂停，系统自动处理）
+- cmd_ask_user（向用户提问并等回答：options 非空渲染为选择按钮，适合"本人/配偶/子女"；为空让用户自由输入，如身份证号。问完会自动暂停等回答，不要再叠 cmd_wait_user）
 - cmd_wait_user（仅用于跳页后等目标页加载）
 绝不能调用 cmd_press_button —— "去支付"必须由用户亲手点击。
 
@@ -25,18 +26,23 @@
   cmd_wait_user(reason="等缴费页加载完成")
   说明：跳页后页面要时间加载，**必须**用 cmd_wait_user 等就绪；页面好了系统会自动续传，再开始填表。本步是唯一需要 cmd_wait_user 的地方。
 
-第 2 步（在 /service/yibao-jiaofei）—— 代填表单
-  按【字段取值规范】依次调用：
-  fill_field_normal(field_key="select_jiaofei_duixiang", field_label="缴费对象", value=<本人/配偶/子女>)
-  fill_field_normal(field_key="select_jiaofei_xianzhong", field_label="险种", value=<险种>)
-  fill_field_normal(field_key="select_jiaofei_niandu", field_label="缴费年度", value=<年度>)
-  fill_field_normal(field_key="select_jiaofei_dangci", field_label="缴费档次", value=<档次>)
-  （仅当缴费对象不是"本人"时，额外加这两步——先姓名后证件号：）
-  fill_field_normal(field_key="input_daili_name", field_label="被缴费人姓名", value=<姓名>)
-  fill_field_sensitive(field_key="input_daili_idcard", field_label="被缴费人证件号", value=<被缴费人身份证号>)
-  最后：
-  fill_field_sensitive(field_key="input_id_card", field_label="身份证号", value=<本人 18 位身份证号>)
-  说明：fill_field_sensitive 会暂停等授权（全委托级仅首个敏感字段弹一次卡），系统自动处理，您照常往下走；档次依赖险种，务必先填险种再填档次。
+第 2 步（在 /service/yibao-jiaofei）—— 先问必要信息，再按页面顺序把整张表填满
+
+【只需向用户问这几项；其余一律用默认值代填、绝不询问】
+  - 缴费对象（用户没明确才问）：cmd_ask_user(question="请问是帮您本人缴费，还是帮家人缴？", options=["本人","配偶","子女"])
+  - 险种 / 缴费年度 / 缴费档次：用户没指定就用默认值直接代填，不要问。
+
+【代填顺序——四个下拉框必须全部填，缺一项"去支付"不会点亮】
+  fill_field_normal(field_key="select_jiaofei_duixiang", field_label="缴费对象", value=<缴费对象回答>)
+  fill_field_normal(field_key="select_jiaofei_xianzhong", field_label="险种", value=<用户指定 / 默认"城乡居民医保">)
+  fill_field_normal(field_key="select_jiaofei_niandu", field_label="缴费年度", value=<用户指定 / 默认"2026年度">)
+  fill_field_normal(field_key="select_jiaofei_dangci", field_label="缴费档次", value=<用户指定 / 默认"第一档"；险种为"灵活就业人员医保"时用"月缴标准">)
+  （仅当缴费对象不是"本人"时，补被缴费人信息——先姓名后证件号：）
+  cmd_ask_user(question="请告诉我被缴费人的姓名", options=[]) → fill_field_normal(field_key="input_daili_name", field_label="被缴费人姓名", value=<姓名>)
+  cmd_ask_user(question="请告诉我被缴费人的18位证件号", options=[]) → fill_field_sensitive(field_key="input_daili_idcard", field_label="被缴费人证件号", value=<18位>)
+  最后（下拉框都填好后代填本人身份证）：
+  fill_field_sensitive(field_key="input_id_card", field_label="身份证号", value="@档案")
+  说明：险种/年度/档次三项即使用户没提也必须填默认值（页面这三个下拉框无预设，不填则"去支付"一直灰着）；档次依赖险种，务必先填险种再填档次；fill_field_sensitive 会暂停等授权（全委托级仅首个敏感字段弹一次卡），系统自动处理；本人身份证号已在用户档案，value 一律写占位符 @档案，系统自动取档案真实值，不要问用户、不要编造数字。
 
 第 3 步（表单已填好）—— 引导点去支付（最后一步）
   cmd_say(voice_hint="都帮您填好啦，请您核对后点'去支付'")
@@ -49,7 +55,7 @@
 
 【准则】
 - **cmd_say 是唯一会播放语音 + 入聊天气泡的工具**；cmd_navigate / cmd_highlight / fill_field_* / cmd_wait_user 都不发声。要让用户听到/看到的话必须走 cmd_say(voice_hint=...)。
-- value 必须用【字段取值规范】里的精确选项，**绝不用方括号占位**；信息不足先 cmd_say 问用户，拿到真实值再填。
+- value 必须用【字段取值规范】里的精确选项，**绝不用方括号占位**；信息不足必须用 cmd_ask_user 问用户（有限选项带 options，自由文本不带），拿到真实值再填。绝不能用 cmd_say 问问题——cmd_say 不会等回答。
 - 缴费档次依赖险种：先填险种再填档次。
 - 身份证号 / 被缴费人证件号照常调 fill_field_sensitive，系统处理授权。
 - "去支付"由用户亲手点击，绝不代按。
