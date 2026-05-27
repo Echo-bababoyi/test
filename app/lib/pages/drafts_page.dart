@@ -276,7 +276,7 @@ class _DraftsPageState extends State<DraftsPage> {
             ],
           ),
           child: InkWell(
-            onTap: route.isEmpty ? null : () => context.push(route),
+            onTap: route.isEmpty ? null : () => context.push('$route?restore=1'),
             borderRadius: BorderRadius.circular(14),
             child: IntrinsicHeight(
               child: Row(

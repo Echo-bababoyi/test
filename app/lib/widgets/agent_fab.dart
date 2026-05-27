@@ -888,7 +888,7 @@ class _BubbleWindowState extends State<_BubbleWindow>
           setState(() => _items.removeAt(i));
           final route = metaForPageId(item['pageId'] as String)?.route;
           if (route != null) {
-            _close().then((_) { if (mounted) GoRouter.of(context).go(route); });
+            _close().then((_) { if (mounted) GoRouter.of(context).go('$route?restore=1'); });
           }
         },
         onDismiss: () {

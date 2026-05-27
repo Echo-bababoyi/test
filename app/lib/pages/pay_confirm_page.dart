@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
 
 class PayConfirmPage extends StatefulWidget {
@@ -78,8 +79,8 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
-      // 注意：本页不放 AgentFab（支付确认环节，代理不干预）
-      body: ListView(
+      body: Stack(children: [
+        ListView(
         padding: const EdgeInsets.all(Spacing.md),
         children: [
           _SectionCard(
@@ -207,7 +208,9 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
             ),
           ),
         ],
-      ),
+        ),
+        const Positioned.fill(child: AgentFab(currentPath: AppRoutes.yibaoJiaofeiConfirm)),
+      ]),
       bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
     );
   }

@@ -473,6 +473,7 @@ class AgentCore:
                 await self._push_tool_results(response, skip_stopped=stopped_tool)
 
                 field_key = self._get_tool_field_key(response, stopped_tool)
+                field_label = self._get_tool_field_label(response, stopped_tool)
 
                 if stopped_tool == "fill_field_sensitive" and _is_password_field(field_key):
                     logger.info("session=%s password field hard-rejected: %s",
@@ -497,7 +498,7 @@ class AgentCore:
                 try:
                     await self._send_fn(
                         "permission_request",
-                        self._build_permission_payload(stopped_tool, permission_id),
+                        self._build_permission_payload(stopped_tool, permission_id, field_label),
                     )
                 except Exception as exc:
                     logger.error("session=%s permission_request send error: %s",
@@ -628,6 +629,29 @@ class AgentCore:
                     return ""
         return ""
 
+    def _get_tool_field_label(self, response, tool_name: str) -> str:
+        """Extract field_label from a stopped tool's content (used for permission card display)."""
+        import ast
+        for msg in (response.messages or []):
+            if getattr(msg, "from_history", False):
+                continue
+            if msg.role != "tool":
+                continue
+            if not getattr(msg, "stop_after_tool_call", False):
+                continue
+            if getattr(msg, "tool_name", None) != tool_name:
+                continue
+            content = msg.content
+            if isinstance(content, dict):
+                return content.get("field_label", "") or ""
+            if isinstance(content, str):
+                try:
+                    d = ast.literal_eval(content)
+                    return d.get("field_label", "") or ""
+                except Exception:
+                    return ""
+        return ""
+
     def _get_ask_payload(self, response) -> tuple[str, list]:
         """从 cmd_ask_user 的停止工具结果里取出 question / options。"""
         import ast
@@ -669,17 +693,21 @@ class AgentCore:
                     return tool_name
         return None
 
-    def _build_permission_payload(self, tool_name: str, permission_id: str) -> dict:
+    def _build_permission_payload(self, tool_name: str, permission_id: str, field_label: str = "") -> dict:
         meta = _PERMISSION_META.get(tool_name, {
             "permission_type": tool_name,
             "field_label": tool_name,
             "description": f"小浙需要执行 {tool_name}，是否授权？",
         })
+        description = meta["description"]
+        if tool_name == "fill_field_sensitive" and field_label:
+            description = f"小浙想帮您填写【{field_label}】，可以吗？"
+        label = field_label or meta.get("field_label", "")
         return {
             "permission_id": permission_id,
             "permission_type": meta["permission_type"],
-            "field_label": meta["field_label"],
-            "description": meta["description"],
+            "field_label": label,
+            "description": description,
             "tts_audio_base64": None,
             "expires_in_ms": 20000,
         }

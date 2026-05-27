@@ -132,7 +132,11 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
     _idFocus.addListener(() => setState(() => _idFocused = _idFocus.hasFocus));
     _dailiIdFocus.addListener(
         () => setState(() => _dailiIdFocused = _dailiIdFocus.hasFocus));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _restoreDraft());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (GoRouterState.of(context).uri.queryParameters['restore'] == '1') {
+        _restoreDraft();
+      }
+    });
   }
 
   @override
