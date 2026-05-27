@@ -171,6 +171,19 @@ PAGES: dict[str, PageSpec] = {
                         description='提交表单进入支付页（由用户亲手点击）'),
         ),
     ),
+    '/service/yibao-jiaofei/confirm': PageSpec(
+        route='/service/yibao-jiaofei/confirm', page_id='yibao_jiaofei_confirm',
+        title='确认缴费页',
+        description='医保缴费确认页：核对缴费摘要后代填支付人身份证 + 银行卡，再由用户亲手点"确认支付"进入支付密码页',
+        elements=(
+            ElementSpec(key='confirm_id_card', kind='input', label='支付人身份证',
+                        description='18 位居民身份证号，代填用 @档案', sensitive=True),
+            ElementSpec(key='confirm_bank_card', kind='input', label='银行卡号',
+                        description='16-19 位银行卡号，代填用 @档案', sensitive=True),
+            ElementSpec(key='btn_confirm_pay', kind='button', label='确认支付',
+                        description='提交进入支付密码页（由用户亲手点击，代理绝不代按）'),
+        ),
+    ),
     '/service/pension-query': PageSpec(
         route='/service/pension-query', page_id='pension_query', title='养老金查询页',
         description='查询本月养老金发放情况。首页无入口，semi/full 级通过 cmd_navigate 直跳',
