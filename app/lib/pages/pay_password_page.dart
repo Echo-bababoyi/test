@@ -12,11 +12,7 @@ class PayPasswordPage extends StatefulWidget {
 
 class _PayPasswordPageState extends State<PayPasswordPage>
     with SingleTickerProviderStateMixin {
-  static const _kCorrectPwd = '123456';
-  static const _kMaxAttempts = 3;
-
   String _input = '';
-  int _remainingAttempts = _kMaxAttempts;
   String? _errorText;
   bool _locked = false;
   bool _paying = false;
@@ -64,27 +60,13 @@ class _PayPasswordPageState extends State<PayPasswordPage>
   void _onCancel() => context.pop();
 
   void _onSubmit() {
-    if (_input == _kCorrectPwd) {
-      setState(() => _paying = true);
-      final router = GoRouter.of(context);
-      final extra = {...?_incomingExtra, 'success': true};
-      Future.delayed(const Duration(milliseconds: 1500), () {
-        if (!mounted) return;
-        router.pushReplacement(AppRoutes.yibaoJiaofeiResult, extra: extra);
-      });
-      return;
-    }
-    setState(() {
-      _remainingAttempts -= 1;
-      _input = '';
-      if (_remainingAttempts <= 0) {
-        _locked = true;
-        _errorText = '支付密码已锁定，请 24 小时后重试';
-      } else {
-        _errorText = '密码错误，还可尝试 $_remainingAttempts 次';
-      }
+    setState(() => _paying = true);
+    final router = GoRouter.of(context);
+    final extra = {...?_incomingExtra, 'success': true};
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (!mounted) return;
+      router.pushReplacement(AppRoutes.yibaoJiaofeiResult, extra: extra);
     });
-    _shakeCtrl.forward(from: 0);
   }
 
   @override
