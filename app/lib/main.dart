@@ -1,3 +1,4 @@
+import 'dart:html' as html; // ignore: avoid_web_libraries_in_flutter
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'router.dart';
@@ -5,7 +6,21 @@ import 'core/state/app_state.dart';
 import 'core/theme/app_theme.dart';
 
 void main() {
+  _maybeResetStorage();
   runApp(const ProviderScope(child: ZlbElderApp()));
+}
+
+void _maybeResetStorage() {
+  if (!Uri.base.queryParameters.containsKey('reset')) return;
+  final store = html.window.localStorage;
+  final keys = store.keys.where((k) => k.startsWith('xiaozhe_')).toList();
+  for (final k in keys) {
+    store.remove(k);
+  }
+  store.remove('app_mode');
+  html.window.indexedDB?.deleteDatabase('xiaozhe_draft');
+  final loc = html.window.location;
+  html.window.history.replaceState(null, '', '${loc.pathname}${loc.hash}');
 }
 
 class ZlbElderApp extends ConsumerWidget {
