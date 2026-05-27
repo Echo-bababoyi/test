@@ -124,14 +124,16 @@ class _AgentFabState extends ConsumerState<AgentFab> {
 
   double _pickBubbleY(Rect h, double maxH) {
     const margin = 12.0;
+    final maxTop = (maxH - _bubbleH - margin).clamp(0.0, maxH);
     final clearAbove = h.top - margin;
     final clearBelow = maxH - h.bottom - margin;
-    final preferTop = h.center.dy > maxH / 2;
-    if (preferTop && clearAbove >= _bubbleH) return margin;
-    if (!preferTop && clearBelow >= _bubbleH) return maxH - _bubbleH - margin;
-    if (clearAbove >= _bubbleH) return margin;
-    if (clearBelow >= _bubbleH) return maxH - _bubbleH - margin;
-    return clearAbove > clearBelow ? margin : (maxH - _bubbleH - margin).clamp(margin, maxH);
+    if (clearAbove >= clearBelow) {
+      final y = clearAbove >= _bubbleH ? margin : (h.top - _bubbleH - margin);
+      return y.clamp(0.0, maxTop);
+    } else {
+      final y = clearBelow >= _bubbleH ? maxTop : (h.bottom + margin);
+      return y.clamp(0.0, maxTop);
+    }
   }
 
   @override
