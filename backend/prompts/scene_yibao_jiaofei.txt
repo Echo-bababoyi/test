@@ -43,16 +43,25 @@
     cmd_ask_user(question="请告诉我被缴费人的姓名", options=[]) → fill_field_normal(field_key="input_daili_name", field_label="被缴费人姓名", value=<姓名>)
     cmd_ask_user(question="请告诉我被缴费人的18位证件号", options=[]) → fill_field_sensitive(field_key="input_daili_idcard", field_label="被缴费人证件号", value=<18位>)
 (f) 本人身份证号（已在用户档案，无需询问）：fill_field_sensitive(field_key="input_id_card", field_label="身份证号", value="@档案")
-    说明：先填险种再填档次（档次选项依赖险种）；身份证 value 一律写 @档案，系统自动取真实值，不问不编造；fill_field_sensitive 会暂停等授权（全委托级首个敏感字段弹一次卡）。
+    说明：先填险种再填档次（档次选项依赖险种）；身份证 value 一律写 @档案，系统自动取真实值，不问不编造；fill_field_sensitive 会暂停等授权（每个敏感字段都会弹一次授权卡）。
 
-第 3 步（表单已填好）—— 引导点去支付（最后一步）
+第 3 步（表单已填好）—— 引导点去支付
   cmd_say(voice_hint="都帮您填好啦，请您核对后点'去支付'")
-  cmd_highlight(element_key="btn_go_payment", duration_ms=8000)
-  说明：最后一步，不要调 cmd_wait_user，直接输出【完成回复】。
+  cmd_highlight(element_key="btn_go_payment")
+  cmd_wait_user(reason="等用户点去支付、跳转到确认缴费页")
+
+第 4 步（已在确认缴费页 /service/yibao-jiaofei/confirm）—— 代填身份证+银行卡，引导点确认支付（最后一步）
+  cmd_say(voice_hint="到确认页啦，我帮您把身份证和银行卡填好")
+  fill_field_sensitive(field_key="confirm_id_card", field_label="支付人身份证", value="@档案")
+  fill_field_sensitive(field_key="confirm_bank_card", field_label="银行卡号", value="@档案")
+  cmd_say(voice_hint="都填好了，请您核对后点'确认支付'")
+  cmd_highlight(element_key="btn_confirm_pay")
+  说明：confirm_id_card / confirm_bank_card 是确认页专属 key，value 一律 @档案 由系统取真实值；勿与第 2 步 input_id_card 混用。两次 fill_field_sensitive 会各弹一次授权卡。最后一步不调 cmd_wait_user，直接输出【完成回复】。"确认支付"由用户亲手点，绝不代按。
 
 【起点判断规则】
 - 用户不在 /service/yibao-jiaofei → 第 1 步
 - 用户已在 /service/yibao-jiaofei → 第 2 步（跳过 cmd_navigate / cmd_wait_user）
+- 用户已在 /service/yibao-jiaofei/confirm → 直接第 4 步
 
 【准则】
 - **cmd_say 是唯一会播放语音 + 入聊天气泡的工具**；cmd_navigate / cmd_highlight / fill_field_* / cmd_wait_user 都不发声。要让用户听到/看到的话必须走 cmd_say(voice_hint=...)。
@@ -60,4 +69,4 @@
 - 缴费档次依赖险种：先填险种再填档次。
 - 身份证号 / 被缴费人证件号照常调 fill_field_sensitive，系统处理授权。
 - "去支付"由用户亲手点击，绝不代按。
-- 【完成回复】所有步骤执行完毕后，response.content 输出且仅输出：已帮您填好缴费表单，请点击'去支付'
+- 【完成回复】所有步骤执行完毕后，response.content 输出且仅输出：已帮您填好身份证和银行卡，请点击'确认支付'

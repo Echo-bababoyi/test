@@ -96,26 +96,30 @@ class _AgentFabState extends ConsumerState<AgentFab> {
       return;
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final route = widget.currentPath;
-      if (route == null) return;
-      final targetGlobalKey = AgentElementRegistry.get(route, key);
-      final targetCtx = targetGlobalKey?.currentContext;
-      final agentCtx = _stackKey.currentContext;
-      if (targetCtx == null || agentCtx == null) return;
-      final targetBox = targetCtx.findRenderObject() as RenderBox?;
-      final agentBox = agentCtx.findRenderObject() as RenderBox?;
-      if (targetBox == null || agentBox == null
-          || !targetBox.attached || !agentBox.attached) return;
-      final offset = targetBox.localToGlobal(Offset.zero, ancestor: agentBox);
-      final highlightLocal = offset & targetBox.size;
-      final newY = _pickBubbleY(highlightLocal, agentBox.size.height);
-      setState(() {
-        _setBubblePos(y: newY);
-        _bubbleArriveKey = UniqueKey();
+    _scheduleAvoid(key);
+  }
+
+  void _scheduleAvoid(String key) {
+    final deadline = DateTime.now().add(const Duration(milliseconds: 450));
+    void tick() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _bubbleDragging) return;
+        if (AgentSession.instance.currentHighlightKey.value != key) return;
+        final route = widget.currentPath;
+        final tCtx = route == null ? null : AgentElementRegistry.get(route, key)?.currentContext;
+        final tb = tCtx?.findRenderObject() as RenderBox?;
+        final ab = _stackKey.currentContext?.findRenderObject() as RenderBox?;
+        if (tb != null && ab != null && tb.attached && ab.attached) {
+          final off = tb.localToGlobal(Offset.zero, ancestor: ab);
+          final newY = _pickBubbleY(off & tb.size, ab.size.height);
+          if ((newY - _bubbleY).abs() > 0.5) {
+            setState(() { _setBubblePos(y: newY); _bubbleArriveKey = UniqueKey(); });
+          }
+        }
+        if (DateTime.now().isBefore(deadline)) tick();
       });
-    });
+    }
+    tick();
   }
 
   double _pickBubbleY(Rect h, double maxH) {

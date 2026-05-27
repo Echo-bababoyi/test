@@ -288,7 +288,6 @@ class AgentCore:
         self._permission_granted: bool = False
         self.trust_level: str = trust_level
         self.current_page: str = current_page
-        self._task_sensitive_authorized: bool = False
         self._sms_code: str | None = None
         # Pending query results forwarded from ws_handler
         self._query_result: dict | None = None
@@ -391,8 +390,6 @@ class AgentCore:
             logger.info("session=%s execute_task skipped: out_of_scope", self.session_id)
             return ""
 
-        self._task_sensitive_authorized = False
-
         if scene_id in SCENE_PROMPTS:
             instructions = _build_executor_prompt(scene_id, self.current_page, self.trust_level)
         else:
@@ -488,11 +485,6 @@ class AgentCore:
                     input_msg = "用户必须自己输入密码，请用 cmd_say 提示后继续后续步骤"
                     continue
 
-                if self.trust_level == "full" and self._task_sensitive_authorized:
-                    await self._push_stopped_tool(response, stopped_tool)
-                    input_msg = "用户已授权，继续执行"
-                    continue
-
                 permission_id = str(uuid.uuid4())
                 self._permission_event.clear()
                 try:
@@ -507,8 +499,6 @@ class AgentCore:
                 granted = await self.wait_for_permission()
                 if granted:
                     await self._push_stopped_tool(response, stopped_tool)
-                    if self.trust_level == "full":
-                        self._task_sensitive_authorized = True
                     input_msg = "用户已授权，继续执行"
                 else:
                     logger.info("session=%s permission denied for %s, skipping field",

@@ -13,6 +13,9 @@ class UserProfileService {
   String? get phone => html.window.localStorage[_kPhone];
   String? get idCard => html.window.localStorage[_kIdCard];
 
+  static const _mockBankCard = '6222021234567890';
+  String get bankCard => _mockBankCard;
+
   void setProfile({String? phone, required String idCard}) {
     if (phone != null && phone.isNotEmpty) {
       html.window.localStorage[_kPhone] = phone;
@@ -24,7 +27,10 @@ class UserProfileService {
   String? valueForField(String fieldKey) {
     switch (fieldKey) {
       case 'input_id_card':
+      case 'confirm_id_card':
         return idCard;
+      case 'confirm_bank_card':
+        return bankCard;
       case 'input_phone':
         return phone;
     }

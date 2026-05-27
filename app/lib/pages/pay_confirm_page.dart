@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
+import '../services/agent_element_registry.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/agent_fab.dart';
 import '../widgets/elder_bottom_nav.dart';
@@ -21,6 +22,11 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
   final _idController = TextEditingController();
   final _idFocus = FocusNode();
   bool _idFocused = false;
+
+  static const _route = AppRoutes.yibaoJiaofeiConfirm;
+  final _idKey = AgentElementRegistry.register(_route, 'confirm_id_card');
+  final _cardKey = AgentElementRegistry.register(_route, 'confirm_bank_card');
+  final _payBtnKey = AgentElementRegistry.register(_route, 'btn_confirm_pay');
 
   bool get _cardValid {
     final digits = _cardController.text.replaceAll(RegExp(r'\D'), '');
@@ -43,10 +49,15 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
     _cardFocus.addListener(() => setState(() => _cardFocused = _cardFocus.hasFocus));
     _idController.addListener(() => setState(() {}));
     _idFocus.addListener(() => setState(() => _idFocused = _idFocus.hasFocus));
+    AgentElementRegistry.registerApplier(_route, 'confirm_id_card',
+        (v) => setState(() => _idController.text = v));
+    AgentElementRegistry.registerApplier(_route, 'confirm_bank_card',
+        (v) => setState(() => _cardController.text = v));
   }
 
   @override
   void dispose() {
+    AgentElementRegistry.unregisterPage(_route);
     _cardController.dispose();
     _cardFocus.dispose();
     _idController.dispose();
@@ -107,6 +118,7 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
           ),
           const SizedBox(height: Spacing.md),
           Container(
+            key: _idKey,
             padding: const EdgeInsets.all(Spacing.md),
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -143,6 +155,7 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
           ),
           const SizedBox(height: Spacing.md),
           Container(
+            key: _cardKey,
             padding: const EdgeInsets.all(Spacing.md),
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -183,6 +196,7 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
           SizedBox(
             height: 56,
             child: ElevatedButton(
+              key: _payBtnKey,
               onPressed: _canPay
                   ? () => context.push(
                         AppRoutes.yibaoJiaofeiPay,

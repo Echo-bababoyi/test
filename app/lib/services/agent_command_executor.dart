@@ -88,6 +88,15 @@ class AgentCommandExecutor {
       return;
     }
 
+    final ctx = key.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(ctx,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+    }
+
     _currentHighlightEntry?.remove();
     _currentHighlightEntry = null;
 
