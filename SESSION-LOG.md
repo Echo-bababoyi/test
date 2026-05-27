@@ -4,6 +4,42 @@
 
 ---
 
+## 2026-05-27（会话 20）
+
+**主要工作**：
+
+1. **#69 授权卡文案显示具体字段名**：后端 `_build_permission_payload` 提取 `field_label`，fill_field_sensitive 时显示"小浙想帮您填写【身份证号】，可以吗？"（`447f889`）
+2. **#70 医保缴费页下拉框去预设值**：草稿回填改为仅 `?restore=1` 时触发，默认进页下拉框为空；agent_fab + drafts_page 两入口同步（`447f889`）
+3. **#71 支付确认页补挂 AgentFab**：pay_confirm_page 加 Stack + AgentFab，跳转后面板保持显示（`447f889`）
+4. **高亮自动滚动**：cmd_highlight 前加 `Scrollable.ensureVisible` 自动滚到目标元素（`8d4b603`）
+5. **气泡避让有界重试**：从单次 postFrame 改为 450ms 有界重试，覆盖滚动后位置变化（`8d4b603`）
+6. **确认页代填续写**：pay_confirm_page 注册 3 个高亮 key + applier；prompt 新增第 4 步代填身份证(@档案)+银行卡(@档案)+高亮确认支付；pages.py 补确认页 PageSpec（`8d4b603` + `16bc4d5`）
+7. **每次敏感字段独立弹授权卡**：移除 `_task_sensitive_authorized` 一次性放行机制（`8d4b603`）
+8. **气泡避让方向修复**：alignment 0.5→0.85 + `_pickBubbleY` 改为按净空大小决策（`4c53016`）
+9. **支付密码页 demo 模式**：去掉硬编码密码校验，任意 6 位输入通过（`325246a`）
+10. **?reset URL 参数**：访问 `/?reset` 一键清空 xiaozhe_* localStorage + app_mode + IndexedDB 草稿（`9026fce`）
+
+**团队参与**：PM / architect(Opus) / frontend / backend / lead 全员
+
+**关键决策**：
+- **授权卡每次都弹**：用户明确要求每个敏感字段独立授权，不存在一任务一卡
+- **确认页方案 A（全代填）**：身份证用 @档案，银行卡也代填（mock），不只引导
+- **applier 路径代填确认页**：绕开 executor 脱敏导致校验失败的坑
+- **气泡避让按净空决策**：替代不稳定的 center 翻转判据
+
+**遗留/待测（下次会话）**：
+- **气泡避让方向**：代码已改对（architect 确认），疑浏览器缓存旧构建，需 build 后 Ctrl+Shift+R 硬刷新验证
+- **?reset 功能**：已实现未测试
+- **医保缴费全流程**：确认页代填 + 授权卡 + 密码页 → 需完整跑一遍
+- **#37 人脸验证真机测试**仍未进行
+- **#52/#53/#54 待真机回归**
+
+**当前状态**：
+- 6 个 commit（447f889 → 9026fce），工作树干净
+- 下次会话恢复点：① build + 硬刷新测气泡避让 ② ?reset 测试 ③ 医保全流程 ④ 真机测试
+
+---
+
 ## 2026-05-26（会话 19）
 
 **主要工作**：

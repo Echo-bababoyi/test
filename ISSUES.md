@@ -74,9 +74,15 @@
 | 66 | cmd_ask_user 场景内问答工具（HITL 暂停 + 回答路由回执行器 + 60s 超时只裹 arun） | backend | ✅ |
 | 67 | 用户档案预填（UserProfileService + @档案占位符 + 身份证免打字） | frontend / backend | ✅ |
 | 68 | 医保缴费 prompt 重写（选择卡逐项问→填交错 + 删默认值矛盾） | backend | 🧪 |
-| 69 | 授权卡文案不明确（只说"敏感信息"未说具体字段名） | frontend | 🔧 |
-| 70 | 医保缴费页下拉框有预设值（应为空） | frontend | 🔧 |
-| 71 | 点"去支付"跳转后聊天面板消失 | frontend | 🐛 |
+| 69 | 授权卡文案显示具体字段名（"小浙想帮您填写【身份证号】"） | backend | 🧪 |
+| 70 | 医保缴费页下拉框去预设值（仅 ?restore=1 时回填） | frontend | 🧪 |
+| 71 | 支付确认页补挂 AgentFab（跳转后面板不消失） | frontend | 🧪 |
+| 72 | 高亮自动滚动（cmd_highlight 前 Scrollable.ensureVisible） | frontend | 🧪 |
+| 73 | 气泡避让有界重试 + 净空决策（替代单次 postFrame + center 翻转） | frontend | 🧪 |
+| 74 | 确认页代填续写（第 4 步身份证+银行卡 @档案 + pages.py 注册） | frontend / backend | 🧪 |
+| 75 | 每次敏感字段独立弹授权卡（移除 _task_sensitive_authorized） | backend | 🧪 |
+| 76 | 支付密码页 demo 模式（去校验，任意 6 位通过） | frontend | 🧪 |
+| 77 | ?reset URL 参数一键清空测试数据 | frontend | 🧪 |
 
 ---
 
@@ -416,7 +422,9 @@ broadcast 流广播模式下，多个场景（pension_query / yibao_query）共�
 
 **目标**：授权卡文案带上具体字段名，如"小浙想帮您填写【身份证号】"。
 
-**状态**：🔧
+**修复**：后端 `_build_permission_payload` 新增 `field_label` 参数，从 LLM 工具调用结果提取字段名注入 description。无 field_label 时回退默认文案。完成时间：2026-05-27（会话 20）
+
+**状态**：🧪
 
 ---
 
@@ -426,14 +434,56 @@ broadcast 流广播模式下，多个场景（pension_query / yibao_query）共�
 
 **目标**：页面初始状态所有下拉框为空，等代理代填或用户手选。
 
-**状态**：🔧
+**修复**：草稿回填改为仅 `?restore=1` URL 参数时触发（agent_fab + drafts_page 两入口同步加参数）。完成时间：2026-05-27（会话 20）
+
+**状态**：🧪
 
 ---
 
-### #71 点"去支付"跳转后聊天面板消失
+### #71 支付确认页补挂 AgentFab
 
-**背景**：医保缴费流程完成后，用户按引导点"去支付"跳转到下一页面时，聊天面板消失。下一页面并非密码输入页，面板不该关闭。
+**背景**：医保缴费流程完成后，用户按引导点"去支付"跳转到确认页时，聊天面板消失。
 
-**目标**：跳转后聊天面板保持显示。
+**修复**：pay_confirm_page 补挂 AgentFab（Stack 包裹），全局 panelOpen + ChatHistory 自动恢复展开态。密码页仍不挂（安全红线）。完成时间：2026-05-27（会话 20）
 
-**状态**：🐛
+**状态**：🧪
+
+---
+
+### #72–#77 本次会话（2026-05-27，会话 20）
+
+**#72 高亮自动滚动**
+
+cmd_highlight 触发时目标元素如果不在可视区域内（如"去支付"按钮在底部导航栏下方），页面不会自动滚动。在 `_onHighlight` 插 overlay 前加 `Scrollable.ensureVisible(ctx, alignment: 0.85)` 自动滚到目标元素。完成时间：2026-05-27
+
+**状态**：🧪
+
+**#73 气泡避让有界重试 + 净空决策**
+
+气泡避让只在高亮瞬间算一次（单次 postFrameCallback），目标未稳定或滚动中拿不到布局就直接放弃。改为 450ms 有界重试逐帧重算。`_pickBubbleY` 从 center 翻转改为 clearAbove vs clearBelow 净空比较，根治近中心方向抖动。完成时间：2026-05-27
+
+**状态**：🧪
+
+**#74 确认页代填续写**
+
+确认页（pay_confirm_page）缺高亮 key 注册，代理到"去支付"就结束。新增 confirm_id_card / confirm_bank_card / btn_confirm_pay 三个高亮 key + applier（绕开 executor 脱敏）；prompt 第 3 步改 cmd_wait_user 等跳转，新增第 4 步代填身份证(@档案)+银行卡(@档案)+高亮确认支付；pages.py 补确认页 PageSpec；user_profile_service 新增 mock 银行卡。完成时间：2026-05-27
+
+**状态**：🧪
+
+**#75 每次敏感字段独立弹授权卡**
+
+移除 `_task_sensitive_authorized` 一次性放行机制（4 处删除），每次 fill_field_sensitive / read_sms 都必走授权卡流程。医保全流程预期弹卡：主页身份证 1 张 + 确认页身份证 1 张 + 银行卡 1 张 = 3 张。完成时间：2026-05-27
+
+**状态**：🧪
+
+**#76 支付密码页 demo 模式**
+
+去掉硬编码密码 `_kCorrectPwd='123456'` 校验，任意 6 位输入直接走成功分支跳结果页。完成时间：2026-05-27
+
+**状态**：🧪
+
+**#77 ?reset URL 参数一键清空测试数据**
+
+访问 `/?reset` 自动清空 xiaozhe_* localStorage + app_mode + IndexedDB 草稿库，清完后 replaceState 去掉参数。方便测试回到全新用户态。完成时间：2026-05-27
+
+**状态**：🧪
