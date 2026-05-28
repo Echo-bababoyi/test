@@ -4,6 +4,32 @@
 
 ---
 
+## 2026-05-28（会话 21）
+
+**主要工作**：
+
+1. **#73 气泡避让追加加固**：key==null 时不再复位到底部（防遮挡确认按钮）；`_pickBubbleY` 末尾加 overlap 兜底；`_scheduleAvoid` deadline 450→800ms + 跨页 entry==null 推顶部（`bf08166`）
+2. **#78 普通刷新清除会话级 localStorage**：main.dart 启动时 `_clearSessionScopedKeys()` 清除 trust_level / first_choice_shown / profile_phone / profile_idcard，保留模式和语音偏好（`bf08166`）
+3. **#79 医保缴费简化（仅本人）**：prompt 新增第 0 步"给谁缴费？"前置问询（他人→功能未开发）；yibao_jiaofei_page 删除缴费对象下拉 + 被缴费人信息区块（-136 行）；pay_confirm_page 固定本人态；pages.py 删除 daili 相关 ElementSpec（`bf08166`）
+
+**团队参与**：architect(Opus) / frontend / backend / lead
+
+**关键决策**：
+- **气泡 key==null 不复位**：清空高亮不代表气泡要回底部，保持上次位置更安全
+- **localStorage 分两类**：偏好类（app_mode/voice/speech_rate）跨刷新保留；会话类（trust/profile/firstChoice）每次启动清
+- **医保只保留本人缴费**：代缴场景过于复杂且非毕设核心，砍掉做减法
+
+**遗留/待测（下次会话）**：
+- **#37 人脸验证真机测试**仍未进行
+- **#52/#53/#54 待真机回归**
+- N1 麦克风 Web Speech API → N2 云服务器部署 → N5 Prompt 调优 → N6 答辩准备
+
+**当前状态**：
+- 1 个 commit（bf08166），工作树干净
+- 下次会话恢复点：真机测试 → N1 麦克风 → N2 部署
+
+---
+
 ## 2026-05-27（会话 20）
 
 **主要工作**：
