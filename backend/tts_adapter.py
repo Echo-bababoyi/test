@@ -34,7 +34,7 @@ class XunfeiTTS:
                 "aue": "lame",
                 "sfl": 1,
                 "auf": "audio/L16;rate=16000",
-                "vcn": "xiaoyan",
+                "vcn": "x4_yezi",
                 "speed": speed,
                 "volume": 50,
                 "pitch": 50,

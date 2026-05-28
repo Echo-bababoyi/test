@@ -6,6 +6,7 @@ import 'agent_element_registry.dart';
 import 'draft_service.dart';
 import 'agent_settings_service.dart';
 import 'agent_session.dart';
+import 'audio_player.dart';
 import 'user_profile_service.dart';
 
 class AgentCommandExecutor {
@@ -38,7 +39,12 @@ class AgentCommandExecutor {
       case 'cmd_press_button':
         _onPressButton(payload);
       case 'cmd_say':
-        _speakHint(payload['voice_hint'] as String? ?? '');
+        final ttsB64 = payload['tts_audio_base64'] as String?;
+        if (ttsB64 != null && ttsB64.isNotEmpty) {
+          AudioPlayer.playBase64(ttsB64);
+        } else {
+          _speakHint(payload['voice_hint'] as String? ?? '');
+        }
     }
   }
 

@@ -322,6 +322,7 @@ class AgentSession {
         if (items.isEmpty) {
           items.add({'role': 'agent', 'text': greeting});
         }
+        AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
 
       case 'asr_result':
         break;
@@ -343,6 +344,7 @@ class AgentSession {
           'permission_id': payload['permission_id'] as String? ?? '',
           'description': payload['description'] as String? ?? '需要您的授权',
         });
+        AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
 
       case 'agent_choice_request':
         final text = payload['text'] as String? ?? '';
@@ -350,6 +352,7 @@ class AgentSession {
             .map((e) => Map<String, dynamic>.from(e as Map))
             .toList();
         items.add({'type': 'choice', 'text': text, 'options': opts});
+        AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
 
       case 'task_done':
         _isGuiding = false;
@@ -366,6 +369,7 @@ class AgentSession {
             ? '没听清，请再说一次'
             : (payload['voice_hint'] as String? ?? '出错了，请重试');
         items.add({'role': 'agent', 'text': errText});
+        AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
 
       case 'agent_out_of_scope':
         _isGuiding = false;
@@ -373,6 +377,7 @@ class AgentSession {
         currentHighlightKey.value = null;
         final hint = payload['voice_hint'] as String? ?? '浙里办没有这个服务';
         items.add({'role': 'agent', 'text': hint});
+        AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
     }
     if (!_panelOpen) {
       _hasNewMessage = true;

@@ -7,7 +7,6 @@ import '../core/state/app_state.dart';
 import '../core/theme/app_theme.dart';
 import '../theme/design_tokens.dart';
 import '../services/agent_session.dart';
-import '../services/audio_player.dart';
 import '../services/auth_state.dart';
 import '../services/agent_element_registry.dart';
 import '../services/agent_settings_service.dart';
@@ -647,7 +646,6 @@ class _BubbleWindowState extends State<_BubbleWindow>
     _animCtrl.dispose();
     _scrollCtrl.dispose();
     _textCtrl.dispose();
-    AudioPlayer.stop();
     super.dispose();
   }
 

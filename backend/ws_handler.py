@@ -377,19 +377,54 @@ class WSHandler:
 
     async def _tts_to_b64(self, text: str) -> str | None:
         if not text:
+            logger.info("session=%s TTS skip: empty text", self.session_id)
             return None
+        logger.info("session=%s TTS request: text=%r (%d chars)",
+                    self.session_id, text[:50], len(text))
         try:
             from backend.tts_adapter import get_tts_adapter
             adapter = get_tts_adapter()
             audio_bytes = await adapter.synthesize(text)
             if audio_bytes:
                 import base64
+                logger.info("session=%s TTS success: %d audio bytes",
+                            self.session_id, len(audio_bytes))
                 return base64.b64encode(audio_bytes).decode()
+            logger.warning("session=%s TTS returned empty audio", self.session_id)
         except Exception as exc:
             logger.warning("session=%s TTS failed: %s", self.session_id, exc)
         return None
 
+    _TTS_TYPES = {
+        "agent_ready": ("greeting",),
+        "agent_reply": ("text",),
+        "cmd_say": ("voice_hint",),
+        "agent_choice_request": ("text",),
+        "permission_request": ("description",),
+        "agent_error": ("voice_hint",),
+        "agent_out_of_scope": ("voice_hint",),
+    }
+
     async def send(self, msg_type: str, payload):
+        is_dict = isinstance(payload, dict)
+        in_tts = msg_type in self._TTS_TYPES
+        current_b64 = (
+            "<has>" if (is_dict and payload.get("tts_audio_base64")) else "<None>"
+        )
+        logger.info(
+            "session=%s send msg=%s is_dict=%s in_tts_types=%s current_b64=%s",
+            self.session_id, msg_type, is_dict, in_tts, current_b64,
+        )
+        if msg_type in self._TTS_TYPES and isinstance(payload, dict):
+            if payload.get("tts_audio_base64") is None:
+                for field in self._TTS_TYPES[msg_type]:
+                    text = payload.get(field)
+                    if text:
+                        b64 = await self._tts_to_b64(text)
+                        if b64:
+                            payload["tts_audio_base64"] = b64
+                        break
+
         out = OutboundMessage(
             type=msg_type,
             payload=payload,
