@@ -1,43 +1,37 @@
 ---
 name: 项目开发进展
-description: 会话 21 后状态 — 气泡避让加固 + #78 localStorage 清理 + #79 医保缴费简化（仅本人）
+description: 会话 22 后状态 — 讯飞 TTS 全链路启用 + AgentDock V2 保存在分支（已回退）
 metadata:
   type: project
 ---
 
-## 当前状态（2026-05-28 会话 21 后）
+## 当前状态（2026-05-28 会话 22 后）
 
-工作树有未提交改动（7 个文件）。
+工作树干净，已 push 到 GitHub（`a2f064b`）。
 
-**会话 21 核心交付**：
+**会话 22 核心交付**：
 
-### 1. #73 气泡避让追加修复
-- key==null 时不再复位到底部（防遮挡确认按钮）
-- `_pickBubbleY` 末尾加 overlap 兜底（仍重叠则强制顶部）
-- `_scheduleAvoid` deadline 450→800ms + 跨页 entry==null 推顶部
+### 1. 讯飞 TTS 语音合成全链路启用
+- .env 配置讯飞 APPID/APIKey/APISecret
+- ws_handler.send 统一拦截注入 TTS（7 类消息自动生成 mp3）
+- 音色 x4_yezi，语速 40（慢 15%，适老化）
+- 前端 6 处消息类型新增 AudioPlayer.playBase64 播放
+- cmd_say 优先讯飞 mp3，fallback Web Speech
+- audio_player 队列式播放（防打断）
+- 删 _BubbleWindow.dispose 内 AudioPlayer.stop()（防跨页打断）
 
-### 2. #78 普通刷新清除会话级 localStorage
-- main.dart 启动时调用 `_clearSessionScopedKeys()` 清除 trust_level / first_choice_shown / profile_phone / profile_idcard
-- 保留跨刷新偏好：app_mode / voice_enabled / speech_rate
-
-### 3. #79 医保缴费简化（仅本人缴费）
-- prompt 新增第 0 步"给谁缴费？"前置问询，他人→回复功能未开发
-- yibao_jiaofei_page 删除缴费对象下拉 + 被缴费人信息区块（-136 行）
-- pay_confirm_page 删除被缴费人信息卡，固定本人态
-- pages.py 删除 daili 相关 ElementSpec
-
-**待测/待修**：
-
-1. **气泡避让** — 已修但需 build 后验证（确认页按钮不再被遮挡）
-2. **医保缴费全流程** — 简化后需重新测试：代理问"给谁缴费"→本人→代填→确认→密码→结果
-3. **#37 人脸验证真机测试**仍未进行
-4. **#52/#53/#54 待真机回归**
+### 2. AgentDock V2 底部 Shell 布局（已回退，分支保存）
+- 用户反馈 V1 AgentDock 交互"花里胡哨"，要求改为底部导航栏+聊天框一体化
+- 完成 AgentBottomShell（导航栏双态 + AnimatedSize + 五态 Panel）
+- 用户测试后因时间紧迫回退到 AgentFab 版本（`6693cf7`）
+- V2 进度保存在分支 `agentdock-v2-wip`，待后续继续
+- 已知问题：guide 态缺少输入框/按钮
 
 **下次会话接续点**：
-- 用户已确认医保缴费流程没问题
-- 需要 git commit 本次改动
-- 真机测试（#37 人脸验证 + #52/#53/#54 回归）
-- N1 麦克风 Web Speech API → N2 云服务器部署 → 答辩准备
+- 讯飞 ASR 语音识别接入（用户已提供讯飞 API 凭据）
+- #37 人脸验证真机测试
+- N2 云服务器部署 → N5 Prompt 调优 → N6 答辩准备
+- AgentDock V2 如需继续：`git checkout agentdock-v2-wip`
 
-**Why:** 下次会话恢复时快速了解会话 21 做了什么。
-**How to apply:** 新会话读此记忆，提醒用户 commit + 继续真机测试。
+**Why:** 下次会话恢复时快速了解会话 22 做了什么。
+**How to apply:** 新会话读此记忆，继续讯飞 ASR → 真机测试 → 部署。

@@ -4,6 +4,41 @@
 
 ---
 
+## 2026-05-28（会话 22）
+
+**主要工作**：
+
+1. **AgentDock V1 重构（已回退）**：AgentFab 悬浮气泡 → AgentDock 底部三态抽屉，19 页面迁移 + W1-W7/R1-R6 修复。用户反馈交互不满意后进一步做 V2 底部 Shell 布局（AgentBottomShell 嵌入 Scaffold.bottomNavigationBar），但因时间紧迫回退到 AgentFab 版本（`6693cf7`）。V2 进度保存在分支 `agentdock-v2-wip`。
+2. **讯飞 TTS 语音合成全链路启用（`a2f064b`）**：
+   - 配置讯飞 API（APPID/APIKey/APISecret 写入 .env）
+   - ws_handler.send 统一拦截注入讯飞 TTS（7 类消息：agent_ready/agent_reply/cmd_say/agent_choice_request/permission_request/agent_error/agent_out_of_scope）
+   - 音色改为 x4_yezi
+   - 前端 6 处消息类型新增 AudioPlayer.playBase64 播放
+   - agent_command_executor cmd_say 优先用讯飞 mp3，fallback Web Speech
+   - audio_player 改为队列式播放（防多条音频互相打断）
+   - 删除 _BubbleWindow.dispose 内 AudioPlayer.stop()（防跨页打断引导语音）
+
+**团队参与**：PM(Sonnet) / architect(Opus) / frontend(Sonnet) / backend(Sonnet) / lead(Opus)
+
+**关键决策**：
+- **AgentDock V2 回退**：用户觉得底部抽屉交互"花里胡哨"，且时间紧迫需要展示，回退到 AgentFab 悬浮弹窗版本
+- **讯飞 TTS 替代 Edge TTS**：用户选择讯飞 API，音色 x4_yezi
+- **TTS 注入点统一在 send 方法**：一处改动覆盖所有 13 个发送点，无需逐个修改
+- **audio_player 队列化**：防止多条音频互相打断，onEnded 触发下一条
+- **dispose 不停音频**：跨页时 widget 重建不应打断正在播的引导语音
+
+**遗留/待测（下次会话）**：
+- **AgentDock V2 底部 Shell 布局**在分支 `agentdock-v2-wip` 中，guide 态缺少输入框/按钮未修复
+- **#37 人脸验证真机测试**仍未进行
+- N1 麦克风语音输入（讯飞 ASR）→ N2 云服务器部署 → N5 Prompt 调优 → N6 答辩准备
+- DEPLOY.md 端口描述仍为 3080（V1 回退后未同步更新）
+
+**当前状态**：
+- 1 个 commit（a2f064b），已 push 到 GitHub
+- 下次会话恢复点：讯飞 ASR 语音输入 → 真机测试 → 部署
+
+---
+
 ## 2026-05-28（会话 21）
 
 **主要工作**：
