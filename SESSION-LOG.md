@@ -4,6 +4,44 @@
 
 ---
 
+## 2026-05-28（会话 23）
+
+**主要工作**：
+
+1. **#80 讯飞 ASR 语音识别全链路接入（`80ba845`，+206/-57，6 文件）**：
+   - 前端：新建 `AudioCapture`（Web Audio API 16k mono PCM）替换原 MediaRecorder 方案
+   - 前端：`MicButton` 改 `Listener` 零延迟触发 + 30s 超时 + `onError` 回调
+   - 前端：`AgentFab` 插入紧凑版麦克风按钮
+   - 前端：`agent_session` 新增 `sendAudio` + `asr_result` 占位气泡清除逻辑
+   - 后端：ASR/TTS 凭证隔离（`XUNFEI_ASR_*` 优先，回退共用凭证）
+   - 后端：`asr_adapter` wpgs 合并 bug 修复（`sentences` dict 按 `sn/pgs/rg` 正确处理）
+   - 后端：`business` 加 `vad_eos=3000 + ptt + nunum`；空 result 防护
+   - ASR 冒烟测试通过：TTS 生成 PCM → ASR 识别，"帮我缴纳医保"→"帮我缴纳医保。"
+2. **#81 成果展示 PPT 制作指引（`dd32839`）**：
+   - 产出 `docs/PPT_CONTENT.md`
+   - 10 页逐页内容（标题文字 + ≤5 条要点 + 图片需求表 + 布局建议）
+   - 附：8 张截图清单（含原型路由路径）+ 2 张自制图表说明
+
+**团队参与**：PM(Sonnet) / architect(Opus) / frontend(Sonnet) / backend(Sonnet)
+
+**关键决策**：
+- **AudioCapture 替代 MediaRecorder**：讯飞 ASR 要求 16k mono PCM，MediaRecorder 输出格式不可控；Web Audio API ScriptProcessorNode 直接采样更稳定
+- **MicButton 改 Listener 零延迟**：原 GestureDetector onLongPressStart 有 500ms 判定延迟，改 Listener onPointerDown 立即触发
+- **ASR 凭证隔离**：ASR 和 TTS 可能使用不同应用，优先读 `XUNFEI_ASR_*`，未配置时回退 `XUNFEI_*` 共用凭证
+- **wpgs 合并 bug**：sentences 以 sn 为 key 存字典，pgs=apd 追加，pgs=rpl 按 rg 替换对应位置；原代码直接 append 导致乱序
+
+**遗留/待测（下次会话）**：
+- **#37 人脸验证真机测试**仍未进行
+- **ASR 真机测试**：需要真实麦克风输入验证识别准确率和延迟
+- **#52/#53/#54/#61/#62/#63 待真机回归**
+- N2 云服务器部署（TLS 反代）→ N4 真机测试 → N5 Prompt 调优 → N6 答辩准备
+
+**当前状态**：
+- 2 个 commit（`80ba845` + `dd32839`），工作树干净
+- 下次会话恢复点：ASR 真机测试 → 人脸验证真机测试 → 部署
+
+---
+
 ## 2026-05-28（会话 22）
 
 **主要工作**：

@@ -85,6 +85,8 @@
 | 77 | ?reset URL 参数一键清空测试数据 | frontend | 🧪 |
 | 78 | 讯飞 TTS 语音合成全链路启用（send 统一注入 + 前端 7 类消息播放 + 队列化 + 跨页不打断） | frontend / backend | ✅ |
 | 79 | AgentDock V2 底部 Shell 布局重构（分支 agentdock-v2-wip，guide 态缺输入框） | frontend | 🔧 |
+| 80 | 讯飞 ASR 语音识别全链路接入（AudioCapture PCM + MicButton 零延迟 + wpgs 合并修复） | frontend / backend | ✅ |
+| 81 | 成果展示 PPT 制作指引（docs/PPT_CONTENT.md，10 页逐页内容 + 截图清单） | PM | ✅ |
 
 ---
 
@@ -501,3 +503,23 @@ cmd_highlight 触发时目标元素如果不在可视区域内（如"去支付"�
 用户只需"为自己缴费"场景，去掉"为他人代缴"全部分支。改动：① prompt 新增第 0 步"给谁缴费？"前置问询，他人回复"功能未开发"直接结束；② yibao_jiaofei_page 删除缴费对象下拉 + 被缴费人信息区块（-136 行）；③ pay_confirm_page 删除被缴费人信息卡，固定本人态；④ pages.py 删除 daili 相关 ElementSpec。完成时间：2026-05-28
 
 **状态**：🧪
+
+---
+
+### #80–#81 本次会话（2026-05-28，会话 23）
+
+**#80 讯飞 ASR 语音识别全链路接入**
+
+前端：新建 `AudioCapture`（Web Audio API ScriptProcessorNode，16k mono PCM 采样）替换原 MediaRecorder；`MicButton` 改 `Listener` onPointerDown/Up 零延迟触发，避免 GestureDetector 500ms 判定延迟，添加 30s 超时 + `onError` 回调；`AgentFab` 嵌入紧凑版麦克风按钮；`agent_session` 新增 `sendAudio` 方法 + `asr_result` 消息类型清除占位气泡。
+
+后端：ASR/TTS 凭证隔离（优先读 `XUNFEI_ASR_APPID/APIKEY/APISECRET`，未配置时回退 `XUNFEI_*` 共用凭证）；修复 `asr_adapter` wpgs 合并 bug（`sentences` dict 以 `sn` 为 key 存储，`pgs=apd` 追加，`pgs=rpl` 按 `rg` 范围替换，解决乱序问题）；`business` 参数加 `vad_eos=3000 + ptt + nunum`；加空 result 防护。
+
+冒烟测试通过：TTS 生成 PCM → ASR 识别，"帮我缴纳医保"→"帮我缴纳医保。"。完成时间：2026-05-28（commit `80ba845`，+206/-57，6 文件）
+
+**状态**：✅（待真机麦克风测试）
+
+**#81 成果展示 PPT 制作指引**
+
+产出 `docs/PPT_CONTENT.md`，基于确认的 10 页成果展示大纲（5分钟/295秒）。每页包含：页码标题、可直接复制的正文要点（≤5条/页，≤20字/条）、图片需求表（编号/内容/截图路径）、布局建议。附：8张截图清单（含对应原型路由路径和截取状态说明）+ 2张自制图表画法说明（止步点示意图 + 系统架构图）。完成时间：2026-05-28（commit `dd32839`）
+
+**状态**：✅
