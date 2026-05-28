@@ -34,6 +34,9 @@ class XunfeiASR:
                 "domain": "iat",
                 "accent": "mandarin",
                 "dwa": "wpgs",
+                "vad_eos": 3000,
+                "ptt": 1,
+                "nunum": 1,
             },
             "data": {
                 "status": 2 if is_only else 0,
@@ -66,6 +69,7 @@ class XunfeiASR:
                     await ws.send(json.dumps(frame))
                     await asyncio.sleep(0.04)
 
+            sentences: dict[int, str] = {}
             async for message in ws:
                 data = json.loads(message)
                 code = data.get("code", -1)
@@ -74,11 +78,25 @@ class XunfeiASR:
                     break
                 ws_data = data.get("data", {})
                 result = ws_data.get("result", {})
+                sn = result.get("sn", 0)
+                pgs = result.get("pgs")
+                rg = result.get("rg")
+                cur = ""
                 for w in result.get("ws", []):
                     for cw in w.get("cw", []):
-                        result_text += cw.get("w", "")
+                        cur += cw.get("w", "")
+                if not cur and pgs != "rpl":
+                    if ws_data.get("status") == 2:
+                        break
+                    continue
+                if pgs == "rpl" and rg:
+                    for k in list(sentences.keys()):
+                        if rg[0] <= k <= rg[1]:
+                            sentences.pop(k)
+                sentences[sn] = cur
                 if ws_data.get("status") == 2:
                     break
+            result_text = "".join(sentences[k] for k in sorted(sentences.keys()))
 
         return result_text.strip()
 
@@ -89,9 +107,9 @@ class XunfeiASR:
 
 
 def get_asr_adapter() -> XunfeiASR | None:
-    app_id = os.getenv("XUNFEI_APP_ID", "")
-    api_key = os.getenv("XUNFEI_API_KEY", "")
-    api_secret = os.getenv("XUNFEI_API_SECRET", "")
+    app_id = os.getenv("XUNFEI_ASR_APP_ID") or os.getenv("XUNFEI_APP_ID", "")
+    api_key = os.getenv("XUNFEI_ASR_API_KEY") or os.getenv("XUNFEI_API_KEY", "")
+    api_secret = os.getenv("XUNFEI_ASR_API_SECRET") or os.getenv("XUNFEI_API_SECRET", "")
     if app_id and api_key and api_secret:
         return XunfeiASR(app_id=app_id, api_key=api_key, api_secret=api_secret)
     return None

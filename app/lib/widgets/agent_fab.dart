@@ -17,6 +17,7 @@ import '../services/page_meta.dart';
 import '../services/ws_client.dart';
 import 'agent_bubble.dart';
 import 'auth_card.dart';
+import 'mic_button.dart';
 
 const _kFabSize = 52.0;
 
@@ -786,6 +787,17 @@ class _BubbleWindowState extends State<_BubbleWindow>
                               filled: true,
                               fillColor: Colors.grey.shade50,
                             ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        MicButton(
+                          size: 36,
+                          onAudioReady: (pcm) {
+                            setState(() => _items.add({'type': 'asr_placeholder', 'text': '🎙️ 识别中…'}));
+                            AgentSession.instance.sendAudio(pcm);
+                          },
+                          onError: (msg) => ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(msg)),
                           ),
                         ),
                         const SizedBox(width: 8),

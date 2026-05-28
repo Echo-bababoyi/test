@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'agent_command_executor.dart';
+import 'audio_capture.dart';
 import 'audio_player.dart';
 import 'chat_history.dart';
 import 'log_service.dart';
@@ -173,6 +176,21 @@ class AgentSession {
     });
   }
 
+  void sendAudio(Uint8List pcm) {
+    if (_sessionId == null) return;
+    if (pcm.isEmpty) return;
+    final frames = AudioCapture.frame(pcm);
+    for (int i = 0; i < frames.length; i++) {
+      WsClient.instance.send('audio_chunk', {
+        'session_id': _sessionId,
+        'chunk_index': i,
+        'is_last': i == frames.length - 1,
+        'audio_base64': base64Encode(frames[i]),
+      });
+    }
+    WsClient.instance.send('audio_end', {'session_id': _sessionId});
+  }
+
   void sendUserConfirm(String answer, String rawText) {
     WsClient.instance.send('user_confirm', {
       'session_id': _sessionId,
@@ -325,7 +343,11 @@ class AgentSession {
         AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
 
       case 'asr_result':
-        break;
+        items.removeWhere((e) => e['type'] == 'asr_placeholder');
+        final asrText = payload['text'] as String? ?? '';
+        if (asrText.isNotEmpty) {
+          items.add({'role': 'user', 'text': asrText});
+        }
 
       case 'agent_thinking':
         items.add({'type': 'thinking'});
@@ -361,6 +383,7 @@ class AgentSession {
         LogService.saveFromTaskDone(payload);
 
       case 'agent_error':
+        items.removeWhere((e) => e['type'] == 'asr_placeholder');
         _isGuiding = false;
         _unwatchInput();
         currentHighlightKey.value = null;

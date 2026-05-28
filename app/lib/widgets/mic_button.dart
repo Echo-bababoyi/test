@@ -1,12 +1,15 @@
 import 'dart:async';
-import 'dart:html' as html;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../services/audio_capture.dart';
 
-typedef AudioReadyCallback = void Function(List<String> base64Chunks);
+typedef AudioReadyCallback = void Function(Uint8List pcm);
 
 class MicButton extends StatefulWidget {
   final AudioReadyCallback onAudioReady;
-  const MicButton({super.key, required this.onAudioReady});
+  final void Function(String reason)? onError;
+  final double size;
+  const MicButton({super.key, required this.onAudioReady, this.onError, this.size = 100});
 
   @override
   State<MicButton> createState() => _MicButtonState();
@@ -18,8 +21,8 @@ class _MicButtonState extends State<MicButton> with SingleTickerProviderStateMix
   late Animation<double> _opacityAnim;
   bool _pressing = false;
 
-  html.MediaRecorder? _recorder;
-  final List<html.Blob> _chunks = [];
+  AudioCapture? _capture;
+  Timer? _maxTimer;
 
   @override
   void initState() {
@@ -38,62 +41,56 @@ class _MicButtonState extends State<MicButton> with SingleTickerProviderStateMix
 
   @override
   void dispose() {
+    _maxTimer?.cancel();
     _pulseController.dispose();
-    _recorder?.stop();
+    _capture?.stop();
     super.dispose();
   }
 
   Future<void> _startRecording() async {
     try {
-      final stream = await html.window.navigator.mediaDevices!.getUserMedia({'audio': true});
-      _chunks.clear();
-      _recorder = html.MediaRecorder(stream);
-      _recorder!.addEventListener('dataavailable', (event) {
-        final blob = (event as html.BlobEvent).data;
-        if (blob != null && blob.size > 0) _chunks.add(blob);
-      });
-      _recorder!.start(200); // 每 200ms 一个 chunk
+      _capture = AudioCapture();
+      await _capture!.start();
     } catch (e) {
-      debugPrint('[MicButton] getUserMedia error: $e');
+      debugPrint('[MicButton] start error: $e');
+      if (mounted) {
+        setState(() => _pressing = false);
+        _pulseController.stop();
+      }
+      final reason = e.toString().contains('NotAllowed')
+          ? '麦克风权限被拒，请在浏览器地址栏开启'
+          : '录音启动失败：$e';
+      widget.onError?.call(reason);
     }
   }
 
   Future<void> _stopRecording() async {
-    if (_recorder == null) return;
-    final completer = Completer<void>();
-    _recorder!.addEventListener('stop', (_) => completer.complete());
-    _recorder!.stop();
-    await completer.future;
-
-    // 把所有 blob 转为 base64
-    final base64Chunks = <String>[];
-    for (final blob in _chunks) {
-      final reader = html.FileReader();
-      final c = Completer<String>();
-      reader.onLoadEnd.listen((_) {
-        final result = reader.result as String;
-        // result 是 "data:audio/webm;base64,XXXX"
-        final b64 = result.split(',').last;
-        c.complete(b64);
-      });
-      reader.readAsDataUrl(blob);
-      base64Chunks.add(await c.future);
-    }
-
-    _recorder = null;
-    _chunks.clear();
-    if (base64Chunks.isNotEmpty) {
-      widget.onAudioReady(base64Chunks);
+    if (_capture == null) return;
+    try {
+      final pcm = await _capture!.stop();
+      _capture = null;
+      widget.onAudioReady(pcm);
+    } catch (e) {
+      debugPrint('[MicButton] stop error: $e');
+      _capture = null;
     }
   }
 
-  void _onPressStart(LongPressStartDetails _) {
+  void _onPressStart() {
     setState(() => _pressing = true);
     _pulseController.forward(from: 0);
     _startRecording();
+    _maxTimer = Timer(const Duration(seconds: 30), () {
+      if (!mounted) return;
+      setState(() => _pressing = false);
+      _pulseController.stop();
+      _stopRecording();
+    });
   }
 
-  void _onPressEnd(LongPressEndDetails _) {
+  void _onPressEnd() {
+    _maxTimer?.cancel();
+    _maxTimer = null;
     setState(() => _pressing = false);
     _pulseController.stop();
     _stopRecording();
@@ -101,12 +98,16 @@ class _MicButtonState extends State<MicButton> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onLongPressStart: _onPressStart,
-      onLongPressEnd: _onPressEnd,
+    final s = widget.size;
+    final circleSize = s * 0.72;
+    final iconSize = s * 0.36;
+    return Listener(
+      onPointerDown: (_) => _onPressStart(),
+      onPointerUp: (_) => _onPressEnd(),
+      onPointerCancel: (_) => _onPressEnd(),
       child: SizedBox(
-        width: 100,
-        height: 100,
+        width: s,
+        height: s,
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -116,8 +117,8 @@ class _MicButtonState extends State<MicButton> with SingleTickerProviderStateMix
                 builder: (_, __) => Opacity(
                   opacity: _opacityAnim.value,
                   child: Container(
-                    width: 72 * _scaleAnim.value,
-                    height: 72 * _scaleAnim.value,
+                    width: circleSize * _scaleAnim.value,
+                    height: circleSize * _scaleAnim.value,
                     decoration: const BoxDecoration(
                       color: Color(0xFFFF6D00),
                       shape: BoxShape.circle,
@@ -126,8 +127,8 @@ class _MicButtonState extends State<MicButton> with SingleTickerProviderStateMix
                 ),
               ),
             Container(
-              width: 72,
-              height: 72,
+              width: circleSize,
+              height: circleSize,
               decoration: const BoxDecoration(
                 color: Color(0xFFFF6D00),
                 shape: BoxShape.circle,
@@ -135,7 +136,7 @@ class _MicButtonState extends State<MicButton> with SingleTickerProviderStateMix
               child: Icon(
                 _pressing ? Icons.mic : Icons.mic_none,
                 color: Colors.white,
-                size: 36,
+                size: iconSize,
               ),
             ),
           ],
