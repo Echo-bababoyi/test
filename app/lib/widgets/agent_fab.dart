@@ -81,32 +81,27 @@ class _AgentFabState extends ConsumerState<AgentFab> {
     if (_bubbleDragging) return;
     final key = AgentSession.instance.currentHighlightKey.value;
 
-    if (key == null) {
-      final ctx = _stackKey.currentContext;
-      if (ctx == null) return;
-      final box = ctx.findRenderObject() as RenderBox?;
-      if (box == null || !box.attached) return;
-      setState(() {
-        _setBubblePos(
-          x: box.size.width - _bubbleW - 12,
-          y: box.size.height - _bubbleH - 10,
-        );
-        _bubbleArriveKey = UniqueKey();
-      });
-      return;
-    }
+    if (key == null) return;
 
     _scheduleAvoid(key);
   }
 
   void _scheduleAvoid(String key) {
-    final deadline = DateTime.now().add(const Duration(milliseconds: 450));
+    final deadline = DateTime.now().add(const Duration(milliseconds: 800));
     void tick() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || _bubbleDragging) return;
         if (AgentSession.instance.currentHighlightKey.value != key) return;
         final route = widget.currentPath;
-        final tCtx = route == null ? null : AgentElementRegistry.get(route, key)?.currentContext;
+        final entry = route == null ? null : AgentElementRegistry.get(route, key);
+        if (entry == null) {
+          if ((_bubbleY - 12).abs() > 0.5) {
+            setState(() { _setBubblePos(y: 12); _bubbleArriveKey = UniqueKey(); });
+          }
+          if (DateTime.now().isBefore(deadline)) tick();
+          return;
+        }
+        final tCtx = entry.currentContext;
         final tb = tCtx?.findRenderObject() as RenderBox?;
         final ab = _stackKey.currentContext?.findRenderObject() as RenderBox?;
         if (tb != null && ab != null && tb.attached && ab.attached) {
@@ -127,13 +122,18 @@ class _AgentFabState extends ConsumerState<AgentFab> {
     final maxTop = (maxH - _bubbleH - margin).clamp(0.0, maxH);
     final clearAbove = h.top - margin;
     final clearBelow = maxH - h.bottom - margin;
+    double y;
     if (clearAbove >= clearBelow) {
-      final y = clearAbove >= _bubbleH ? margin : (h.top - _bubbleH - margin);
-      return y.clamp(0.0, maxTop);
+      y = clearAbove >= _bubbleH ? margin : (h.top - _bubbleH - margin);
     } else {
-      final y = clearBelow >= _bubbleH ? maxTop : (h.bottom + margin);
-      return y.clamp(0.0, maxTop);
+      y = clearBelow >= _bubbleH ? maxTop : (h.bottom + margin);
     }
+    y = y.clamp(0.0, maxTop);
+    // 兜底：若仍重叠，强制顶部
+    if (y < h.bottom && y + _bubbleH > h.top) {
+      y = margin;
+    }
+    return y;
   }
 
   @override

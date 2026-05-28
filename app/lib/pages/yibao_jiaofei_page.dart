@@ -29,29 +29,20 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
   static const _pageId = 'yibao_jiaofei';
   static const _pageTitle = '医保缴费';
   Timer? _saveTimer;
-  String? _targetPerson;
   String? _xianzhong;
   String? _year;
   _JiaofeiDangci? _dangci;
   final _idController = TextEditingController();
   final _idFocus = FocusNode();
-  final _dailiNameController = TextEditingController();
-  final _dailiIdController = TextEditingController();
-  final _dailiIdFocus = FocusNode();
 
   bool _idFocused = false;
-  bool _dailiIdFocused = false;
 
-  final _targetKey = AgentElementRegistry.register(_route, 'select_jiaofei_duixiang');
   final _xianzhongKey = AgentElementRegistry.register(_route, 'select_jiaofei_xianzhong');
   final _yearKey = AgentElementRegistry.register(_route, 'select_jiaofei_niandu');
   final _dangciKey = AgentElementRegistry.register(_route, 'select_jiaofei_dangci');
   final _idKey = AgentElementRegistry.register(_route, 'input_id_card');
-  final _dailiNameKey = AgentElementRegistry.register(_route, 'input_daili_name');
-  final _dailiIdKey = AgentElementRegistry.register(_route, 'input_daili_idcard');
   final _submitKey = AgentElementRegistry.register(_route, 'btn_go_payment');
 
-  static const _persons = ['本人', '配偶', '子女'];
   static const _xianzhongs = ['城乡居民医保', '灵活就业人员医保'];
   static const _years = ['2024年度', '2025年度', '2026年度'];
 
@@ -71,26 +62,14 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
     '灵活就业人员医保': '按月缴费，次月生效',
   };
 
-  bool get _needDaili => _targetPerson != null && _targetPerson != '本人';
-
   bool get _canSubmit {
-    if (_targetPerson == null || _xianzhong == null ||
-        _year == null || _dangci == null) {
-      return false;
-    }
-    if (_idController.text.length != 18) { return false; }
-    if (_needDaili) {
-      if (_dailiNameController.text.isEmpty) { return false; }
-      if (_dailiIdController.text.length != 18) { return false; }
-    }
+    if (_xianzhong == null || _year == null || _dangci == null) return false;
+    if (_idController.text.length != 18) return false;
     return true;
   }
 
   bool get _idInvalid =>
       _idController.text.isNotEmpty && _idController.text.length != 18;
-  bool get _dailiIdInvalid =>
-      _dailiIdController.text.isNotEmpty &&
-      _dailiIdController.text.length != 18;
 
   @override
   void initState() {
@@ -98,12 +77,6 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
     WidgetsBinding.instance.addObserver(this);
     DraftService.clearCompleted(_pageId);
     AgentElementRegistry.registerController(_route, 'input_id_card', _idController);
-    AgentElementRegistry.registerController(_route, 'input_daili_idcard', _dailiIdController);
-    AgentElementRegistry.registerController(_route, 'input_daili_name', _dailiNameController);
-    AgentElementRegistry.registerApplier(_route, 'select_jiaofei_duixiang', (v) {
-      final m = _persons.firstWhere((p) => v.contains(p) || p.contains(v), orElse: () => '');
-      if (m.isNotEmpty) { setState(() => _targetPerson = m); _scheduleAutoSave(); }
-    });
     AgentElementRegistry.registerApplier(_route, 'select_jiaofei_xianzhong', (v) {
       final m = _xianzhongs.firstWhere((x) => v.contains(x) || x.contains(v), orElse: () => '');
       if (m.isNotEmpty) _onXianzhongChanged(m);
@@ -121,17 +94,7 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
       setState(() {});
       _scheduleAutoSave();
     });
-    _dailiIdController.addListener(() {
-      setState(() {});
-      _scheduleAutoSave();
-    });
-    _dailiNameController.addListener(() {
-      setState(() {});
-      _scheduleAutoSave();
-    });
     _idFocus.addListener(() => setState(() => _idFocused = _idFocus.hasFocus));
-    _dailiIdFocus.addListener(
-        () => setState(() => _dailiIdFocused = _dailiIdFocus.hasFocus));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (GoRouterState.of(context).uri.queryParameters['restore'] == '1') {
         _restoreDraft();
@@ -155,13 +118,9 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
     if (!DraftService.isCompleted(_pageId)) _flushAutoSave();
     WidgetsBinding.instance.removeObserver(this);
     AgentElementRegistry.unregister(_route, 'input_id_card');
-    AgentElementRegistry.unregister(_route, 'input_daili_idcard');
     AgentElementRegistry.unregisterPage(_route);
     _idController.dispose();
     _idFocus.dispose();
-    _dailiNameController.dispose();
-    _dailiIdController.dispose();
-    _dailiIdFocus.dispose();
     super.dispose();
   }
 
@@ -171,7 +130,6 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
     final fields = (draft['fields'] as Map?)?.cast<String, dynamic>() ?? {};
     final sensitive = draft['sensitive_filled'] as bool? ?? false;
     setState(() {
-      _targetPerson = fields['target_person'] as String?;
       _xianzhong = fields['xianzhong'] as String?;
       _year = fields['year'] as String?;
       final dangciLabel = fields['dangci'] as String?;
@@ -182,10 +140,6 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
             if (d.label == dangciLabel) { _dangci = d; break; }
           }
         }
-      }
-      final dailiName = fields['daili_name'] as String?;
-      if (dailiName != null && dailiName.isNotEmpty) {
-        _dailiNameController.text = dailiName;
       }
     });
     if (sensitive && mounted) {
@@ -206,11 +160,9 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
 
   void _flushAutoSave() {
     final fields = <String, dynamic>{
-      'target_person': _targetPerson,
       'xianzhong': _xianzhong,
       'year': _year,
       'dangci': _dangci?.label,
-      'daili_name': _dailiNameController.text,
     };
     fields.removeWhere((k, v) => v == null || v.toString().isEmpty);
     if (fields.isEmpty) return;
@@ -218,7 +170,7 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
       _pageId,
       _pageTitle,
       fields,
-      _idController.text.isNotEmpty || _dailiIdController.text.isNotEmpty,
+      _idController.text.isNotEmpty,
     );
   }
 
@@ -259,24 +211,6 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _FieldLabel('缴费对象'),
-                    DropdownButtonFormField<String>(
-                      key: _targetKey,
-                      initialValue: _targetPerson,
-                      hint: const Text('请选择缴费对象', style: TextStyle(fontSize: 18, color: Color(0xFF999999))),
-                      items: _persons.map((p) => DropdownMenuItem(
-                        value: p,
-                        child: Text(p, style: const TextStyle(fontSize: 18)),
-                      )).toList(),
-                      onChanged: (v) {
-                        setState(() => _targetPerson = v);
-                        _scheduleAutoSave();
-                      },
-                      decoration: _inputDecoration(),
-                      style: const TextStyle(fontSize: 18, color: Color(0xFF333333)),
-                    ),
-                    const SizedBox(height: 20),
-
                     _FieldLabel('险种'),
                     DropdownButtonFormField<String>(
                       key: _xianzhongKey,
@@ -381,65 +315,6 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
                         child: Text('请输入18位身份证号',
                             style: TextStyle(fontSize: 15, color: Color(0xFFFF3B30))),
                       ),
-
-                    // 条件区块：被缴费人信息（_needDaili 才展开）
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeInOut,
-                      child: _needDaili
-                          ? Padding(
-                              padding: const EdgeInsets.only(top: 20),
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: _kOrange.withValues(alpha: 0.5),
-                                    width: 1.5,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Padding(
-                                      padding: EdgeInsets.only(bottom: 12),
-                                      child: Text('被缴费人信息',
-                                          style: TextStyle(fontSize: 14, color: _kOrange)),
-                                    ),
-                                    _FieldLabel('被缴费人姓名'),
-                                    SizedBox(
-                                      height: 56,
-                                      child: TextField(
-                                        key: _dailiNameKey,
-                                        controller: _dailiNameController,
-                                        decoration: _inputDecoration(),
-                                        style: const TextStyle(fontSize: 18),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    _FieldLabel('被缴费人证件号'),
-                                    _MaskedIdField(
-                                      fieldKey: _dailiIdKey,
-                                      controller: _dailiIdController,
-                                      focusNode: _dailiIdFocus,
-                                      focused: _dailiIdFocused,
-                                      invalid: _dailiIdInvalid,
-                                      decoration: _inputDecoration(),
-                                      maskFn: _maskId,
-                                    ),
-                                    if (_dailiIdInvalid)
-                                      const Padding(
-                                        padding: EdgeInsets.only(top: 6),
-                                        child: Text('请输入18位身份证号',
-                                            style: TextStyle(
-                                                fontSize: 15, color: Color(0xFFFF3B30))),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
                   ],
                 ),
               ),
@@ -454,14 +329,9 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
                             extra: {
                               'xianzhong': _xianzhong,
                               'year': _year,
-                              'target': _targetPerson,
                               'dangci_label': _dangci!.label,
                               'amount': _dangci!.amount.toStringAsFixed(2),
                               'id_masked': _maskId(_idController.text),
-                              if (_needDaili) ...{
-                                'daili_name': _dailiNameController.text,
-                                'daili_id_masked': _maskId(_dailiIdController.text),
-                              },
                             },
                           )
                       : null,

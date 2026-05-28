@@ -7,6 +7,7 @@ import 'core/theme/app_theme.dart';
 
 void main() {
   _maybeResetStorage();
+  _clearSessionScopedKeys();
   runApp(const ProviderScope(child: ZlbElderApp()));
 }
 
@@ -21,6 +22,14 @@ void _maybeResetStorage() {
   html.window.indexedDB?.deleteDatabase('xiaozhe_draft');
   final loc = html.window.location;
   html.window.history.replaceState(null, '', '${loc.pathname}${loc.hash}');
+}
+
+void _clearSessionScopedKeys() {
+  final store = html.window.localStorage;
+  store.remove('xiaozhe_trust_level');
+  store.remove('xiaozhe_first_choice_shown');
+  store.remove('xiaozhe_profile_phone');
+  store.remove('xiaozhe_profile_idcard');
 }
 
 class ZlbElderApp extends ConsumerWidget {

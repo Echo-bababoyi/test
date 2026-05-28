@@ -71,12 +71,8 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
         GoRouterState.of(context).extra as Map<String, dynamic>? ?? {};
     final xianzhong = inExtra['xianzhong'] as String? ?? '城乡居民医保';
     final year = inExtra['year'] as String? ?? '2026年度';
-    final target = inExtra['target'] as String? ?? '本人';
     final amount = inExtra['amount'] as String? ?? '380.00';
     final idMasked = inExtra['id_masked'] as String? ?? '330****2518';
-    final dailiName = inExtra['daili_name'] as String?;
-    final dailiIdMasked = inExtra['daili_id_masked'] as String?;
-    final isDaili = dailiName != null && dailiName.isNotEmpty;
     final cardDigits = _cardController.text.replaceAll(RegExp(r'\D'), '');
     final bankTail = cardDigits.length >= 4 ? cardDigits.substring(cardDigits.length - 4) : '';
 
@@ -99,22 +95,16 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
             rows: [
               ('险种', xianzhong),
               ('缴费年度', year),
-              ('缴费对象', target),
             ],
             highlight: ('缴费金额', '¥ $amount'),
           ),
           const SizedBox(height: Spacing.md),
           _SectionCard(
-            title: isDaili ? '被缴费人信息' : '缴费人信息',
-            rows: isDaili
-                ? [
-                    ('姓名', dailiName),
-                    ('证件号', dailiIdMasked ?? ''),
-                  ]
-                : [
-                    ('姓名', '*小明'),
-                    ('证件号', idMasked),
-                  ],
+            title: '缴费人信息',
+            rows: [
+              ('姓名', '*小明'),
+              ('证件号', idMasked),
+            ],
           ),
           const SizedBox(height: Spacing.md),
           Container(

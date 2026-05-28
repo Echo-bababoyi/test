@@ -1,55 +1,43 @@
 ---
 name: 项目开发进展
-description: 会话 20 后状态 — #69-#71 修复 + 高亮滚动 + 气泡避让 + 确认页代填 + 授权每次弹卡 + 密码 demo + ?reset
+description: 会话 21 后状态 — 气泡避让加固 + #78 localStorage 清理 + #79 医保缴费简化（仅本人）
 metadata:
   type: project
 ---
 
-## 当前状态（2026-05-27 会话 20 后）
+## 当前状态（2026-05-28 会话 21 后）
 
-工作树干净。6 个 commit（447f889 → 9026fce）未推送 GitHub。
+工作树有未提交改动（7 个文件）。
 
-**会话 20 核心交付**：
+**会话 21 核心交付**：
 
-### 1. #69/#70/#71 三个遗留 bug 修复
-- #69：授权卡文案显示具体字段名（"小浙想帮您填写【身份证号】"）
-- #70：草稿回填仅 ?restore=1 时触发，默认进页下拉框为空
-- #71：pay_confirm_page 补挂 AgentFab
+### 1. #73 气泡避让追加修复
+- key==null 时不再复位到底部（防遮挡确认按钮）
+- `_pickBubbleY` 末尾加 overlap 兜底（仍重叠则强制顶部）
+- `_scheduleAvoid` deadline 450→800ms + 跨页 entry==null 推顶部
 
-### 2. 高亮自动滚动 + 气泡避让（#72/#73）
-- cmd_highlight 前加 Scrollable.ensureVisible(alignment:0.85)
-- 气泡避让从单次 postFrame 改为 450ms 有界重试
-- _pickBubbleY 改为 clearAbove vs clearBelow 净空决策
+### 2. #78 普通刷新清除会话级 localStorage
+- main.dart 启动时调用 `_clearSessionScopedKeys()` 清除 trust_level / first_choice_shown / profile_phone / profile_idcard
+- 保留跨刷新偏好：app_mode / voice_enabled / speech_rate
 
-### 3. 确认页代填续写（#74）
-- pay_confirm_page 注册 confirm_id_card/confirm_bank_card/btn_confirm_pay + applier
-- prompt 第 3 步改 cmd_wait_user，新增第 4 步代填身份证+银行卡(@档案)
-- pages.py 补确认页 PageSpec
-- user_profile_service 新增 mock 银行卡
-
-### 4. 每次敏感字段独立弹授权卡（#75）
-- 移除 _task_sensitive_authorized 一次性放行（4 处删除）
-- 全流程预期 3 张授权卡（主页身份证 + 确认页身份证 + 银行卡）
-
-### 5. 支付密码页 demo 模式（#76）
-- 去掉硬编码密码校验，任意 6 位输入通过
-
-### 6. ?reset URL 参数（#77）
-- 访问 /?reset 清空 xiaozhe_* localStorage + app_mode + IndexedDB 草稿
+### 3. #79 医保缴费简化（仅本人缴费）
+- prompt 新增第 0 步"给谁缴费？"前置问询，他人→回复功能未开发
+- yibao_jiaofei_page 删除缴费对象下拉 + 被缴费人信息区块（-136 行）
+- pay_confirm_page 删除被缴费人信息卡，固定本人态
+- pages.py 删除 daili 相关 ElementSpec
 
 **待测/待修**：
 
-1. **气泡避让方向** — 代码已改对（architect 确认），需 build 后 Ctrl+Shift+R 硬刷新验证
-2. **?reset 功能** — 已实现未测试
-3. **医保缴费全流程** — 确认页代填+授权卡+密码页，需完整跑一遍
-4. **#68 医保缴费 prompt** 待完整测试
-5. **#37 人脸验证真机测试**仍未进行
-6. **#52/#53/#54 待真机回归**
+1. **气泡避让** — 已修但需 build 后验证（确认页按钮不再被遮挡）
+2. **医保缴费全流程** — 简化后需重新测试：代理问"给谁缴费"→本人→代填→确认→密码→结果
+3. **#37 人脸验证真机测试**仍未进行
+4. **#52/#53/#54 待真机回归**
 
 **下次会话接续点**：
-- **首要**：build + 硬刷新测气泡避让 + ?reset + 医保全流程
+- 用户已确认医保缴费流程没问题
+- 需要 git commit 本次改动
 - 真机测试（#37 人脸验证 + #52/#53/#54 回归）
 - N1 麦克风 Web Speech API → N2 云服务器部署 → 答辩准备
 
-**Why:** 下次会话恢复时快速了解会话 20 做了什么、哪些问题待测。
-**How to apply:** 新会话读此记忆，提醒用户先 build 测试气泡避让和 ?reset。
+**Why:** 下次会话恢复时快速了解会话 21 做了什么。
+**How to apply:** 新会话读此记忆，提醒用户 commit + 继续真机测试。

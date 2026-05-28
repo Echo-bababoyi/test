@@ -153,10 +153,8 @@ PAGES: dict[str, PageSpec] = {
     # ── 业务页 ───────────────────────────────────────────────────────────
     '/service/yibao-jiaofei': PageSpec(
         route='/service/yibao-jiaofei', page_id='yibao_jiaofei', title='医保缴费页',
-        description='为本人或家属缴纳本年度城乡居民基本医疗保险',
+        description='为本人缴纳本年度城乡居民/灵活就业医疗保险',
         elements=(
-            ElementSpec(key='select_jiaofei_duixiang', kind='select', label='缴费对象',
-                        description='本人 / 家属'),
             ElementSpec(key='select_jiaofei_xianzhong', kind='select', label='险种',
                         description='默认城乡居民医疗保险'),
             ElementSpec(key='select_jiaofei_niandu', kind='select', label='缴费年度'),
@@ -164,9 +162,6 @@ PAGES: dict[str, PageSpec] = {
                         description='一档 / 二档'),
             ElementSpec(key='input_id_card', kind='input', label='身份证号',
                         description='18 位居民身份证号', sensitive=True),
-            ElementSpec(key='input_daili_name', kind='input', label='代办人姓名'),
-            ElementSpec(key='input_daili_idcard', kind='input', label='代办人身份证号',
-                        sensitive=True),
             ElementSpec(key='btn_go_payment', kind='button', label='去支付',
                         description='提交表单进入支付页（由用户亲手点击）'),
         ),

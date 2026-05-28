@@ -460,7 +460,7 @@ cmd_highlight 触发时目标元素如果不在可视区域内（如"去支付"�
 
 **#73 气泡避让有界重试 + 净空决策**
 
-气泡避让只在高亮瞬间算一次（单次 postFrameCallback），目标未稳定或滚动中拿不到布局就直接放弃。改为 450ms 有界重试逐帧重算。`_pickBubbleY` 从 center 翻转改为 clearAbove vs clearBelow 净空比较，根治近中心方向抖动。完成时间：2026-05-27
+气泡避让只在高亮瞬间算一次（单次 postFrameCallback），目标未稳定或滚动中拿不到布局就直接放弃。改为 450ms→800ms 有界重试逐帧重算。`_pickBubbleY` 从 center 翻转改为 clearAbove vs clearBelow 净空比较，根治近中心方向抖动。会话 21 追加修复：key==null 时不再复位到底部（防遮挡按钮）；`_pickBubbleY` 末尾加 overlap 兜底；`_scheduleAvoid` 跨页 entry==null 时推顶部。完成时间：2026-05-27 / 追加 2026-05-28
 
 **状态**：🧪
 
@@ -485,5 +485,17 @@ cmd_highlight 触发时目标元素如果不在可视区域内（如"去支付"�
 **#77 ?reset URL 参数一键清空测试数据**
 
 访问 `/?reset` 自动清空 xiaozhe_* localStorage + app_mode + IndexedDB 草稿库，清完后 replaceState 去掉参数。方便测试回到全新用户态。完成时间：2026-05-27
+
+**状态**：🧪
+
+**#78 普通刷新页面不会清空 localStorage 状态**
+
+普通刷新（F5 / Ctrl+R）后会话级 localStorage 残留（trust_level / first_choice_shown / profile_phone / profile_idcard）。修复：main.dart 启动时调用 `_clearSessionScopedKeys()` 清除这 4 个 key，保留跨刷新偏好（app_mode / voice_enabled / speech_rate）。完成时间：2026-05-28
+
+**状态**：🧪
+
+**#79 医保缴费简化 — 仅保留本人缴费**
+
+用户只需"为自己缴费"场景，去掉"为他人代缴"全部分支。改动：① prompt 新增第 0 步"给谁缴费？"前置问询，他人回复"功能未开发"直接结束；② yibao_jiaofei_page 删除缴费对象下拉 + 被缴费人信息区块（-136 行）；③ pay_confirm_page 删除被缴费人信息卡，固定本人态；④ pages.py 删除 daili 相关 ElementSpec。完成时间：2026-05-28
 
 **状态**：🧪
