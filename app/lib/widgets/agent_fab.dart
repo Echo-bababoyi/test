@@ -791,7 +791,7 @@ class _BubbleWindowState extends State<_BubbleWindow>
                         ),
                         const SizedBox(width: 8),
                         MicButton(
-                          size: 36,
+                          size: 50,
                           onAudioReady: (pcm) {
                             setState(() => _items.add({'type': 'asr_placeholder', 'text': '🎙️ 识别中…'}));
                             AgentSession.instance.sendAudio(pcm);

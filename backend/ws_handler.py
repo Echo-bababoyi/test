@@ -46,6 +46,7 @@ class WSHandler:
         self.state = SessionState.idle
         self._agent_core = None
         self._pending_intent: dict | None = None
+        self._pending_choices: list[dict] | None = None  # 当前弹出的选择框选项，非 None 时优先本地匹配
         self._audio_buf: list[bytes] = []
         self._last_activity: float = time.time()
 
@@ -235,6 +236,32 @@ class WSHandler:
         self._agent_core.set_query_result(payload.page_id, payload.result_fields)
         asyncio.create_task(self._broadcast_query_result())
 
+    def _match_choice(self, text: str) -> dict | None:
+        """若当前有待定选项，尝试将用户文本模糊匹配到某一选项，返回匹配到的 option dict 或 None。"""
+        if not self._pending_choices:
+            return None
+        t = text.strip()
+        # 精确匹配 value/label
+        for opt in self._pending_choices:
+            if t == opt.get("value") or t == opt.get("label"):
+                return opt
+        # 子串包含匹配（优先，避免肯定词误匹配覆盖"城乡居民医保"这类具体值）
+        for opt in self._pending_choices:
+            val = opt.get("value", "")
+            label = opt.get("label", "")
+            if val and (val in t or t in val):
+                return opt
+            if label and (label in t or t in label):
+                return opt
+        # 肯定词 → 第一项，否定词 → 最后一项（兜底）
+        affirm = {"对", "是", "好", "确认", "对的", "是的", "好的", "对啊", "嗯", "要", "行", "可以"}
+        deny = {"不", "否", "取消", "不要", "不对", "不是", "算了", "不行"}
+        if t in affirm:
+            return self._pending_choices[0]
+        if t in deny:
+            return self._pending_choices[-1]
+        return None
+
     async def _broadcast_query_result(self) -> None:
         try:
             summary_text = await self._agent_core.broadcast_query_result()
@@ -269,6 +296,28 @@ class WSHandler:
         if self._agent_core.is_awaiting_answer:
             logger.info("session=%s route reply to executor: %r", self.session_id, text)
             self._agent_core.resolve_answer(text)
+            return
+        # 若处于确认等待状态（requires_confirmation），直接做肯定/否定匹配，跳过 LLM
+        if self.state == SessionState.confirming and self._pending_intent:
+            t = text.strip()
+            affirm = {"对", "是", "好", "确认", "对的", "是的", "好的", "对啊", "嗯", "要", "行", "可以", "帮我办", "去吧", "开始"}
+            deny = {"不", "否", "取消", "不要", "不对", "不是", "算了", "不行", "停", "别"}
+            if t in affirm:
+                logger.info("session=%s confirm YES by text: %r", self.session_id, text)
+                self.state = SessionState.executing
+                asyncio.create_task(self._run_execute(self._pending_intent["intent_summary"]))
+                return
+            if t in deny:
+                logger.info("session=%s confirm NO by text: %r", self.session_id, text)
+                self.state = SessionState.idle
+                self._pending_intent = None
+                return
+        # 若处于选项等待状态（agent_choice_request），先本地模糊匹配，跳过 LLM
+        matched = self._match_choice(text)
+        if matched:
+            logger.info("session=%s choice matched: %r → %s", self.session_id, text, matched.get("value"))
+            self._pending_choices = None
+            asyncio.create_task(self.process_asr_text(matched["value"]))
             return
         try:
             await self.send("agent_thinking", AgentThinkingPayload(
@@ -308,12 +357,14 @@ class WSHandler:
                 self.state = SessionState.listening
                 self._pending_intent = None
                 prompt_text = intent.get("confirm_text") or "您想用刷脸登录还是验证码登录？"
+                options = [
+                    {"value": "刷脸登录", "label": "刷脸登录"},
+                    {"value": "验证码登录", "label": "验证码登录"},
+                ]
+                self._pending_choices = options  # 保存选项，支持用户打字匹配
                 await self.send("agent_choice_request", AgentChoiceRequestPayload(
                     text=prompt_text,
-                    options=[
-                        {"value": "刷脸登录", "label": "刷脸登录"},
-                        {"value": "验证码登录", "label": "验证码登录"},
-                    ],
+                    options=options,
                 ).model_dump())
                 return
 
