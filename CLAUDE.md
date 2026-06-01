@@ -30,7 +30,6 @@
 .
 ├── CLAUDE.md                 # 本文件（项目指引）
 ├── ISSUES.md                 # 问题/任务清单（唯一）
-├── SESSION-LOG.md            # 会话日志
 ├── bin/                      # Flutter/Dart 包装脚本
 │   ├── flutter
 │   └── dart

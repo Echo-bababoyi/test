@@ -1,7 +1,7 @@
 <!-- 项目记忆索引。每条对应同目录下一个 .md 文件 -->
 
 - [编码通用纪律](feedback_coding.md) — Config 保护 / 编辑前查调用方 / Search-first / Checkpoint / 服务重启
-- [三文档机制](feedback_docs.md) — ISSUES + SESSION-LOG + CLAUDE.md 分工与会话恢复（COMMITS.md 已删除）
+- [二文档机制](feedback_docs.md) — ISSUES + CLAUDE.md 分工；会话恢复靠项目记忆 + git log（COMMITS.md / SESSION-LOG.md 已删除）
 - [团队启动配置](feedback_team_setup.md) — 默认 4 人 全员 Opus / 成员结构 / persona 文件 / 生命周期
 - [团队运转规则](feedback_team_workflow.md) — team-lead 铁律 / 派活纪律 / 成员约束 / Bug 7 步 / 功能 6 步
 - [踩坑教训](feedback_lessons.md) — 跳过 review 自审 / 成员越权 commit / 批量改动回退 / 粗略方案驳回 / CDN 国内不通
