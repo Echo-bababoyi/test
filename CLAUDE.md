@@ -16,13 +16,13 @@
 - 新增记忆时写入 `.claude/memory/<memory_name>.md` 并在同目录 `MEMORY.md` 中登记
 - 读取记忆时仅从此目录加载，不要回落到默认路径
 
-## 仓库定位（2026-05-25 更新）
+## 仓库定位（2026-06-01 更新）
 
 本项目为本科毕业设计，学术定位见开题报告：**《信息服务 APP 的适老化设计与多模态交互》**。
 
 **核心创新点**：**受控响应型智能代理"小浙"**（权限受控 + 行为受控 + 不主动挑事，只在用户有需求时介入）。围绕该代理设计展开适老化交互与多模态交互研究。
 
-**当前阶段**：前端交互体验全面收尾 + 人脸验证真检测落地（2026-05-19，会话 9）。AgentFab 悬浮助手已全页面覆盖（12 页接入 + ConsumerStatefulWidget 监听 modeProvider 自动派生标准蓝 / 长辈橙）+ AgentPanel 664 行死代码清理；标准版定位收紧（关闭"立即登录"横幅 + 搜索条改 SnackBar 占位，仅保留品牌门面）+ 长辈版橙色全 10 文件统一（标准蓝残留全部清除，splash/standard_home 保留浙里办原版蓝色作为品牌还原）；"我的"页面未登录态橙色登录引导（_LoginPrompt + loginProvider 响应式登出）；标准版底部"我的"Tab 误跳长辈版 bug 修复，唯一合法跨版本入口仅 Hero 区"长辈版"按钮；登录页适老化（条款勾选交互 + 字号 ≥18sp + 删除装饰区）；**人脸验证 MediaPipe 真检测全实现**（FaceLandmarker 本地化部署零 CDN 依赖 + 摄像头预览 + EAR 眨眼 + yaw ±15° 转头 + S3-S9 状态机 + E1-E4 异常分支 + 跨页 SnackBar，待真机测试）；后端 Agno API 字段适配 + 异常捕获 + ASR 三类错误细分 + text_input 异步化 + TTS 按需生成 + dotenv 配置加固；WS 客户端端口对齐后端 8080。Noto Sans SC 字体集成。主流程可在 localhost 跑通。下一步：**人脸验证真机测试**（Chrome/Safari/Firefox 摄像头 + EAR/yaw 阈值实测调优）→ 验证码登录流程 → N1 麦克风 Web Speech API → N2 云服务器部署（TLS 反代）→ N4 真机测试 → N5 Prompt 调优 → N6 答辩准备。技术栈：FastAPI + Agno Agent + DeepSeek-V3 + Web Speech API（ASR）+ Edge TTS + MediaPipe Tasks Vision（人脸检测）。
+**当前阶段**：进入**答辩准备阶段** + 语音全链路（ASR+TTS）已跑通（2026-06-01，会话 25 后）。会话 25：开题报告/论文初稿文本拆分入 `docs/word/extracted/`（嵌套结构 + 目录索引）；产出答辩 PPT 三件套（`docs/答辩PPT大纲.md` 大纲+逐页讲稿、`docs/答辩PPT逐页文字.md` 上屏文字、`docs/答辩PPT配图清单.md`）。注意：论文最新版已含真实可用性测试数据（SUS 57.5、信任题 1.75），答辩口径如实呈现不夸大。讯飞 ASR 语音识别全链路接入（Web Audio API PCM 录音 + 后端 wpgs 修复 + 凭证隔离，冒烟测试通过）；讯飞 TTS 语音合成全链路启用；ws_handler 选项/确认本地匹配跳过 LLM（响应提速）；成果展示 PPT 生成流水线（gen_ppt.py + take_screenshots.py + 12 张截图 + 最终 pptx）；文档格式整理（开题报告→docx，论文→doc）。4 个核心场景（登录刷脸/验证码 + 医保缴费 + 养老金查询）全委托代填改造完成。下一步：**前后端联调测试**（浏览器按麦克风说话实测）→ N2 云服务器部署（TLS 反代）→ N4 真机测试 → N5 Prompt 调优 → N6 答辩准备。技术栈：FastAPI + Agno Agent + DeepSeek-V3 + 讯飞 ASR（语音识别）+ 讯飞 TTS / Edge TTS（语音合成）+ MediaPipe Tasks Vision（人脸检测）。
 
 ## 项目结构
 

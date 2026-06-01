@@ -1,6 +1,6 @@
 ---
 name: 团队启动配置
-description: CC Team 创建方式 / 默认 4 人 Sonnet / 成员结构 / 生命周期 — 用户说"启动团队"时加载
+description: CC Team 创建方式 / 默认 4 人 全员 Opus / 成员结构 / 生命周期 — 用户说"启动团队"时加载
 type: feedback
 ---
 
@@ -14,11 +14,10 @@ TeamCreate → Agent(team_name=...) 一次性创建 4 个成员（PM / architect
 
 ## 成员模型
 
-- **team-lead + architect**：Opus 4.6（1M context）— 需要复杂推理和架构决策
-- **PM / frontend / backend / reviewer**：Sonnet — 速度快、成本低，足够胜任编码/文档任务
+- **全员 Opus**：team-lead / architect / PM / frontend / backend / reviewer 统一使用 Opus
 
-**Why**：architect 需要做技术方案设计、代码 review、架构评估，复杂度接近 team-lead，用 Opus 保证质量。其余成员执行具体任务用 Sonnet 即可。
-**创建时**：`Agent(model="opus")` 给 architect，其余不指定或指定 `model="sonnet"`。
+**Why**：用户要求全员 Opus，质量优先。
+**创建时**：所有成员 `Agent(model="opus")`。
 
 ## 默认 4 人结构
 
