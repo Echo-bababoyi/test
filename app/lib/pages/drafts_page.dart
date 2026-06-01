@@ -3,8 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../services/draft_store.dart';
 import '../services/page_meta.dart';
-import '../widgets/agent_fab.dart';
-import '../widgets/elder_bottom_nav.dart';
+import '../widgets/agent_dock.dart';
 
 const _kOrange = Color(0xFFFF6D00);
 const _kOrangeLight = Color(0xFFFFF3E0);
@@ -140,12 +139,9 @@ class _DraftsPageState extends State<DraftsPage> {
               : _drafts.isEmpty
                   ? _buildEmptyState()
                   : _buildDraftList(),
-          Positioned.fill(
-            child: AgentFab(currentPath: AppRoutes.drafts),
-          ),
         ],
       ),
-      bottomNavigationBar: const ElderBottomNav(currentIndex: 2),
+      bottomNavigationBar: const AgentBottomShell(currentIndex: 2, currentPath: AppRoutes.drafts),
     );
   }
 

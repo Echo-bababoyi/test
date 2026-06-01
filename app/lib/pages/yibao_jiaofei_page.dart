@@ -5,8 +5,7 @@ import '../router.dart';
 import '../services/agent_element_registry.dart';
 import '../services/draft_service.dart';
 import '../services/draft_store.dart';
-import '../widgets/agent_fab.dart';
-import '../widgets/elder_bottom_nav.dart';
+import '../widgets/agent_dock.dart';
 
 const _kOrange = Color(0xFFFF6D00);
 const _kBg = Color(0xFFF5F5F5);
@@ -351,12 +350,9 @@ class _YibaoJiaofeiPageState extends State<YibaoJiaofeiPage> with WidgetsBinding
               ),
             ],
           ),
-          const Positioned.fill(
-            child: AgentFab(currentPath: AppRoutes.yibaoJiaofei),
-          ),
         ],
       ),
-      bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
+      bottomNavigationBar: const AgentBottomShell(currentIndex: 0, currentPath: AppRoutes.yibaoJiaofei),
     );
   }
 

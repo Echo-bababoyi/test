@@ -7,8 +7,8 @@ import 'package:go_router/go_router.dart';
 import '../core/state/app_state.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
-import '../widgets/agent_fab.dart';
 import '../widgets/in_app_overlay.dart';
+import '../services/agent_session.dart';
 import '../widgets/system_dialog.dart';
 import '../services/user_profile_service.dart';
 import '../widgets/camera_view.dart';
@@ -40,7 +40,26 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
   final _cameraPermissionKey = AgentElementRegistry.register(_route, 'btn_camera_permission_allow');
 
   @override
+  void initState() {
+    super.initState();
+    // P0-1 隐式页面绑定（headless，无可见对话面板）：让 login_face 第 6-9 步的
+    // cmd_highlight overlay 渲染在按钮上、点击发 step_completed、cmd_say TTS 正常。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      AgentSession.instance.bindPage(
+        token: this,
+        router: GoRouter.of(context),
+        overlayContext: context,
+        currentPath: AppRoutes.faceAuth,
+        pageId: null,
+        pageTitle: null,
+      );
+    });
+  }
+
+  @override
   void dispose() {
+    AgentSession.instance.unbindPage(this);
     AgentElementRegistry.unregisterPage(_route);
     super.dispose();
   }
@@ -62,6 +81,11 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
         {'action': '人脸检测', 'target': '眨眼 + 转头验证通过'},
         {'action': '登录', 'target': '验证成功'},
       ],
+    );
+    // 刷脸成功回执：唤醒幕后等待的引导流，无缝接回（§11 Part B）
+    AgentSession.instance.sendStepCompleted(
+      lastAction: 'face_auth_success',
+      notes: 'liveness_passed',
     );
     context.go(AppRoutes.elderHome);
   }
@@ -98,8 +122,6 @@ class _FaceAuthPageState extends ConsumerState<FaceAuthPage> {
                 Positioned(bottom: 100, left: -40, child: _bgCircle(120, 0x10FF6D00)),
               ],
               _buildBody(),
-              if (isPrepare)
-                Positioned.fill(child: AgentFab(currentPath: AppRoutes.faceAuth)),
             ],
           ),
         ),

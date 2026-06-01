@@ -3,8 +3,7 @@ import '../router.dart';
 import '../services/agent_element_registry.dart';
 import '../services/log_service.dart';
 import '../services/ws_client.dart';
-import '../widgets/agent_fab.dart';
-import '../widgets/elder_bottom_nav.dart';
+import '../widgets/agent_dock.dart';
 
 const _kOrange = Color(0xFFFF6D00);
 const _kBg = Color(0xFFFFFBF5);
@@ -119,12 +118,9 @@ class _PensionQueryPageState extends State<PensionQueryPage> {
               ],
             ),
           ),
-          Positioned.fill(
-            child: AgentFab(currentPath: AppRoutes.pensionQuery),
-          ),
         ],
       ),
-      bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
+      bottomNavigationBar: const AgentBottomShell(currentIndex: 0, currentPath: AppRoutes.pensionQuery),
     );
   }
 

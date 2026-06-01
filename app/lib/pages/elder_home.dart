@@ -4,9 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../core/state/app_state.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
-import '../widgets/agent_fab.dart';
+import '../widgets/agent_dock.dart';
 import '../widgets/connection_indicator.dart';
-import '../widgets/elder_bottom_nav.dart';
 import '../widgets/login_guard.dart';
 import '../widgets/press_scale_wrapper.dart';
 import '../services/agent_element_registry.dart';
@@ -213,12 +212,12 @@ class _ElderHomeState extends ConsumerState<ElderHome>
               ],
             ),
           ),
-          Positioned.fill(
-            child: AgentFab(currentPath: AppRoutes.elderHome),
-          ),
         ],
       ),
-      bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
+      bottomNavigationBar: const AgentBottomShell(
+        currentIndex: 0,
+        currentPath: AppRoutes.elderHome,
+      ),
     );
   }
 }

@@ -4,8 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../services/agent_element_registry.dart';
 import '../theme/design_tokens.dart';
-import '../widgets/agent_fab.dart';
-import '../widgets/elder_bottom_nav.dart';
+import '../widgets/agent_dock.dart';
 
 class PayConfirmPage extends StatefulWidget {
   const PayConfirmPage({super.key});
@@ -213,9 +212,11 @@ class _PayConfirmPageState extends State<PayConfirmPage> {
           ),
         ],
         ),
-        const Positioned.fill(child: AgentFab(currentPath: AppRoutes.yibaoJiaofeiConfirm)),
       ]),
-      bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
+      bottomNavigationBar: const AgentBottomShell(
+        currentPath: AppRoutes.yibaoJiaofeiConfirm,
+        slim: true,
+      ),
     );
   }
 }

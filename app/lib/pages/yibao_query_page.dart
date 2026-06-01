@@ -3,9 +3,8 @@ import '../router.dart';
 import '../services/agent_element_registry.dart';
 import '../services/log_service.dart';
 import '../services/ws_client.dart';
-import '../widgets/agent_fab.dart';
+import '../widgets/agent_dock.dart';
 import '../widgets/connection_indicator.dart';
-import '../widgets/elder_bottom_nav.dart';
 
 const _kOrange = Color(0xFFFF6D00);
 const _kBg = Color(0xFFF5F5F5);
@@ -176,12 +175,9 @@ class _YibaoQueryPageState extends State<YibaoQueryPage> {
           ],
         ),
       ),
-          const Positioned.fill(
-            child: AgentFab(currentPath: AppRoutes.yibaoQuery),
-          ),
         ],
       ),
-      bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
+      bottomNavigationBar: const AgentBottomShell(currentIndex: 0, currentPath: AppRoutes.yibaoQuery),
     );
   }
 }

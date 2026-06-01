@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../router.dart';
 import '../services/operation_log_store.dart';
-import '../widgets/agent_fab.dart';
-import '../widgets/elder_bottom_nav.dart';
+import '../widgets/agent_dock.dart';
 
 const _sceneIconMap = <String, IconData>{
   'yibao_jiaofei': Icons.health_and_safety,
@@ -181,12 +180,9 @@ class _OperationLogsPageState extends State<OperationLogsPage> {
               : _logs.isEmpty
                   ? _buildEmpty()
                   : _buildList(),
-          const Positioned.fill(
-            child: AgentFab(currentPath: AppRoutes.operationLogs),
-          ),
         ],
       ),
-      bottomNavigationBar: const ElderBottomNav(currentIndex: 2),
+      bottomNavigationBar: const AgentBottomShell(currentIndex: 2, currentPath: AppRoutes.operationLogs),
     );
   }
 

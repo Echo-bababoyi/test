@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
-import '../widgets/agent_fab.dart';
+import '../widgets/agent_dock.dart';
 import '../widgets/in_app_overlay.dart';
 import '../services/agent_element_registry.dart';
 import '../services/login_page_snackbar.dart';
@@ -272,10 +272,11 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ],
       ),
-          const Positioned.fill(
-            child: AgentFab(currentPath: AppRoutes.login),
-          ),
         ],
+      ),
+      bottomNavigationBar: const AgentBottomShell(
+        currentPath: AppRoutes.login,
+        slim: true,
       ),
     );
   }
