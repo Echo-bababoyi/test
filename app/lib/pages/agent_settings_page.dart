@@ -6,6 +6,7 @@ import '../router.dart';
 import '../services/agent_session.dart';
 import '../services/agent_settings_service.dart';
 import '../theme/design_tokens.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/system_dialog.dart';
 import '../widgets/trust_level_cards.dart';
 
@@ -165,6 +166,9 @@ class _AgentSettingsPageState extends ConsumerState<AgentSettingsPage> {
           ),
         ],
       ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.agentSettings),
+          ),
         ],
       ),
     );

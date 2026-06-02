@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
-import '../widgets/agent_dock.dart';
+import '../widgets/agent_fab.dart';
+import '../widgets/elder_bottom_nav.dart';
 import '../services/agent_element_registry.dart';
 
 class YibaoHubPage extends StatelessWidget {
@@ -65,9 +66,12 @@ class YibaoHubPage extends StatelessWidget {
               ),
             ],
           ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.yibaoHub),
+          ),
         ],
       ),
-      bottomNavigationBar: const AgentBottomShell(currentIndex: 0, currentPath: AppRoutes.yibaoHub),
+      bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
     );
   }
 }

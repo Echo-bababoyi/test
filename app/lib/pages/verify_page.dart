@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../core/state/app_state.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
-import '../widgets/agent_dock.dart';
+import '../widgets/agent_fab.dart';
 import '../services/agent_element_registry.dart';
 import '../services/agent_session.dart';
 import '../services/user_profile_service.dart';
@@ -306,6 +306,9 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
           ],
         ),
       ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.verify),
+          ),
           Positioned(
             top: 0, left: 0, right: 0,
             child: SmsNotification(
@@ -367,10 +370,6 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: const AgentBottomShell(
-        currentPath: AppRoutes.verify,
-        slim: true,
       ),
     );
   }

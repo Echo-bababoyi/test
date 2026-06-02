@@ -12,9 +12,6 @@ import 'log_service.dart';
 import 'agent_element_registry.dart';
 import 'ws_client.dart';
 
-/// 底部 AgentDock 4 态（S0/S1/S2/S3）
-enum AgentPanelMode { closed, dialog, guide, card }
-
 String _generateSessionId() {
   final rand = Random.secure();
   final bytes = List<int>.generate(16, (_) => rand.nextInt(256));
@@ -55,54 +52,13 @@ class AgentSession {
   final _uiSignal = StreamController<void>.broadcast();
   Stream<void> get uiSignal => _uiSignal.stream;
 
-  AgentPanelMode _panelMode = AgentPanelMode.closed;
-  AgentPanelMode get panelMode => _panelMode;
-  bool _closing = false; // 收尾渐隐进行中（S2→S0）
-  bool get closing => _closing;
-  Timer? _reEnsureTimer; // 改法 B：面板高度变化后重触发高亮滚动的调度
-  Timer? _finishTimer1; // 收尾序列：停顿计时
-  Timer? _finishTimer2; // 收尾序列：渐隐缩小后置 closed
-
-  // 向后兼容：standard_home 的 AgentFab 仍用 panelOpen / setPanelOpen
-  bool get panelOpen => _panelMode != AgentPanelMode.closed;
-  void setPanelOpen(bool open) =>
-      setPanelMode(open ? AgentPanelMode.dialog : AgentPanelMode.closed);
-
-  void setPanelMode(AgentPanelMode m) {
-    _cancelFinish(); // 真实交互中止挂起的收尾序列，避免 timer 踩掉新状态
-    if (_panelMode == m) return;
-    final prev = _panelMode;
-    if (m == AgentPanelMode.dialog && prev == AgentPanelMode.closed) {
-      _animateNextOpen = true;
-      clearNewMessage();
-    }
-    _panelMode = m;
+  bool _panelOpen = false;
+  bool get panelOpen => _panelOpen;
+  void setPanelOpen(bool open) {
+    if (_panelOpen == open) return;
+    if (open) _animateNextOpen = true;
+    _panelOpen = open;
     _uiSignal.add(null);
-    // 改法 B：面板高度变化 → 延后到动画 settle 后重触发一次高亮滚动
-    if (currentHighlightKey.value != null && m != AgentPanelMode.closed) {
-      _scheduleReEnsureVisible();
-    }
-  }
-
-  void _scheduleReEnsureVisible() {
-    _reEnsureTimer?.cancel(); // Δ去重：连续切换不叠加多次滚动
-    _reEnsureTimer = Timer(const Duration(milliseconds: 320), () {
-      // 动画 280~300ms + 缓冲，避免在视口缩放中途按中间态算错偏移
-      if (currentHighlightKey.value == null) return;
-      _executor?.reEnsureVisible();
-    });
-  }
-
-  /// 中止挂起的收尾序列（新交互/新引导/跳页时调用），避免 timer 踩掉新状态。
-  void _cancelFinish() {
-    _finishTimer1?.cancel();
-    _finishTimer2?.cancel();
-    _finishTimer1 = null;
-    _finishTimer2 = null;
-    if (_closing) {
-      _closing = false;
-      _uiSignal.add(null);
-    }
   }
 
   bool _hasNewMessage = false;
@@ -178,8 +134,6 @@ class AgentSession {
     _router = null;
     _overlayContext = null;
     _executor = null;
-    _reEnsureTimer?.cancel(); // 跳页时取消挂起的重滚动（R3）
-    _cancelFinish(); // 跳页时中止挂起的收尾序列（R3）
     debugPrint('[AgentSession] unbindPage');
   }
 
@@ -253,8 +207,6 @@ class AgentSession {
       'input_mode': 'touch',
       'raw_text': rawText,
     });
-    // S3 → S2：卡片处理完缩回窄条（引导中）
-    if (_isGuiding) setPanelMode(AgentPanelMode.guide);
   }
 
   void sendChoiceText(String value) {
@@ -262,8 +214,6 @@ class AgentSession {
       'session_id': _sessionId,
       'text': value,
     });
-    // S3 → S2：选择卡处理完缩回窄条（引导中）
-    if (_isGuiding) setPanelMode(AgentPanelMode.guide);
   }
 
   void notifyHighlight(String? elementKey) {
@@ -364,19 +314,13 @@ class AgentSession {
       _executor?.handleMessage(msg);
       if (type == 'cmd_say' || type == 'cmd_highlight') {
         _isGuiding = true;
-        _cancelFinish(); // 新引导到来，中止上一任务的收尾序列
-        // S1/S0 → S2：进入引导流自动缩成窄条（用户已唤醒，不违反原则1）
-        if (_panelMode == AgentPanelMode.dialog ||
-            _panelMode == AgentPanelMode.closed) {
-          setPanelMode(AgentPanelMode.guide);
-        }
       }
       if (type == 'cmd_say') {
         final payload = msg['payload'] as Map<String, dynamic>? ?? {};
         final voiceHint = payload['voice_hint'] as String?;
         if (voiceHint != null && voiceHint.isNotEmpty) {
           ChatHistory.instance.items.add({'role': 'agent', 'text': voiceHint});
-          if (!panelOpen) _hasNewMessage = true;
+          if (!_panelOpen) _hasNewMessage = true;
           _uiSignal.add(null);
         }
       }
@@ -423,8 +367,6 @@ class AgentSession {
           'description': payload['description'] as String? ?? '需要您的授权',
         });
         AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
-        // S2 → S3：引导态推授权卡，面板临时长高容纳卡片
-        if (_isGuiding) setPanelMode(AgentPanelMode.card);
 
       case 'agent_choice_request':
         final text = payload['text'] as String? ?? '';
@@ -433,11 +375,12 @@ class AgentSession {
             .toList();
         items.add({'type': 'choice', 'text': text, 'options': opts});
         AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
-        // S2 → S3：引导态推选择卡，面板临时长高容纳卡片
-        if (_isGuiding) setPanelMode(AgentPanelMode.card);
 
       case 'task_done':
-        _finishAndClose(payload);
+        _isGuiding = false;
+        _unwatchInput();
+        currentHighlightKey.value = null;
+        LogService.saveFromTaskDone(payload);
 
       case 'agent_error':
         items.removeWhere((e) => e['type'] == 'asr_placeholder');
@@ -452,46 +395,15 @@ class AgentSession {
         AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
 
       case 'agent_out_of_scope':
-        // 引导中插一句无关话被判 OOS：仅作答，不打断引导（§5.3 受控响应）。
-        // 仅非引导态才清进度，避免误清"走到第几步/在等点哪个高亮"。
-        if (!_isGuiding) {
-          _unwatchInput();
-          currentHighlightKey.value = null;
-        }
+        _isGuiding = false;
+        _unwatchInput();
+        currentHighlightKey.value = null;
         final hint = payload['voice_hint'] as String? ?? '浙里办没有这个服务';
         items.add({'role': 'agent', 'text': hint});
         AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
     }
-    if (!panelOpen) {
+    if (!_panelOpen) {
       _hasNewMessage = true;
     }
-  }
-
-  /// 引导收尾（S2 → S0）：窄条原地播报收尾语 → 停顿 1.5s → 渐隐缩小收起。
-  /// 视觉本质为渐隐缩小（opacity↓ + height↓ 同步缓动），**不是弹出放大**（§5.4）。
-  void _finishAndClose(Map<String, dynamic> payload) {
-    _unwatchInput();
-    currentHighlightKey.value = null;
-    // 收尾语进窄条（口语收尾语，§6.1；task_done 现不 append text，这里补）
-    final hint = payload['voice_hint'] as String?;
-    final summary = (hint != null && hint.isNotEmpty)
-        ? hint
-        : (payload['summary'] as String? ?? '已经帮您办好啦');
-    ChatHistory.instance.items.add({'role': 'agent', 'text': summary});
-    AudioPlayer.playBase64(payload['tts_audio_base64'] as String?);
-    _panelMode = AgentPanelMode.guide; // 原地停在窄条播报，不放大
-    _uiSignal.add(null);
-    LogService.saveFromTaskDone(payload);
-    // 停顿 1.5s 给老人读/听完 → 渐隐缩小收起（timer 存字段，可被真实交互中止）
-    _finishTimer1 = Timer(const Duration(milliseconds: 1500), () {
-      _closing = true; // 触发 opacity↓ + height↓ 同步缓动
-      _uiSignal.add(null);
-      _finishTimer2 = Timer(const Duration(milliseconds: 320), () {
-        _closing = false;
-        _isGuiding = false;
-        _panelMode = AgentPanelMode.closed;
-        _uiSignal.add(null);
-      });
-    });
   }
 }

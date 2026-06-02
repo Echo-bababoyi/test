@@ -3,7 +3,8 @@ import '../router.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/design_tokens.dart';
 import '../services/agent_element_registry.dart';
-import '../widgets/agent_dock.dart';
+import '../widgets/agent_fab.dart';
+import '../widgets/elder_bottom_nav.dart';
 
 class ShebaoQueryPage extends StatelessWidget {
   const ShebaoQueryPage({super.key});
@@ -142,9 +143,12 @@ class ShebaoQueryPage extends StatelessWidget {
               ],
             ),
           ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.shebaoQuery),
+          ),
         ],
       ),
-      bottomNavigationBar: const AgentBottomShell(currentIndex: 0, currentPath: AppRoutes.shebaoQuery),
+      bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
     );
   }
 }

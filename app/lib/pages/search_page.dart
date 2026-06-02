@@ -3,10 +3,11 @@ import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../services/wake_word_listener.dart';
 import '../theme/design_tokens.dart';
-import '../widgets/agent_dock.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/in_app_overlay.dart';
 import '../widgets/permission_flow_helper.dart';
 import '../widgets/search_suggestion_list.dart';
+import '../widgets/elder_bottom_nav.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -104,9 +105,12 @@ class _SearchPageState extends State<SearchPage> {
           ],
         ),
       ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.search),
+          ),
         ],
       ),
-      bottomNavigationBar: const AgentBottomShell(currentIndex: 0, currentPath: AppRoutes.search),
+      bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
     );
   }
 }

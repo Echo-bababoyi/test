@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../core/state/app_state.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
-import '../widgets/agent_dock.dart';
+import '../widgets/agent_fab.dart';
+import '../widgets/elder_bottom_nav.dart';
 import '../widgets/persistent_banner.dart';
 import '../widgets/press_scale_wrapper.dart';
 import '../services/agent_element_registry.dart';
@@ -86,9 +87,12 @@ class MinePage extends ConsumerWidget {
               alignment: Alignment.bottomCenter,
               child: PersistentBanner(),
             ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.my),
+          ),
         ],
       ),
-      bottomNavigationBar: const AgentBottomShell(currentIndex: 2, currentPath: AppRoutes.my),
+      bottomNavigationBar: const ElderBottomNav(currentIndex: 2),
     );
   }
 }

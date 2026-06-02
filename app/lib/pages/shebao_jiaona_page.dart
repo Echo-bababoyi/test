@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
-import '../widgets/agent_dock.dart';
+import '../widgets/agent_fab.dart';
+import '../widgets/elder_bottom_nav.dart';
 import '../services/agent_element_registry.dart';
 import '../services/pay_record_store.dart';
 
@@ -58,9 +59,12 @@ class _ShebaoJiaonaPageState extends State<ShebaoJiaonaPage> {
               const _PayRecordsSubPage(),
             ],
           ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.shebaoJiaona),
+          ),
         ],
       ),
-      bottomNavigationBar: const AgentBottomShell(currentIndex: 0, currentPath: AppRoutes.shebaoJiaona),
+      bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
     );
   }
 }

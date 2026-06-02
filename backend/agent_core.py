@@ -53,10 +53,7 @@ _LEVEL_TOOLS: dict[str, set[str]] = {
 }
 
 
-_SCENE_FORCE_TOOLS = {
-    "login_verify": {"read_sms", "fill_field_normal"},
-    "yibao_jiaofei": {"cmd_navigate", "fill_field_normal", "fill_field_sensitive"},
-}
+_SCENE_FORCE_TOOLS = {"login_verify": {"read_sms", "fill_field_normal"}}
 
 
 def _make_session_read_sms(get_code):
@@ -84,7 +81,7 @@ SCENE_PROMPTS = {
 }
 
 SCENE_DONE_SUMMARY = {
-    "login_face":    "已帮您完成刷脸登录",
+    "login_face":    "已引导您完成刷脸登录准备，请按提示操作",
     "login_verify":  "已引导您完成验证码登录步骤，请按提示操作",
     "yibao_jiaofei": "已帮您填好缴费表单，请点击'去支付'",
     "pension_query": "已带您到养老金查询页，请点'查询'查看",

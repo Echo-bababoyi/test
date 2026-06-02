@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../router.dart';
 import '../theme/design_tokens.dart';
-import '../widgets/agent_dock.dart';
+import '../widgets/agent_fab.dart';
 import '../widgets/search_suggestion_list.dart';
+import '../widgets/elder_bottom_nav.dart';
 
 class SearchResultPage extends StatefulWidget {
   const SearchResultPage({super.key});
@@ -137,9 +138,12 @@ class _SearchResultPageState extends State<SearchResultPage> {
               ],
             ),
           ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.searchResult),
+          ),
         ],
       ),
-      bottomNavigationBar: const AgentBottomShell(currentIndex: 0, currentPath: AppRoutes.searchResult),
+      bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
     );
   }
 }

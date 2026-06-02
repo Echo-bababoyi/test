@@ -72,26 +72,6 @@ class AgentCommandExecutor {
     }
   }
 
-  void _scrollIntoView(BuildContext ctx) {
-    Scrollable.ensureVisible(ctx,
-      alignment: 0.5,
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  /// 面板高度变化后由 AgentSession 调度重触发（改法 B）：
-  /// dock 进 bottomNavigationBar 槽位后视口随面板高度变化，需在动画 settle
-  /// 后重算一次，确保高亮元素落在剩余可见区正中、不被面板遮挡。
-  void reEnsureVisible() {
-    if (currentRoute == null) return;
-    final elementKey = AgentSession.instance.currentHighlightKey.value;
-    if (elementKey == null) return;
-    final key = AgentElementRegistry.get(currentRoute!, elementKey);
-    final ctx = key?.currentContext;
-    if (ctx != null) _scrollIntoView(ctx);
-  }
-
   void _onHighlight(Map<String, dynamic> payload) {
     final elementKey = payload['element_key'] as String?;
     if (elementKey == null) {
@@ -116,7 +96,11 @@ class AgentCommandExecutor {
 
     final ctx = key.currentContext;
     if (ctx != null) {
-      _scrollIntoView(ctx);
+      Scrollable.ensureVisible(ctx,
+        alignment: 0.85,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
     }
 
     _currentHighlightEntry?.remove();

@@ -84,7 +84,7 @@
 | 76 | 支付密码页 demo 模式（去校验，任意 6 位通过） | frontend | 🧪 |
 | 77 | ?reset URL 参数一键清空测试数据 | frontend | 🧪 |
 | 78 | 讯飞 TTS 语音合成全链路启用（send 统一注入 + 前端 7 类消息播放 + 队列化 + 跨页不打断） | frontend / backend | ✅ |
-| 79 | 底部导航栏一体化聊天框 AgentDock（替换悬浮气泡 AgentFab）— 交互方案已定稿 docs/AGENT_DOCK_REDESIGN.md v1.0，待 architect 技术方案 + frontend 实施 | PM / architect / frontend | 🔧 |
+| 79 | AgentDock V2 底部 Shell 布局重构（分支 agentdock-v2-wip，guide 态缺输入框） | frontend | 🔧 |
 | 80 | 讯飞 ASR 语音识别全链路接入（AudioCapture PCM + MicButton 零延迟 + wpgs 合并修复） | frontend / backend | ✅ |
 | 81 | 成果展示 PPT 制作指引（docs/PPT_CONTENT.md，10 页逐页内容 + 截图清单） | PM | ✅ |
 

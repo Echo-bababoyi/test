@@ -7,7 +7,8 @@ import '../services/draft_store.dart';
 import '../services/log_service.dart';
 import '../services/pay_record_store.dart';
 import '../theme/design_tokens.dart';
-import '../widgets/agent_dock.dart';
+import '../widgets/agent_fab.dart';
+import '../widgets/elder_bottom_nav.dart';
 
 class PayResultPage extends ConsumerStatefulWidget {
   const PayResultPage({super.key});
@@ -172,9 +173,12 @@ class _PayResultPageState extends ConsumerState<PayResultPage> {
               ),
             ],
           ),
+          const Positioned.fill(
+            child: AgentFab(currentPath: AppRoutes.yibaoJiaofeiResult),
+          ),
         ],
       ),
-      bottomNavigationBar: const AgentBottomShell(currentIndex: 0, currentPath: AppRoutes.yibaoJiaofeiResult),
+      bottomNavigationBar: const ElderBottomNav(currentIndex: 0),
     );
   }
 
