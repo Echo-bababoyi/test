@@ -32,6 +32,10 @@ build/
 *.tmp
 *.bak
 
+# Playwright/浏览器实测临时产物（不入库）
+.playwright-mcp/
+/step*.png
+
 # 编辑器交换/备份文件
 *.swp
 *.swo
